@@ -1,24 +1,39 @@
 {
-  "compilerOptions": {
-    "target": "ES2020",
-    "useDefineForClassFields": true,
-    "module": "ESNext",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "skipLibCheck": true,
-
-    /* Bundler mode */
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "isolatedModules": true,
-    "moduleDetection": "force",
-    "noEmit": true,
-
-    /* Linting */
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
-  },
-  "include": ["src"]
-}
+	"compilerOptions": {
+	  "target": "ES2020",
+	  "useDefineForClassFields": true,
+	  "module": "ESNext",
+	  "lib": ["ES2020", "DOM", "DOM.Iterable"],
+	  "skipLibCheck": true,
+	  "moduleResolution": "bundler",
+	  "allowImportingTsExtensions": true,
+	  "resolveJsonModule": true,
+	  "isolatedModules": true,
+	  "noEmit": true,
+	  "strict": true,
+	  "noUnusedLocals": true,
+	  "noUnusedParameters": true,
+	  "noFallthroughCasesInSwitch": true,
+	  "baseUrl": ".",
+	  "paths": {
+		"@/*": ["src/*"],
+		"@component/*": ["src/components/*"],
+	  	"@page/*": ["src/pages/*"],
+		"@types/*": ["types/*"],
+	  },
+	  "typeRoots": [
+		"./types",
+		"./node_modules/@types"
+	  ],
+	  "types": ["vite/client"]
+	},
+	"include": [
+	  "src/**/*.ts",
+	  "src/**/*.tsx",
+	  "types/**/*.ts",
+	  "types/**/*.d.ts"
+	],
+	"references": [
+	  { "path": "./tsconfig.node.json" }
+	]
+  }
