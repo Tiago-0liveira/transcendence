@@ -1,15 +1,20 @@
-import { setupHomeRoute } from "@/pages";
-import { setup404Route } from "@/pages/404";
-
 class Router {
-	private routes: Map<string, RouteConfig>;
-	private currentRoute: Route | null;
+	private static instance: Router | null;
+	private routes: Map<string, RouteConfig> = new Map();
+	private currentRoute: Route | null = null;
+	private loadingElement: HTMLElement | null;
 	private mode: 'history' | 'hash';
 	private baseUrl: string;
 	private rootElement: HTMLElement;
-	private loadingElement: HTMLElement | null;
 
-	constructor(options: RouterOptions = {}) {
+	public static getInstance(): Router {
+		if (!Router.instance) {
+			Router.instance = new Router();
+		}
+		return Router.instance;
+	}
+
+	private constructor(options: RouterOptions = {}) {
 		this.routes = new Map();
 		this.currentRoute = null;
 		this.mode = options.mode || 'history';
@@ -20,18 +25,10 @@ class Router {
 		if (!this.rootElement) {
 			throw new Error('Root element not found');
 		}
-
-		this.registerPages()
-		
-		this.initializeRouter();
+		Router.instance = this;
 	}
 
-	private registerPages(): void {
-		setupHomeRoute(this)
-		setup404Route(this)
-	}
-
-	private initializeRouter(): void {
+	public initializeRouter(): void {
 		// Handle browser navigation events
 		window.addEventListener('popstate', () => this.handleRoute());
 
@@ -139,7 +136,7 @@ class Router {
 			}
 		}
 		if (this.routes.has("/404")) {
-			return { route: this.routes.get("/404") as RouteConfig, params: {}}
+			return { route: this.routes.get("/404") as RouteConfig, params: {} }
 		}
 		return { route: null, params: {} };
 	}
