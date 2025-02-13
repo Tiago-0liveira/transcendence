@@ -7,6 +7,7 @@ const component = async () => {
 			<nav>
 				<a href="/about">About</a>
 				<a href="/contact">Contact</a>
+				<a href="/user">My User</a>
 			</nav>
 		</div>
 	`;

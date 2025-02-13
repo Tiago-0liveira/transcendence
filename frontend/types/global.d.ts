@@ -2,8 +2,7 @@ import Router from '@/router/Router.ts';
 
 declare global {
   interface Window {
-    Router: typeof Router;
-    router: InstanceType<typeof Router>;
+    user?: User;
   }
 }
 
