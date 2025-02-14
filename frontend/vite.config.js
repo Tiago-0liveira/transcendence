@@ -14,7 +14,11 @@ export default defineConfig({
     sourcemap: true,
   },
   server: {
+	watch: {
+		usePolling: true,
+	},
     port: 3000,
+	strictPort: true,
 	historyApiFallback: true,
 	host: "0.0.0.0"
   }

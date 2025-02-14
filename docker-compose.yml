@@ -1,0 +1,25 @@
+services:
+  front-dev:
+    build:
+      context: frontend/
+      target: dev
+    environment:
+      - NODE_ENV=development
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    profiles:
+      - dev
+  front-prod:
+    build:
+      context: frontend/
+      target: prod
+    environment:
+      - NODE_ENV=production
+    ports:
+      - "443:443"
+      - "80:80"
+    profiles:
+      - prod
