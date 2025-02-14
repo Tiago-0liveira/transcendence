@@ -111,7 +111,7 @@ class Router {
 
 			this.currentRoute = newRoute;
 
-		} catch (error) {
+		} catch (error: any) {
 			console.error('Routing error:', error);
 			this.handleError(error);
 		} finally {

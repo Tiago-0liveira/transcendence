@@ -6,7 +6,7 @@ const checkAuth: () => Promise<boolean> = async () => {
 }
 
 // Authentication guard example
-export const authGuard: RouteGuard = async (to, from) => {
+export const authGuard: RouteGuard = async (to, _from) => {
 	const isAuthenticated = await checkAuth(); // Your auth check implementation
 	if (!isAuthenticated) {
 		const uri = encodeURIforLogin("login", to);

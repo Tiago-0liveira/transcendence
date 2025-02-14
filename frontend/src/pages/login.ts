@@ -1,7 +1,7 @@
 import Router from "@/router/Router";
 import { decodeURIfromRoute } from "@/uri-encoding";
 
-const isValidLoginFormData = (data: FormData): boolean => {
+const isValidLoginFormData = (_data: FormData): boolean => {
 	return true;
 }
 

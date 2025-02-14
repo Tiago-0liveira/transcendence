@@ -14,7 +14,7 @@ export const encodeURIforLogin = (to: string, route: Route): string => {
 export const decodeURIfromRoute = (route: Route): string => {
     try {
         // Get URL parameters from the current route
-        const params = JSON.parse(decodeURIComponent(route.params.params || '{}'));
+        /*const params = JSON.parse(decodeURIComponent(route.params.params || '{}'));*/
         const query = JSON.parse(decodeURIComponent(route.params.query || '{}'));
         const returnTo = decodeURIComponent(route.query.returnTo || '/');
 

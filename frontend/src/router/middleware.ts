@@ -1,6 +1,6 @@
 
 // Loading middleware example
-const loadingMiddleware: Middleware = async (to, from) => {
+const loadingMiddleware: Middleware = async (_to, _from) => {
 	// Show loading state
 	document.body.classList.add('loading');
 
