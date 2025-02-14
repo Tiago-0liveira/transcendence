@@ -25,7 +25,6 @@ class Router {
 		if (!this.rootElement) {
 			throw new Error('Root element not found');
 		}
-		Router.instance = this;
 	}
 
 	public initializeRouter(): void {
