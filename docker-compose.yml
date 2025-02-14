@@ -23,3 +23,27 @@ services:
       - "80:80"
     profiles:
       - prod
+
+  back-dev:
+    build:
+      context: backend/server/
+      target: dev
+    environment:
+      - NODE_ENV=development
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./backend/server:/app
+      - /app/node_modules
+    profiles:
+      - dev
+  back-prod:
+    build:
+      context: backend/server/
+      target: prod
+    environment:
+      - NODE_ENV=production
+    ports:
+      - "4000:4000"
+    profiles:
+      - prod
