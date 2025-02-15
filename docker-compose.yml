@@ -1,5 +1,6 @@
 services:
   front-dev:
+    container_name: front-dev
     build:
       context: frontend/
       target: dev
@@ -13,6 +14,7 @@ services:
     profiles:
       - dev
   front-prod:
+    container_name: front-prod
     build:
       context: frontend/
       target: prod
@@ -25,6 +27,7 @@ services:
       - prod
 
   back-dev:
+    container_name: back-dev
     build:
       context: backend/server/
       target: dev
@@ -38,6 +41,7 @@ services:
     profiles:
       - dev
   back-prod:
+    container_name: back-prod
     build:
       context: backend/server/
       target: prod
