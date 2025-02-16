@@ -2,7 +2,7 @@ import Router from '@/router/Router.ts';
 
 declare global {
   interface Window {
-    user?: User;
+    user?: UserNoPass;
   }
 }
 
