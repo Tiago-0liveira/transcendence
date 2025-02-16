@@ -8,8 +8,6 @@ RUN npm install
 
 COPY . .
 
-RUN npm run build
-
 #Dev stage
 
 FROM builder AS dev
@@ -19,6 +17,8 @@ CMD ["npm", "run", "dev"]
 #Prod stage
 
 FROM nginx:alpine AS prod
+
+RUN npm run build
 
 RUN apk add openssl
 
