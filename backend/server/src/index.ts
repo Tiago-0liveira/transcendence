@@ -1,10 +1,17 @@
 import Fastify from "fastify";
-import { PORT } from "./config"
+import cors from "@fastify/cors"
+import { PORT, DEV_MODE } from "./config"
 import Database from "./database/Database";
 import userRoutes from "./api/user";
 
 const db = Database.getInstance();
 const app = Fastify({ logger: true });
+
+app.register(cors, {
+	origin: "*",
+	methods: ["GET", "POST", "DELETE", "PUT"],
+	allowedHeaders: ["Content-Type", "Authorization"]
+})
 
 app.register(userRoutes, { prefix: "/user" })
 
@@ -26,9 +33,7 @@ app.setNotFoundHandler((req, reply) => {
 	reply.sendFile("index.html");
 });
 */
-app.listen({ port: PORT, host: "0.0.0.0" }, () => {
-	console.log(`🚀 Fastify running at http://localhost:${PORT}`);
+app.listen({ port: PORT, host: "0.0.0.0" }, (err, addr) => {
+	console.log(`🚀 Fastify running at ${addr}`);
+	console.log(err);
 });
-
-
-console.log("ola")
