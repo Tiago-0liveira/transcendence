@@ -2,18 +2,21 @@ import Fastify from "fastify";
 import cors from "@fastify/cors"
 import { PORT, DEV_MODE } from "./config"
 import Database from "./database/Database";
+
 import userRoutes from "./api/user";
+import jwtRoutes from "./api/jwt"
 
 const db = Database.getInstance();
 const app = Fastify({ logger: true });
 
 app.register(cors, {
-	origin: "*",
+	origin: DEV_MODE ? "*" : "http://localhost:4000",
 	methods: ["GET", "POST", "DELETE", "PUT"],
 	allowedHeaders: ["Content-Type", "Authorization"]
 })
 
 app.register(userRoutes, { prefix: "/user" })
+app.register(jwtRoutes, { prefix: "/auth/token" })
 
 app.get("/", async () => {
 	return { message: "112asdasdasda12312312312312321312312sdasdasd3" }

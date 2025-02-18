@@ -1,5 +1,4 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { request } from "http";
 import Database from "../database/Database";
 
 export default async function userRoutes(fastify: FastifyInstance) {

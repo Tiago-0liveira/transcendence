@@ -1,5 +1,6 @@
 import { isValidLoginFormData } from "@/auth/validation";
 import Router from "@/router/Router";
+import AuthManager from "@/auth/authManager"
 import { decodeURIfromRoute } from "@/uri-encoding";
 
 
@@ -26,11 +27,11 @@ const component = async () => {
 					<div class="inputs flex flex-col min-h-[80%]">
 						<div class="flex flex-col mt-2 min-w-50 max-w-90">
 							<label for="username" class="ml-1 text-left">Username</label>
-							<input type="text" name="username" for="username" placeholder="Username" required minlength="5" maxlength="100"/>
+							<input type="text" id="username" name="username" for="username" placeholder="Username" required minlength="5" maxlength="100"/>
 						</div>
 						<div class="flex flex-col mt-2 min-w-50 max-w-90">
 							<label for="password" class="ml-1 text-left">Password</label>
-							<input type="password" name="password" for="password" placeholder="Password" 
+							<input type="password" id="password" name="password" for="password" placeholder="Password" 
 								required minlength="8" maxlength="100"
 								class="TODO: this is commented this is a pattern that checks all it says below -->  pattern=\"(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{8,}\""
 								title="At least 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special character"
@@ -39,11 +40,11 @@ const component = async () => {
 						</div>
 						<div class="flex flex-col mt-2 min-w-50 max-w-90">
 							<label for="displayName" class="ml-1 text-left">Display Name</label>
-							<input type="text" name="displayName" for="displayName" placeholder="Display Name" />
+							<input type="text" name="displayName" id="displayName" for="displayName" placeholder="Display Name" />
 						</div>
 						<div class="flex flex-col mt-2 min-w-50 max-w-90">
 							<label for="avatarUrl" class="ml-1 text-left">Avatar Url</label>
-							<input type="url" name="avatarUrl" for="avatarUrl" placeholder="Avatar Url" />
+							<input type="url" name="avatarUrl" id="avatarUrl" for="avatarUrl" placeholder="Avatar Url" />
 						</div>
 					</div>
 					<button class="w-40">Login</button>
