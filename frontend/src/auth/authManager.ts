@@ -1,4 +1,6 @@
 import Router from "@/router/Router";
+import { BACKEND_URL } from "@/utils/config";
+import { backendEndpoint, normalizePath } from "@/utils/path";
 
 
 class AuthManager {
@@ -11,13 +13,16 @@ class AuthManager {
 		this.accessToken = null;
 	}
 
-	public getInstance() {
+	public static getInstance() {
 		if (!AuthManager.instance) {
 			AuthManager.instance = new AuthManager();
 		}
 		return AuthManager.instance;
 	}
 
+	public get loggedIn() {
+		return Boolean(this.user);
+	}
 	// TODO: uncomment this when coding the 2FA
 	/*public get needs2FA(): boolean {
 		return this.user && this.user.needs2FA;
@@ -29,35 +34,41 @@ class AuthManager {
 		return localStorage.getItem("refreshToken");
 	}
 
+	public async fetchUser() {
+		const res = await this.fetch("auth/me", {credentials: "include"});
+		console.log(res);
+	}
+
 	public async fetch(url: string, options: RequestInit = {}) {
-		if (!this.accessToken)
+		url = backendEndpoint(url)
+/*		if (!this.accessToken)
 		{
 			console.info("No access token, trying to refresh!");
 			await this.refreshToken();
 		}
 		const headers = new Headers(options.headers);
-		headers.set("Authorization", `Bearer ${this.GetAccessToken()}`)
+		headers.set("Authorization", `Bearer ${this.GetAccessToken()}`)*/
 
-		const response = await fetch(url, {...options, headers});
+		const response = await fetch(url, {...options});
 
 		if (response.status === 401)
 		{
-			console.info("Access token expired, trying to refresh!");
-			const refreshed = await this.refreshToken();
+			console.info("Access token expired"/*, trying to refresh!"*/);
+			/*const refreshed = await this.refreshToken();
 			if (!refreshed)
 			{
 				this.logout();
 				return null;
 			}
-			headers.set("Authorization", `Bearer ${this.GetAccessToken()}`)
-			return fetch(url, {...options, headers});
+			//headers.set("Authorization", `Bearer ${this.GetAccessToken()}`)
+			return fetch(url, {...options});*/
 		}
 		return response;
 	}
 
 	public async refreshToken() {
 		try {
-			const response = await fetch("/auth/refresh", { credentials: "include" });
+			const response = await fetch(BACKEND_URL + "auth/refresh", { credentials: "include" });
 	
 			if (!response.ok) throw new Error("Refresh failed");
 	

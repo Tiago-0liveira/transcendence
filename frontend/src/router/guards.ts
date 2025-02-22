@@ -1,8 +1,13 @@
+import AuthManager from "@/auth/authManager";
 import Router from "@/router/Router"
 import { encodeURIforLogin } from "@/uri-encoding";
 
 const checkAuth: () => Promise<boolean> = async () => {
-	return window.user != undefined;
+	/*if (!AuthManager.getInstance().loggedIn)
+	{
+		AuthManager.getInstance().fetchUser()
+	}*/
+	return AuthManager.getInstance().loggedIn;
 }
 
 // Authentication guard example

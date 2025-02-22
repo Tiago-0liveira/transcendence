@@ -2,6 +2,8 @@ import { isValidLoginFormData } from "@/auth/validation";
 import Router from "@/router/Router";
 import AuthManager from "@/auth/authManager"
 import { decodeURIfromRoute } from "@/uri-encoding";
+import { BACKEND_URL } from "@/utils/config";
+import { backendEndpoint, normalizePath } from "@/utils/path";
 
 
 
@@ -72,26 +74,27 @@ const component = async () => {
 			const displayName = data.get("displayName")?.toString() ?? "";
 			const avatarURL = data.get("avatarUrl")?.toString() ?? "";
 
-			fetch("http://localhost:4000/user", {
+			fetch(backendEndpoint("user"), {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json"
 				},
-				body: JSON.stringify({ username, password, displayName, avatarURL })
+				body: JSON.stringify({ username, password, displayName, avatarURL }),
+				credentials: "include"
 			})
 				.then(response => {
-					if (response.status !== 200) return;
 					return response.json()
 				})
 				.then(data => {
-					console.log(data)
-					fetch(`http://localhost:4000/user/${data.message}`)
+					AuthManager.getInstance().fetchUser();
+					
+					/*fetch(backendEndpoint("user", String(data.message)))
 						.then(response => response.json())
 						.then(({message}) => {
 							console.log(message);
 							window.user = message;
 							Router.getInstance().navigate("/user")
-						})
+						})*/
 				})
 				.catch(console.error)
 			/*window.user = { username };

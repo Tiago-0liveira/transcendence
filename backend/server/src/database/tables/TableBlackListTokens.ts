@@ -5,7 +5,7 @@ class BlackListTokensTable extends Table<BlackListToken, BlackListToken> {
 	protected _tableName: string = "black_list_jwt_refresh_tokens";
 
 	protected _createStr = `CREATE TABLE IF NOT EXISTS ${this._tableName} (
-		token TEXT NOT NULL,
+		token TEXT NOT NULL UNIQUE
 	);`;
 	protected _insertStr = `INSERT INTO ${this._tableName} (token) VALUES (?)`;
 	protected _getStr = `SELECT (token) FROM ${this._tableName} WHERE token = ?`
@@ -19,12 +19,16 @@ class BlackListTokensTable extends Table<BlackListToken, BlackListToken> {
 
 	async new(params: BlackListToken): Promise<DatabaseResult<number>> {
 		return new Promise((resolve, reject) => {
-			this.database.database.run(this._insertStr, [params.token],
-				function (err) {
-					if (err) reject({ error: err })
-					else resolve({ result: this.lastID });
-				}
-			)
+			try {
+				this.database.database.run(this._insertStr, [params.token],
+					function (err) {
+						if (err) reject({ error: err })
+						else resolve({ result: this.lastID });
+					}
+				)
+			} catch (error) {
+				reject({ error })
+			}
 		})
 	}
 	async delete(id: number): Promise<DatabaseResult<boolean>> {

@@ -1,3 +1,5 @@
+import { normalizePath } from "@/utils/path";
+
 class Router {
 	private static instance: Router | null;
 	private routes: Map<string, RouteConfig> = new Map();
@@ -48,7 +50,7 @@ class Router {
 
 	public register(config: RouteConfig): void {
 		// Convert path pattern to regex for matching
-		const path = this.normalizePath(config.path);
+		const path = normalizePath(config.path);
 		this.routes.set(path, config);
 	}
 
@@ -170,10 +172,6 @@ class Router {
 			params[key] = value;
 		});
 		return params;
-	}
-
-	private normalizePath(path: string): string {
-		return path.startsWith('/') ? path : `/${path}`;
 	}
 
 	private handleError(error: Error): void {

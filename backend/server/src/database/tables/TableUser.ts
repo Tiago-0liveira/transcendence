@@ -31,7 +31,7 @@ class UserTable extends Table<User, UserParams> {
 		return new Promise((resolve, reject) => {
 			this.database.database.run(this._insertStr, [params.username, params.displayName, params.avatarUrl, params.password],
 				function (err) {
-					if (err) reject({ error: err })
+					if (err) reject({ error: err });
 					else resolve({ result: this.lastID });
 				}
 			)
