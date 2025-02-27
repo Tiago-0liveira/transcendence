@@ -1,12 +1,13 @@
+import AuthManager from "@/auth/authManager";
 import Router from "@/router/Router";
 import { authGuard } from "@/router/guards"
 
 const component = async () => {
 
-
+	const user = AuthManager.getInstance().User!;
 	const template = `
 		<div class="user">
-			<h1>Hello ${window.user?.username}</h1>
+			<h1>Hello ${user.username}</h1>
 			<nav>
 				<a href="/">Home</a>
 			</nav>

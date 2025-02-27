@@ -1,7 +1,8 @@
 import sqlite3 from "sqlite3";
-import { DATABASE_URI } from "../config"
+import { DATABASE_URI, DEV_DROP_DB_ON_START } from "../config"
 import TableUser from "./tables/TableUser";
 import TableBlackListTokens from "./tables/TableBlackListTokens";
+import fs from "fs"
 
 class Database {
 	private static s_instance: Database | null;
@@ -18,6 +19,14 @@ class Database {
 	}
 
 	private constructor() {
+		if (DEV_DROP_DB_ON_START) {
+			console.log("DEV_DROP_DB_ON_START is enabled || Dropping database...");
+			try {
+				fs.unlinkSync(DATABASE_URI);
+			} catch (err) {
+				console.error(err);
+			}
+		}
 		this._database = new sqlite3.Database(DATABASE_URI);
 
 		// Tables constructors

@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import Database from "../database/Database";
 import jwt from "../utils/jwt";
 import { authJwtMiddleware } from "../middleware/auth";
+import { JWT_REFRESH_SECRET } from "../config";
 
 export default async function userRoutes(fastify: FastifyInstance) {
 	fastify.post("/", {
@@ -32,16 +33,20 @@ export default async function userRoutes(fastify: FastifyInstance) {
 			if (res.error)
 				reply.code(400).send({ message: res.error })
 			else {
-				const accessToken = jwt.sign(res.result)
+				const accessToken = jwt.sign({}, { exp: 60 * 15, sub: res.result })
+				const refreshToken = jwt.sign({}, { exp: 60 * 60 * 24 * 7, sub: res.result }, JWT_REFRESH_SECRET)
 				console.log("accessToken creation:", accessToken);
+
 				reply
 					.code(200)
-					.setCookie("accessToken", accessToken, {
+					.setCookie("refreshToken", refreshToken, {
+						httpOnly: true,
+						sameSite: "strict",
 						secure: false, // TODO: after enabling https make secure: true aswell
-						maxAge: 60 * 15,
+						expires: new Date(Date.now() + 60 * 60 * 24 * 7 * 1000) /* 1 Week */
 					})
 					.header('Access-Control-Allow-Credentials', 'true')
-					.send({ message: res.result })
+					.send({ message: res.result, accessToken });
 
 			}
 		} catch (error) {
@@ -64,8 +69,6 @@ export default async function userRoutes(fastify: FastifyInstance) {
 			const res = await Database.getInstance().userTable.getById(numberId);
 			if (res.error) {
 				return reply.code(400).send({ message: res.error });
-			} else {
-				return { message: res.result };
 			}
 			return { message: res.result };
 		} catch (error) {

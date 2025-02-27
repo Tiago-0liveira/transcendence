@@ -17,23 +17,12 @@ app.register(fastifyCookie, {
 })
 
 app.register(cors, {
-	origin: (origin, cb) => {
-		/* DEV_MODE ? [FRONTEND_URL, "http://127.0.0.1:3000", "http://localhost:3000"] : FRONTEND_URL */
-		console.log("origin: ", origin);
-	},
+	origin: [FRONTEND_URL],
 	methods: ["GET", "POST", "DELETE", "PUT"],
 	allowedHeaders: ["Content-Type", "Authorization", "Cookie", "Accept"],
-	exposedHeaders: ["Set-Cookie"],
 	credentials: true,
 	optionsSuccessStatus: 200
 })
-
-/*app.addHook('preHandler', (request, reply, done) => {
-	console.log('=== AFTER PARSING ===')
-	console.log("Raw cookies: ", request.headers.cookies)
-	console.log('Parsed cookies:', request.cookies)
-	done()
-})*/
 
 app.register(userRoutes, { prefix: "/user" })
 app.register(jwtRoutes, { prefix: "/auth" })
@@ -43,10 +32,7 @@ app.get("/", async () => {
 	return { message: "112asdasdasda12312312312312321312312sdasdasd3" }
 })
 
-/*app.get("/user", async () => {
-	return { message: "ola user" };
-})
-*/
+
 // Serve API route
 app.get("/api/hello", async () => {
 	return { message: "Hello from Fastify API!" };
@@ -63,5 +49,4 @@ app.listen({ port: PORT, host: "0.0.0.0" }, (err, addr) => {
 		process.exit(1);
 	}
 	console.log(`🚀 Fastify running at ${addr}`);
-	console.log(err);
 });

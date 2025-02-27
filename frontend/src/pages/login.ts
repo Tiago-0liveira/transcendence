@@ -72,31 +72,18 @@ const component = async () => {
 			const username = data.get("username")?.toString() ?? "";
 			const password = data.get("password")?.toString() ?? "";
 			const displayName = data.get("displayName")?.toString() ?? "";
-			const avatarURL = data.get("avatarUrl")?.toString() ?? "";
+			const avatarUrl = data.get("avatarUrl")?.toString() ?? "";
 
-			fetch(backendEndpoint("user"), {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json"
-				},
-				body: JSON.stringify({ username, password, displayName, avatarURL }),
-				credentials: "include"
-			})
-				.then(response => {
-					return response.json()
-				})
-				.then(data => {
-					AuthManager.getInstance().fetchUser();
-					
-					/*fetch(backendEndpoint("user", String(data.message)))
-						.then(response => response.json())
-						.then(({message}) => {
-							console.log(message);
-							window.user = message;
-							Router.getInstance().navigate("/user")
-						})*/
-				})
-				.catch(console.error)
+			const payload: UserParams = { username, password };
+			if (displayName) payload["displayName"] = displayName;
+			if (avatarUrl) payload["avatarUrl"] = avatarUrl;
+
+			const res = await AuthManager.getInstance().login(payload);
+			if (res) {
+				Router.getInstance().navigate("/user");
+			} else {
+				console.error("Login failed");
+			}
 			/*window.user = { username };
 			const route = Router.getInstance().getCurrentRoute();
 			if (!route) {

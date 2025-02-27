@@ -1,6 +1,6 @@
 import Router from "@/router/Router";
 import { BACKEND_URL } from "@/utils/config";
-import { backendEndpoint, normalizePath } from "@/utils/path";
+import { backendEndpoint } from "@/utils/path";
 
 
 class AuthManager {
@@ -11,6 +11,8 @@ class AuthManager {
 	private constructor() {
 		this.user = null;
 		this.accessToken = null;
+		console.log("Will try to recover login")
+		this.fetchUser().then((ok) => { console.log("AuthManager || fetchUser on constructor: ", ok); });
 	}
 
 	public static getInstance() {
@@ -34,44 +36,65 @@ class AuthManager {
 		return localStorage.getItem("refreshToken");
 	}
 
-	public async fetchUser() {
-		const res = await this.fetch("auth/me", {credentials: "include"});
-		console.log(res);
+	public get User() {
+		return this.user;
+	}
+
+	public async fetchUser(): Promise<boolean> {
+		const res = await this.fetch("auth/me", { credentials: "include" });
+		if (!res || !res.ok) return false;
+
+		const body = await res.json();
+		console.log("fetchUser", body);
+		this.user = body.user;
+
+		return true;
 	}
 
 	public async fetch(url: string, options: RequestInit = {}) {
 		url = backendEndpoint(url)
-/*		if (!this.accessToken)
-		{
-			console.info("No access token, trying to refresh!");
-			await this.refreshToken();
-		}
 		const headers = new Headers(options.headers);
-		headers.set("Authorization", `Bearer ${this.GetAccessToken()}`)*/
+		headers.set("Authorization", `Bearer ${this.GetAccessToken()}`)
 
-		const response = await fetch(url, {...options});
+		const response = await fetch(url, { ...options, headers });
+		console.info(response);
 
-		if (response.status === 401)
-		{
-			console.info("Access token expired"/*, trying to refresh!"*/);
-			/*const refreshed = await this.refreshToken();
+		if (!response.ok) {
+			console.info("Access token expired, trying to refresh!");
+			const refreshed = await this.refreshToken();
 			if (!refreshed)
 			{
 				this.logout();
 				return null;
 			}
-			//headers.set("Authorization", `Bearer ${this.GetAccessToken()}`)
-			return fetch(url, {...options});*/
+			headers.set("Authorization", `Bearer ${this.GetAccessToken()}`)
+			return fetch(url, {...options});
 		}
 		return response;
+	}
+
+	public async login(userParams: UserParams): Promise<boolean> {
+		const res = await fetch(backendEndpoint("user"), {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify(userParams),
+			credentials: "include"
+		})
+		if (!res.ok) return false;
+		const data = await res.json();
+		this.accessToken = data.accessToken;
+		
+		return await this.fetchUser();
 	}
 
 	public async refreshToken() {
 		try {
 			const response = await fetch(BACKEND_URL + "auth/refresh", { credentials: "include" });
-	
+
 			if (!response.ok) throw new Error("Refresh failed");
-	
+
 			const data = await response.json();
 			this.accessToken = data.accessToken; // Store the new access token
 			return true;
@@ -81,7 +104,8 @@ class AuthManager {
 			return false;
 		}
 	}
-	
+
+	/* Sends the user to /login and resets accessToken and user in-memory stored data */
 	public async logout(redirect = false) {
 		this.accessToken = null;
 		this.user = null;
