@@ -21,7 +21,7 @@ function createJWT(payload: object, options: Omit<JWTOptions, "iat">, secret: st
 
 	const finalPayload: JWT = { 
 		...options,
-		payload, 
+		payload,
 		iat: now,
 		exp: now + options.exp
 	}

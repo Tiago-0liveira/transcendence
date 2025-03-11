@@ -62,19 +62,37 @@ class AuthManager {
 		if (!response.ok) {
 			console.info("Access token expired, trying to refresh!");
 			const refreshed = await this.refreshToken();
-			if (!refreshed)
-			{
+			if (!refreshed) {
 				this.logout();
 				return null;
 			}
 			headers.set("Authorization", `Bearer ${this.GetAccessToken()}`)
-			return fetch(url, {...options});
+			return fetch(url, { ...options });
 		}
 		return response;
 	}
 
+	public async register(userParams: UserParams): Promise<boolean> {
+		const res = await fetch(backendEndpoint("user/signin"), {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify(userParams)
+		})
+		if (!res.ok) return false;
+		const data = await res.json();
+		return new Promise((resolve, reject) => {
+			if (data.ok) {
+				resolve(true);
+			} else {
+				reject(false);
+			}
+		});
+	}
+
 	public async login(userParams: UserParams): Promise<boolean> {
-		const res = await fetch(backendEndpoint("user"), {
+		const res = await fetch(backendEndpoint("user/login"), {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json"
@@ -85,13 +103,13 @@ class AuthManager {
 		if (!res.ok) return false;
 		const data = await res.json();
 		this.accessToken = data.accessToken;
-		
-		return await this.fetchUser();
+		this.user = data.user;
+		return true;
 	}
 
 	public async refreshToken() {
 		try {
-			const response = await fetch(BACKEND_URL + "auth/refresh", { credentials: "include" });
+			const response = await fetch(backendEndpoint("auth/refresh"), { credentials: "include" });
 
 			if (!response.ok) throw new Error("Refresh failed");
 
@@ -107,10 +125,18 @@ class AuthManager {
 
 	/* Sends the user to /login and resets accessToken and user in-memory stored data */
 	public async logout(redirect = false) {
-		this.accessToken = null;
-		this.user = null;
-		if (redirect)
-			Router.getInstance().navigate("/login")
+		try {
+			const response = await this.fetch("user/logout", { credentials: "include" });
+			this.accessToken = null;
+			this.user = null;
+			if (!response || !response.ok) throw new Error("Refresh failed");
+			return true;
+		} catch (error) {
+			console.log("Could not logout, maybe was already logged out?");
+			if (redirect)
+				Router.getInstance().navigate("/")
+			return false;
+		}
 	}
 }
 

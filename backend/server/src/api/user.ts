@@ -5,7 +5,7 @@ import { authJwtMiddleware } from "../middleware/auth";
 import { JWT_REFRESH_SECRET } from "../config";
 
 export default async function userRoutes(fastify: FastifyInstance) {
-	fastify.post("/", {
+	fastify.post("/signin", {
 		schema: {
 			body: {
 				type: "object",
@@ -33,8 +33,51 @@ export default async function userRoutes(fastify: FastifyInstance) {
 			if (res.error)
 				reply.code(400).send({ message: res.error })
 			else {
-				const accessToken = jwt.sign({}, { exp: 60 * 15, sub: res.result })
+				/*const accessToken = jwt.sign({}, { exp: 60 * 15, sub: res.result })
 				const refreshToken = jwt.sign({}, { exp: 60 * 60 * 24 * 7, sub: res.result }, JWT_REFRESH_SECRET)
+				console.log("accessToken creation:", accessToken);*/
+
+				/*.setCookie("refreshToken", refreshToken, {
+					httpOnly: true,
+					sameSite: "strict",
+					secure: false, // TODO: after enabling https make secure: true aswell
+					expires: new Date(Date.now() + 60 * 60 * 24 * 7 * 1000) // 1 Week
+				})
+				.header('Access-Control-Allow-Credentials', 'true')*/
+				reply
+					.code(200)
+					.send({ ok: true });
+
+			}
+		} catch (error) {
+			reply
+				.code(400)
+				.send({ message: error, ok: false })
+
+		}
+	});
+
+	fastify.post("/login", {
+		schema: {
+			body: {
+				type: "object",
+				required: ["username", "password"],
+				properties: {
+					username: { type: "string" },
+					password: { type: "string" },
+				},
+			}
+		}
+	}, async (request, reply) => {
+		let { username, password } = request.body;
+		try {
+			const res = await Database.getInstance().userTable.login(username, password);
+			if (res.error)
+				reply.code(400).send({ message: res.error })
+			else {
+				console.log("login:", res.result);
+				const accessToken = jwt.sign({}, { exp: 60 * 15, sub: res.result.id })
+				const refreshToken = jwt.sign({}, { exp: 60 * 60 * 24 * 7, sub: res.result.id }, JWT_REFRESH_SECRET)
 				console.log("accessToken creation:", accessToken);
 
 				reply
@@ -43,19 +86,21 @@ export default async function userRoutes(fastify: FastifyInstance) {
 						httpOnly: true,
 						sameSite: "strict",
 						secure: false, // TODO: after enabling https make secure: true aswell
-						expires: new Date(Date.now() + 60 * 60 * 24 * 7 * 1000) /* 1 Week */
+						expires: new Date(Date.now() + 60 * 60 * 24 * 7 * 1000) // 1 Week
 					})
 					.header('Access-Control-Allow-Credentials', 'true')
-					.send({ message: res.result, accessToken });
-
+					.send({ accessToken: accessToken, user: res.result });
 			}
 		} catch (error) {
-			reply
-				.code(400)
-				.send({ message: error })
-
+			reply.code(400).send({message: error})
 		}
-	});
+	})
+
+	fastify.post("/logout", { preHandler: authJwtMiddleware }, async (request, reply) => {
+		reply
+			.clearCookie("refreshToken")
+			.send({ ok: true });
+	})
 
 	// TODO: in the future if we implement JWT we can take the user id from the data stored in that token
 	/*fastify.get("/me", async (request, reply) => {

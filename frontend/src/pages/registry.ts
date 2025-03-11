@@ -1,4 +1,6 @@
 import "@page/index"
 import "@page/404"
-import "@page/login"
+import "@/pages/auth/signin"
+import "@/pages/auth/logout"
+import "@/pages/auth/login"
 import "@page/user"

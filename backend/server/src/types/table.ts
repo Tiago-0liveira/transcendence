@@ -1,3 +1,3 @@
 type DatabaseResult<T> =
-	{ result: T, error: null } |
-	{ error: Error, result: null }
+	{ result: T, error?: undefined } |
+	{ error: Error, result?: undefined }
