@@ -1,18 +1,27 @@
 export class baseElement extends HTMLElement {
-	private ElemEventListeners: any;
-	private isRendered: boolean;
+	#elementEventListeners: {
+		[key: string]: { element: HTMLElement; eventCallback: EventListener }[];
+	} = {};
+	// #elementEventListeners: any;
+	#isRendered = false;
 
 	constructor() {
 		super();
-		this.isRendered = false;
-		this.ElemEventListeners = [];
+		// this.#elementEventListeners = [];
 	}
 	connectedCallback(): void {
-		console.log("hello from connectedCallback");
+		// console.log("hello from connectedCallback");
+		const render = this.render();
+		if (!this.#isRendered && render !== null) {
+			this.innerHTML = this.render() + this.style;
+			this.#isRendered = true;
+			this.postRender();
+		}
+		return;
 	}
 
 	disconnectedCallback(): void {
-		console.log("hello from disconnectedCallback");
+		this.removeEveryElementEventListener();
 	}
 
 	attributeChangedCallback(): void {
@@ -23,6 +32,49 @@ export class baseElement extends HTMLElement {
 		return "";
 	}
 
+	addElementEventListener(
+		element: HTMLElement,
+		event: string,
+		callback: EventListener,
+		callbackInstance: any = this,
+	) {
+		if (element) {
+			if (!this.#elementEventListeners[event]) {
+				this.#elementEventListeners[event] = [];
+			}
+			const eventCallback = callback.bind(callbackInstance);
+			this.#elementEventListeners[event].push({ element, eventCallback });
+			element.addEventListener(event, eventCallback);
+		}
+	}
+
+	removeElementEventListener(element: HTMLElement, event: string) {
+		const evListeners = this.#elementEventListeners[event];
+		if (evListeners) {
+			for (let evListener of evListeners) {
+				if (evListener.element === element) {
+					element.removeEventListener(event, evListener.eventCallback);
+					evListeners.splice(evListeners.indexOf(evListener), 1);
+				}
+			}
+		}
+	}
+
+	removeEveryElementEventListener() {
+		for (let event in this.#elementEventListeners) {
+			if (this.#elementEventListeners.hasOwnProperty(event)) {
+				const eventListeners = this.#elementEventListeners[event];
+				for (const eventListener of eventListeners) {
+					eventListener.element.removeEventListener(
+						event,
+						eventListener.eventCallback,
+					);
+				}
+			}
+		}
+		this.#elementEventListeners = {};
+	}
+
 	updateRender(): string {
 		return this.render() + this.style;
 	}
@@ -30,4 +82,6 @@ export class baseElement extends HTMLElement {
 	getStyle(): string {
 		return "<style></style>";
 	}
+
+	postRender(): void {}
 }
