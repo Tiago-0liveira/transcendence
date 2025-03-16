@@ -2,8 +2,6 @@ import { isValidLoginFormData } from "@/auth/validation";
 import Router from "@/router/Router";
 import { decodeURIfromRoute } from "@/uri-encoding";
 
-
-
 const component = async () => {
 	const template = `
 		<style>
@@ -37,34 +35,26 @@ const component = async () => {
 								onpaste="return false;"
 							/>
 						</div>
-						<div class="flex flex-col mt-2 min-w-50 max-w-90">
-							<label for="displayName" class="ml-1 text-left">Display Name</label>
-							<input type="text" name="displayName" for="displayName" placeholder="Display Name" />
-						</div>
-						<div class="flex flex-col mt-2 min-w-50 max-w-90">
-							<label for="avatarUrl" class="ml-1 text-left">Avatar Url</label>
-							<input type="url" name="avatarUrl" for="avatarUrl" placeholder="Avatar Url" />
-						</div>
 					</div>
-					<button class="w-40">Login</button>
+					<button class="w-40">Sign In</button>
 					<a href="/42-oauth" class="42 oauth absolute right-[-5rem] mb-[3.5rem]"><img class="aspect-auto w-8" src="42-logo.svg" alt="42 school logo svg"></a>
 					<a href="/google-oauth" class="google oauth absolute right-[-5rem] mt-[3.5rem]"><img class="aspect-auto w-8" src="google-logo.svg" alt="Google logo svg"></a>
 				</div>
 			</form>
 		</div>
 	`;
-	document.querySelector('#app')!.innerHTML = template;
+	document.querySelector("#app")!.innerHTML = template;
 
-	const form = document.getElementById("loginForm")
+	const form = document.getElementById("loginForm");
 	if (!form) return;
 
 	form.addEventListener("submit", async (e) => {
-		e.preventDefault()
+		e.preventDefault();
 		const data = new FormData(form as HTMLFormElement);
 		// TODO: change this login form (needs validation here and in the backend)
 		// TODO: just some tests and boilerplate code
 		if (isValidLoginFormData(data)) {
-			// TODO: validate in backend 
+			// TODO: validate in backend
 			// TODO: maybe send a notification here?
 			const username = data.get("username")?.toString() ?? "";
 			const password = data.get("password")?.toString() ?? "";
@@ -74,25 +64,25 @@ const component = async () => {
 			fetch("http://localhost:4000/user", {
 				method: "POST",
 				headers: {
-					"Content-Type": "application/json"
+					"Content-Type": "application/json",
 				},
-				body: JSON.stringify({ username, password, displayName, avatarURL })
+				body: JSON.stringify({ username, password, displayName, avatarURL }),
 			})
-				.then(response => {
+				.then((response) => {
 					if (response.status !== 200) return;
-					return response.json()
+					return response.json();
 				})
-				.then(data => {
-					console.log(data)
+				.then((data) => {
+					console.log(data);
 					fetch(`http://localhost:4000/user/${data.message}`)
-						.then(response => response.json())
-						.then(({message}) => {
+						.then((response) => response.json())
+						.then(({ message }) => {
 							console.log(message);
 							window.user = message;
-							Router.getInstance().navigate("/user")
-						})
+							Router.getInstance().navigate("/user");
+						});
 				})
-				.catch(console.error)
+				.catch(console.error);
 			/*window.user = { username };
 			const route = Router.getInstance().getCurrentRoute();
 			if (!route) {
@@ -109,7 +99,7 @@ const component = async () => {
 				}
 			}*/
 		}
-	})
-}
+	});
+};
 
-Router.getInstance().register({ path: '/login', component });
+Router.getInstance().register({ path: "/login", component });
