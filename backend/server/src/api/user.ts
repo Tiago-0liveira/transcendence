@@ -75,10 +75,8 @@ export default async function userRoutes(fastify: FastifyInstance) {
 			if (res.error)
 				reply.code(400).send({ message: res.error })
 			else {
-				console.log("login:", res.result);
 				const accessToken = jwt.sign({}, { exp: 60 * 15, sub: res.result.id })
 				const refreshToken = jwt.sign({}, { exp: 60 * 60 * 24 * 7, sub: res.result.id }, JWT_REFRESH_SECRET)
-				console.log("accessToken creation:", accessToken);
 
 				reply
 					.code(200)
