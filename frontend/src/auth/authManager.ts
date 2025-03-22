@@ -63,7 +63,6 @@ class AuthManager {
 			console.info("Access token expired, trying to refresh!");
 			const refreshed = await this.refreshToken();
 			if (!refreshed) {
-				this.logout();
 				return null;
 			}
 			headers.set("Authorization", `Bearer ${this.GetAccessToken()}`)
@@ -118,7 +117,7 @@ class AuthManager {
 			return true;
 		} catch (error) {
 			console.log("Refresh token invalid, logging out.");
-			this.logout(true);
+			/* this.logout(true); */
 			return false;
 		}
 	}
