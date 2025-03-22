@@ -65,7 +65,7 @@ class UserTable extends Table<User, UserParams> {
 			)
 		})
 	}
-	async login(username: string, password: string): Promise<DatabaseResult<Omit<UserParams, "password">>> {
+	async login(username: string, password: string): Promise<DatabaseResult<Omit<UserParams, "password"> & { id: number }>> {
 		return new Promise((resolve, reject) => {
 			this.database.database.get(`SELECT id, username, displayName, avatarUrl FROM ${this._tableName} WHERE username = ? AND password = ?`, [username, password], (err, row) => {
 				if (err) reject({ error: err });
