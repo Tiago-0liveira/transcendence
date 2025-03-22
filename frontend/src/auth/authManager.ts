@@ -41,7 +41,7 @@ class AuthManager {
 	}
 
 	public async fetchUser(): Promise<boolean> {
-		const res = await this.fetch("auth/me", { credentials: "include" });
+		const res = await this.authFetch("auth/me", { credentials: "include" });
 		if (!res || !res.ok) return false;
 
 		const body = await res.json();
@@ -51,7 +51,7 @@ class AuthManager {
 		return true;
 	}
 
-	public async fetch(url: string, options: RequestInit = {}) {
+	public async authFetch(url: string, options: RequestInit = {}) {
 		url = backendEndpoint(url)
 		const headers = new Headers(options.headers);
 		headers.set("Authorization", `Bearer ${this.GetAccessToken()}`)
@@ -126,7 +126,7 @@ class AuthManager {
 	/* Sends the user to /login and resets accessToken and user in-memory stored data */
 	public async logout(redirect = false) {
 		try {
-			const response = await this.fetch("user/logout", { credentials: "include" });
+			const response = await this.authFetch("user/logout", { credentials: "include" });
 			this.accessToken = null;
 			this.user = null;
 			if (!response || !response.ok) throw new Error("Refresh failed");
