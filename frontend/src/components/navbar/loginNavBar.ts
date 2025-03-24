@@ -1,4 +1,4 @@
-import { baseElement } from "./baseElement";
+import { baseElement } from "../baseElement";
 
 export class NavBar extends baseElement {
 	constructor() {
