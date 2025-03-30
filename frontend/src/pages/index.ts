@@ -19,17 +19,17 @@ const component = async () => {
 	const template = `
     <nav class="bg-blue-600 text-white p-4 shadow-md">
         <div class="container mx-auto flex justify-between items-center">
-            <a href="/" class="text-xl font-bold">Transcendence</a>
+            <a href="/" class="text-xl font-bold hover:text-purple-400">Transcendence</a>
             <div class="space-x-4">
-                <a href="/login" class="hover:text-blue-300">Sign In</a>
-                <a href="/register" class="hover:text-blue-300">Sign Up</a>
+                <a href="/login" class="hover:text-purple-400">Sign In</a>
+                <a href="/register" class="hover:text-purple-400">Sign Up</a>
             </div>
         </div>
     </nav>
-    <div class="home p-5"> <!-- Added padding for better spacing -->
-        <nav class="mt-4"> <!-- Added margin-top for spacing -->
-            ${userElement}
-        </nav>
+    <div class="flex items-center justify-center min-h-screen"> <!-- Added padding for better spacing -->
+       <span class="px-4 py-4 bg-blue-600 rounded-lg shadow-2xl  hover:text-purple-400 text-white">
+           ${userElement}
+       </span>
     </div>
 	`;
 	document.querySelector("#app")!.innerHTML = template;
