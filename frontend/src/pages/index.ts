@@ -17,17 +17,17 @@ const component = async () => {
 	//      }
 	// } in order to isolate the styles we want to specifically
 	const template = `
-    <nav class="bg-gray-200 shadow-black p-3 dark:bg-gray-700">
-        <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto">
-            <a href="" class="">Transcendence</a>
-            <div class="flex space-x-6">
-                    <a class="" href="#">Sign In</a>
-                    <a class="" href="#">Sign Up</a>
+    <nav class="bg-blue-600 text-white p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="/" class="text-xl font-bold">Transcendence</a>
+            <div class="space-x-4">
+                <a href="/login" class="hover:text-blue-300">Sign In</a>
+                <a href="/register" class="hover:text-blue-300">Sign Up</a>
             </div>
         </div>
     </nav>
-    <div class="home h-40 flex flex-col justify-evenly">
-        <nav>
+    <div class="home p-5"> <!-- Added padding for better spacing -->
+        <nav class="mt-4"> <!-- Added margin-top for spacing -->
             ${userElement}
         </nav>
     </div>
