@@ -17,8 +17,8 @@ const component = async () => {
 	//      }
 	// } in order to isolate the styles we want to specifically
 	const template = `
-    <nav class="top-0 bg-white  dark:bg-blue-900">
-        <div class="max-w-screen-xl border-gray-200 flex items-center justify-between ">
+    <nav class="bg-gray-200 shadow-black p-3 dark:bg-gray-700">
+        <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto">
             <a href="" class="">Transcendence</a>
             <div class="flex space-x-6">
                     <a class="" href="#">Sign In</a>
@@ -26,11 +26,11 @@ const component = async () => {
             </div>
         </div>
     </nav>
-		<div class="home h-40 flex flex-col justify-evenly">
-			<nav>
-				${userElement}
-			</nav>
-		</div>
+    <div class="home h-40 flex flex-col justify-evenly">
+        <nav>
+            ${userElement}
+        </nav>
+    </div>
 	`;
 	document.querySelector("#app")!.innerHTML = template;
 };
