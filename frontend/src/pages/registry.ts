@@ -1,4 +1,9 @@
 import "@page/index";
 import "@page/404";
 import "@page/login";
-import "@page/userProfile";
+import "@page/user";
+import "@page/userSettings";
+import "@page/game";
+import "@page/chat";
+import "@page/chatSettings";
+import "@page/leaderboard";
