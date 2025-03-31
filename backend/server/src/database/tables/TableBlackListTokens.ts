@@ -1,7 +1,7 @@
-import Database from "../Database";
-import Table from "./table"
+import Database from "@db/Database";
+import BaseTable from "@db-table/BaseTable"
 
-class BlackListTokensTable extends Table<BlackListToken, BlackListToken> {
+class BlackListTokensTable extends BaseTable<BlackListToken, BlackListToken> {
 	protected _tableName: string = "black_list_jwt_refresh_tokens";
 
 	protected _createStr = `CREATE TABLE IF NOT EXISTS ${this._tableName} (

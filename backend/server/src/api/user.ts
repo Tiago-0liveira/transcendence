@@ -1,8 +1,8 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import Database from "../database/Database";
-import jwt from "../utils/jwt";
-import { authJwtMiddleware } from "../middleware/auth";
-import { JWT_REFRESH_SECRET } from "../config";
+import Database from "@db/Database";
+import jwt from "@utils/jwt";
+import { authJwtMiddleware } from "@middleware/auth";
+import { JWT_REFRESH_SECRET } from "@config";
 
 export default async function userRoutes(fastify: FastifyInstance) {
 	fastify.post("/signin", {
@@ -90,7 +90,7 @@ export default async function userRoutes(fastify: FastifyInstance) {
 					.send({ accessToken: accessToken, user: res.result });
 			}
 		} catch (error) {
-			reply.code(400).send({message: error})
+			reply.code(400).send({ message: error })
 		}
 	})
 

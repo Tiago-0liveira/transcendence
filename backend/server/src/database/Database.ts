@@ -1,7 +1,7 @@
 import sqlite3 from "sqlite3";
-import { DATABASE_URI, DEV_DROP_DB_ON_START } from "../config"
-import TableUser from "./tables/TableUser";
-import TableBlackListTokens from "./tables/TableBlackListTokens";
+import { DATABASE_URI, DEV_DROP_DB_ON_START } from "@config"
+import TableUser from "@db-table/TableUser";
+import TableBlackListTokens from "@db-table/TableBlackListTokens";
 import fs from "fs"
 
 class Database {

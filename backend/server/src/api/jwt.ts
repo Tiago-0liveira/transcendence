@@ -1,8 +1,8 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { authJwtMiddleware } from "../middleware/auth";
-import Database from "../database/Database";
-import jwt from "../utils/jwt";
-import { JWT_REFRESH_SECRET } from "../config";
+import { authJwtMiddleware } from "@middleware/auth";
+import Database from "@db/Database";
+import jwt from "@utils/jwt";
+import { JWT_REFRESH_SECRET } from "@config";
 
 export default async function jwtRoutes(fastify: FastifyInstance) {
 	fastify.get("/me", { preHandler: authJwtMiddleware }, async (request, reply) => {

@@ -1,8 +1,8 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors"
 import fastifyCookie from "@fastify/cookie"
-import { PORT, DEV_MODE, FRONTEND_URL, JWT_SECRET } from "./config"
-import Database from "./database/Database";
+import { PORT, DEV_MODE, FRONTEND_URL, JWT_SECRET } from "@config"
+import Database from "@db/Database";
 
 import userRoutes from "./api/user";
 import jwtRoutes from "./api/jwt"

@@ -1,6 +1,6 @@
 import type { FastifyReply } from "fastify/types/reply";
 import type { FastifyRequest } from "fastify/types/request";
-import jwt from "../utils/jwt";
+import jwt from "@utils/jwt";
 
 export const authJwtMiddleware = async (request: FastifyRequest, reply: FastifyReply) => {
 	if (!request.headers.authorization || !request.headers.authorization.startsWith("Bearer ")) {

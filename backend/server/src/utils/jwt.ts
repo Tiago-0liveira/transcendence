@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "crypto"
-import { JWT_SECRET } from "../config"
+import { JWT_SECRET } from "@config"
 
 
 
@@ -19,7 +19,7 @@ function createJWT(payload: object, options: Omit<JWTOptions, "iat">, secret: st
 	const header: JWTHeader = { alg: "HS256", typ: "JWT" }
 	const now = Math.floor(Date.now() / 1000)
 
-	const finalPayload: JWT = { 
+	const finalPayload: JWT = {
 		...options,
 		payload,
 		iat: now,
