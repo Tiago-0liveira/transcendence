@@ -69,11 +69,16 @@ const component = async () => {
 				body: JSON.stringify({ username, password, displayName, avatarURL }),
 			})
 				.then((response) => {
-					if (response.status !== 200) return;
+					if (response.status !== 200) {
+						throw new Error(`Server responded with status ${response.status}`);
+					}
 					return response.json();
 				})
 				.then((data) => {
 					console.log(data);
+					if (!data || !data.message) {
+						throw new Error("Invalid response: missing message property");
+					}
 					fetch(`http://localhost:4000/user/${data.message}`)
 						.then((response) => response.json())
 						.then(({ message }) => {
