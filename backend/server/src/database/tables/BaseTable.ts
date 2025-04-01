@@ -1,6 +1,6 @@
-import Database from "../Database";
+import Database from "@db/Database";
 
-abstract class Table<T, TPARAMS> {
+abstract class BaseTable<T, TPARAMS> {
 	protected database: Database;
 
 	protected abstract _tableName: string;
@@ -34,4 +34,4 @@ abstract class Table<T, TPARAMS> {
 	abstract update(id: number, params: TPARAMS): Promise<DatabaseResult<number>>;
 }
 
-export default Table;
+export default BaseTable;

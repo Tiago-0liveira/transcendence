@@ -6,12 +6,20 @@
 		"esModuleInterop": true, // Enable compatibility with commonjs modules
 		"skipLibCheck": true, // Skip library checks for performance
 		"outDir": "./dist", // Output directory for compiled files
-		"strict": true // Enable all strict type-checking options
+		"strict": true, // Enable all strict type-checking options
+		"paths": {
+			"@middleware/*": ["./src/middleware/*"],
+			"@enums/*": ["./src/enums/*"],
+			"@db/*": ["./src/database/*"],
+			"@db-table/*": ["./src/database/tables/*"],
+			"@utils/*": ["./src/utils/*"],
+			"@config": ["./src/config"],
+		},
 	},
 	"include": [
 		"src/**/*.ts"
 	], // Include all .ts files in the src folder
 	"exclude": [
 		"node_modules"
-	] // Exclude node_modules
+	], // Exclude node_modules
 }
