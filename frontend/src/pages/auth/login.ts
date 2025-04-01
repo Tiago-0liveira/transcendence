@@ -43,12 +43,21 @@ const component = async () => {
 							</div>
 						</div>
 						
-						<a href="/signin" class="link h-10">Don't have an account?</a>
+						<div>
+							<a href="/signin" class="link h-10">Don't have an account?</a>
+							<div class="flex flex-row justify-evenly mt-2">
+								<span id="42-oauth" class="hover:cursor-pointer rounded-md p-2 transition-colors hover:bg-zinc-900">
+									<img class="aspect-auto w-8" src="42-logo.svg" alt="42 school logo svg">
+								</span>
+								<span id="google-oauth" class="hover:cursor-pointer rounded-md p-2 transition-colors hover:bg-zinc-900">
+									<img class="aspect-auto w-8" src="google-logo.svg" alt="Google logo svg">
+								</span>
+							</div>
+						</div>
 					</div>
 					
 					<button class="w-40">Login</button>
-					<a href="/42-oauth" class="42 oauth absolute right-[-5rem] mb-[3.5rem]"><img class="aspect-auto w-8" src="42-logo.svg" alt="42 school logo svg"></a>
-					<a href="/google-oauth" class="google oauth absolute right-[-5rem] mt-[3.5rem]"><img class="aspect-auto w-8" src="google-logo.svg" alt="Google logo svg"></a>
+					
 				</div>
 			</form>
 		</div>
@@ -57,6 +66,26 @@ const component = async () => {
 
 	const form = document.getElementById("loginForm")
 	if (!form) return;
+
+	const googleOauth = document.getElementById("google-oauth");
+	const fortyTwoOauth = document.getElementById("42-oauth");
+
+	console.log(google)
+
+	if (googleOauth) {
+		googleOauth.addEventListener("click", () => {
+			google.accounts.oauth2.initCodeClient({
+				client_id: GOOGLE_CLIENT_ID,
+				scope: "profile email",
+				ux_mode: "popup", // Use "popup" instead of "redirect"
+				callback: (response) => {
+					console.log("User authenticated:", response);
+				},
+			}).requestCode();
+		})
+	} else {
+		/* disable button so user knows google auth is disabled */
+	}
 
 	form.addEventListener("submit", async (e) => {
 		e.preventDefault()

@@ -24,6 +24,9 @@ export default defineConfig({
     port: 3000,
 	strictPort: true,
 	historyApiFallback: true,
-	host: "0.0.0.0"
+	host: "0.0.0.0",
+	headers: {
+		"Cross-Origin-Opener-Policy": "same-origin-allow-popups"
+	}
   }
 });

@@ -99,6 +99,7 @@ class AuthManager {
 			body: JSON.stringify(userParams),
 			credentials: "include"
 		})
+		console.log("login res:", res);
 		if (!res.ok) return false;
 		const data = await res.json();
 		this.accessToken = data.accessToken;

@@ -4,9 +4,9 @@ import Router from "@/router/Router";
 const component = async () => {
 
 	const loggedIn = Boolean(AuthManager.getInstance().User);
-	
-	const userElement = loggedIn ? 
-		"<a href=\"/user\">My User</a><a href=\"/logout\">Logout</a>" : 
+
+	const userElement = loggedIn ?
+		"<a href=\"/user\">My User</a><a href=\"/logout\">Logout</a>" :
 		"<a href=\"/login\">Login</a>"
 
 	const template = `
