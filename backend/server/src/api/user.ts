@@ -3,6 +3,8 @@ import Database from "@db/Database";
 import jwt from "@utils/jwt";
 import { authJwtMiddleware } from "@middleware/auth";
 import { JWT_REFRESH_SECRET } from "@config";
+import { UserAuthMethod } from "@enums/enums";
+import { OAuth2Client } from "google-auth-library";
 
 export default async function userRoutes(fastify: FastifyInstance) {
 	fastify.post("/signin", {
@@ -15,11 +17,12 @@ export default async function userRoutes(fastify: FastifyInstance) {
 					displayName: { type: "string", nullable: true },
 					avatarUrl: { type: "string", format: "uri", nullable: true },
 					password: { type: "string" },
+					authMethod: { type: "string", enum: [UserAuthMethod.LOCAL, UserAuthMethod.GOOGLE, UserAuthMethod.FORTY_TWO], default: UserAuthMethod.LOCAL },
 				},
 			},
 		},
 	}, async (request: FastifyRequest<{ Body: UserParams }>, reply: FastifyReply) => {
-		let { username, displayName, avatarUrl, password } = request.body;
+		let { username, displayName, avatarUrl, password, authMethod } = request.body;
 
 		if (!displayName)
 			displayName = username;
@@ -29,7 +32,7 @@ export default async function userRoutes(fastify: FastifyInstance) {
 		// TODO: validate all input
 
 		try {
-			const res = await Database.getInstance().userTable.new({ username, displayName, avatarUrl, password })
+			const res = await Database.getInstance().userTable.new({ username, displayName, avatarUrl, password, authMethod })
 			if (res.error)
 				reply.code(400).send({ message: res.error })
 			else {
