@@ -1,20 +1,19 @@
 export class baseElement extends HTMLElement {
-	#elementEventListeners: {
+	private elementEventListeners: {
 		[key: string]: { element: HTMLElement; eventCallback: EventListener }[];
 	} = {};
-	// #elementEventListeners: any;
-	#isRendered = false;
+	// elementEventListeners: any;
+	private isRendered = false;
 
 	constructor() {
 		super();
-		// this.#elementEventListeners = [];
+		// this.elementEventListeners = [];
 	}
 	connectedCallback(): void {
 		// console.log("hello from connectedCallback");
-		const render = this.render();
-		if (!this.#isRendered && render !== null) {
+		if (!this.isRendered && this.render() !== null) {
 			this.innerHTML = this.render() + this.style;
-			this.#isRendered = true;
+			this.isRendered = true;
 			this.postRender();
 		}
 		return;
@@ -39,17 +38,17 @@ export class baseElement extends HTMLElement {
 		callbackInstance: any = this,
 	) {
 		if (element) {
-			if (!this.#elementEventListeners[event]) {
-				this.#elementEventListeners[event] = [];
+			if (!this.elementEventListeners[event]) {
+				this.elementEventListeners[event] = [];
 			}
 			const eventCallback = callback.bind(callbackInstance);
-			this.#elementEventListeners[event].push({ element, eventCallback });
+			this.elementEventListeners[event].push({ element, eventCallback });
 			element.addEventListener(event, eventCallback);
 		}
 	}
 
 	removeElementEventListener(element: HTMLElement, event: string) {
-		const evListeners = this.#elementEventListeners[event];
+		const evListeners = this.elementEventListeners[event];
 		if (evListeners) {
 			for (let evListener of evListeners) {
 				if (evListener.element === element) {
@@ -61,9 +60,9 @@ export class baseElement extends HTMLElement {
 	}
 
 	removeEveryElementEventListener() {
-		for (let event in this.#elementEventListeners) {
-			if (this.#elementEventListeners.hasOwnProperty(event)) {
-				const eventListeners = this.#elementEventListeners[event];
+		for (let event in this.elementEventListeners) {
+			if (this.elementEventListeners.hasOwnProperty(event)) {
+				const eventListeners = this.elementEventListeners[event];
 				for (const eventListener of eventListeners) {
 					eventListener.element.removeEventListener(
 						event,
@@ -72,7 +71,7 @@ export class baseElement extends HTMLElement {
 				}
 			}
 		}
-		this.#elementEventListeners = {};
+		this.elementEventListeners = {};
 	}
 
 	updateRender(): string {
