@@ -2,7 +2,7 @@ import { isValidLoginFormData } from "@/auth/validation";
 import Router from "@/router/Router";
 import AuthManager from "@/auth/authManager"
 import { decodeURIfromRoute } from "@/uri-encoding";
-import { BACKEND_URL, GOOGLE_CLIENT_ID } from "@/utils/config";
+import { BACKEND_URL, GOOGLE_CLIENT_ID, GOOGLE_OAUTH_ENABLED } from "@/utils/config";
 import { backendEndpoint, normalizePath } from "@/utils/path";
 
 
@@ -72,7 +72,7 @@ const component = async () => {
 
 	console.log(google)
 
-	if (googleOauth) {
+	if (googleOauth && GOOGLE_OAUTH_ENABLED) {
 		googleOauth.addEventListener("click", () => {
 			google.accounts.oauth2.initCodeClient({
 				client_id: GOOGLE_CLIENT_ID,
