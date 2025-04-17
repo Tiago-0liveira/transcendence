@@ -54,7 +54,30 @@ class Router {
 		this.routes.set(path, config);
 	}
 
-	public async navigate(url: string): Promise<void> {
+	public async navigate(pathOrUrl: string, routeParams?: RouteParams, queryParams?: QueryParams): Promise<void> {
+		let url = pathOrUrl;
+		if (routeParams || queryParams) {
+			if (routeParams) {
+				Object.entries(routeParams).forEach(([key, value]) => {
+					url = url.replace(`:${key}`, encodeURIComponent(String(value)));
+				});
+			}
+
+			if (queryParams && Object.keys(queryParams).length > 0) {
+				const searchParams = new URLSearchParams();
+				Object.entries(queryParams).forEach(([key, value]) => {
+					if (value !== undefined && value !== null) {
+						searchParams.append(key, String(value));
+					}
+				});
+
+				const queryString = searchParams.toString();
+				if (queryString) {
+					url += (url.includes('?') ? '&' : '?') + queryString;
+				}
+			}
+		}
+
 		const fullUrl = new URL(url, window.location.origin);
 		const path = this.mode === 'hash'
 			? fullUrl.hash.slice(1) || '/'
@@ -67,6 +90,27 @@ class Router {
 		}
 
 		await this.handleRoute();
+	}
+
+	public parseUri(uri: string): {
+		path: string;
+		params: RouteParams;
+		query: QueryParams;
+	} {
+		const url = new URL(uri, window.location.origin);
+
+		// Extract the path based on the router mode
+		const path = this.mode === 'hash'
+			? url.hash.slice(1) || '/'
+			: url.pathname.slice(this.baseUrl.length) || '/';
+
+		// Use existing methods to find matching route and extract params
+		const { params } = this.findMatchingRoute(path);
+
+		// Use existing method to parse query params
+		const query = this.parseQueryParams(url.search);
+
+		return { path, params, query };
 	}
 
 	private async handleRoute(): Promise<void> {
@@ -107,10 +151,10 @@ class Router {
 				}
 			}
 
+			this.currentRoute = newRoute;
 			// Render component
 			await route.component();
 
-			this.currentRoute = newRoute;
 
 		} catch (error: any) {
 			console.error('Routing error:', error);
