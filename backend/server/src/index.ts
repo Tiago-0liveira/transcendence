@@ -6,6 +6,7 @@ import Database from "@db/Database";
 
 import userRoutes from "./api/user";
 import jwtRoutes from "./api/jwt"
+import oauthRoutes from "./api/oauth";
 
 const db = Database.getInstance();
 const app = Fastify({ logger: true });
@@ -26,7 +27,8 @@ app.register(cors, {
 
 app.register(userRoutes, { prefix: "/user" })
 app.register(jwtRoutes, { prefix: "/auth" })
-
+app.register(oauthRoutes, { prefix: "/oauth" })
+	
 
 app.get("/", async () => {
 	return { message: "112asdasdasda12312312312312321312312sdasdasd3" }
