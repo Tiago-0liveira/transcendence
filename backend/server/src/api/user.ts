@@ -78,17 +78,12 @@ export default async function userRoutes(fastify: FastifyInstance) {
 			if (res.error)
 				reply.code(400).send({ message: res.error })
 			else {
-				const accessToken = jwt.sign({}, { exp: 60 * 15, sub: res.result.id })
-				const refreshToken = jwt.sign({}, { exp: 60 * 60 * 24 * 7, sub: res.result.id }, JWT_REFRESH_SECRET)
+				const accessToken = jwt.sign({}, DEFAULTS.jwt.accessToken.options(String(res.result.id)))
+				const refreshToken = jwt.sign({}, DEFAULTS.jwt.refreshToken.options(String(res.result.id)), JWT_REFRESH_SECRET)
 
 				reply
 					.code(200)
-					.setCookie("refreshToken", refreshToken, {
-						httpOnly: true,
-						sameSite: "strict",
-						secure: false, // TODO: after enabling https make secure: true aswell
-						expires: new Date(Date.now() + 60 * 60 * 24 * 7 * 1000) // 1 Week
-					})
+					.setCookie("refreshToken", refreshToken, DEFAULTS.cookies.oauthToken.options())
 					.header('Access-Control-Allow-Credentials', 'true')
 					.send({ accessToken: accessToken, user: res.result });
 			}
