@@ -7,6 +7,7 @@ class AuthManager {
 	private static instance: AuthManager;
 	private user: UserNoPass | null;
 	private accessToken: string | null;
+	/*private*/
 
 	private constructor() {
 		this.user = null;
@@ -71,6 +72,8 @@ class AuthManager {
 		return response;
 	}
 
+	/* Default login */
+	/* TODO: make this request get the jwt cookie from the backend so it logins right after sign up UX all the way */
 	public async register(userParams: UserParams): Promise<boolean> {
 		const res = await fetch(backendEndpoint("user/signin"), {
 			method: "POST",
@@ -81,13 +84,72 @@ class AuthManager {
 		})
 		if (!res.ok) return false;
 		const data = await res.json();
-		return new Promise((resolve, reject) => {
-			if (data.ok) {
-				resolve(true);
-			} else {
-				reject(false);
+		return data.ok
+	}
+
+	public async oauthGoogleLogin(googleCode: string): Promise<string | null> {
+		const res = await fetch(backendEndpoint("oauth/login/google"), {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify({ code: googleCode }),
+			credentials: "include"
+		})
+		const data = await res.json()
+		if (!res.ok) {
+			// TODO: send notification here
+			console.error("/oauth/login/google error:", data.error);
+			return data.error;
+		}
+		this.accessToken = data.accessToken;
+
+		await this.fetchUser()
+		return data.error || null;
+	}
+	/* returns null if succeeded
+		else return the error
+	*/
+	public async oauthGoogleSignUp(googleCode: string): Promise<string | null> {
+		const res = await fetch(backendEndpoint("oauth/signup/google"), {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify({ code: googleCode }),
+			credentials: "include"
+		})
+		const data = await res.json();
+		if (!res.ok) {
+			console.error("/oauth/signup/google error:", data.error)
+			return data.error;
+		}
+		return data.error || null;
+	}
+
+	public async oauthGoogleCompleteSignUp(userParams: UserParamsNoPass): Promise<string | null> {
+		const res = await fetch(backendEndpoint("oauth/signup/google/complete"), {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify({ user: userParams }),
+			credentials: "include"
+		})
+		const data = await res.json()
+		if (!res.ok) {
+			// TODO: send notification here
+			console.error("/oauth/signup/google/complete error:", data.error);
+			if (res.status === 401) {
+				Router.getInstance().navigate("/login")
 			}
-		});
+
+			return data.error;
+		}
+		this.accessToken = data.accessToken;
+
+		await this.fetchUser()
+		return data.error || null;
 	}
 
 	public async login(userParams: UserParams): Promise<boolean> {
@@ -99,11 +161,11 @@ class AuthManager {
 			body: JSON.stringify(userParams),
 			credentials: "include"
 		})
-		console.log("login res:", res);
 		if (!res.ok) return false;
 		const data = await res.json();
 		this.accessToken = data.accessToken;
-		this.user = data.user;
+		
+		await this.fetchUser()
 		return true;
 	}
 

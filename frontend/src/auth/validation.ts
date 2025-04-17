@@ -1,3 +1,4 @@
+// TODO: make validations better
 
 export const isValidLoginFormData = (_data: FormData): boolean => {
 
@@ -19,6 +20,20 @@ export const isValidLoginFormData = (_data: FormData): boolean => {
 		if (displayName.length < 4 || displayName.length > 17) { return false; }
 		// TODO: we could remove curse or strong words (maybe install node js lib with dictionary ?? or just leave it like this)
 	}
+
+	return true;
+}
+
+export const isValidGoogleOauthFormData = (_data: FormData): boolean => {
+	const username_entry = _data.get("username");
+	const displayName_entry = _data.get("displayName");
+	const avatarUrl_entry = _data.get("avatarUrl");
+
+	if (!username_entry) { return false; }
+
+	const username = username_entry.toString();
+
+	if (username.length < 5 || username.length > 17) { return false; }
 
 	return true;
 }

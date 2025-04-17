@@ -70,20 +70,32 @@ const component = async () => {
 	const googleOauth = document.getElementById("google-oauth");
 	const fortyTwoOauth = document.getElementById("42-oauth");
 
-	console.log(google)
-
-	if (googleOauth) {
+	if (googleOauth && google?.accounts?.oauth2?.initCodeClient) {
 		googleOauth.addEventListener("click", () => {
+			console.log("her32")
 			google.accounts.oauth2.initCodeClient({
 				client_id: GOOGLE_CLIENT_ID,
 				scope: "profile email",
-				ux_mode: "popup", // Use "popup" instead of "redirect"
+				ux_mode: "popup",
 				callback: (response) => {
-					console.log("User authenticated:", response);
+					if (response.error) {
+						console.error("google callback error:", response.error)
+						return;
+					}
+
+					AuthManager.getInstance().oauthGoogleLogin(response.code).then(err => {
+						if (!err)
+							Router.getInstance().navigate("/user")
+						else
+							console.error("oauthGoogleLogin err: ", err)
+					})
+					
 				},
 			}).requestCode();
 		})
 	} else {
+		console.log("here");
+		googleOauth?.setAttribute("disabled", "true");
 		/* disable button so user knows google auth is disabled */
 	}
 
