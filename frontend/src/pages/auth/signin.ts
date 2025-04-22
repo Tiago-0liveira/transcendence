@@ -128,7 +128,7 @@ const component = async () => {
 
 			const res = await AuthManager.getInstance().register(payload);
 			if (res) {
-				Router.getInstance().navigate("/login");
+				Router.getInstance().navigate("/user");
 			} else {
 				console.error("Sigin failed");
 			}

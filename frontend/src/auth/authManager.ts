@@ -84,6 +84,9 @@ class AuthManager {
 		})
 		if (!res.ok) return false;
 		const data = await res.json();
+		this.accessToken = data.accessToken;
+
+		await this.fetchUser()
 		return data.ok
 	}
 

@@ -4,7 +4,6 @@ import jwt from "@utils/jwt";
 import { authJwtMiddleware } from "@middleware/auth";
 import { JWT_REFRESH_SECRET } from "@config";
 import { UserAuthMethod } from "@enums/enums";
-import { OAuth2Client } from "google-auth-library";
 import DEFAULTS from "@utils/defaults";
 
 export default async function userRoutes(fastify: FastifyInstance) {
@@ -35,10 +34,19 @@ export default async function userRoutes(fastify: FastifyInstance) {
 
 		try {
 			const res = await Database.getInstance().userTable.new({ username, displayName, avatarUrl, password, authProvider })
+			console.log("/signin res:", res);
 			if (res.error)
-				reply.code(400).send({ message: res.error })
-			else 
-				reply.code(200).send({ ok: true });
+				return reply.code(400).send({ message: res.error })
+			else {
+				const accessToken = jwt.sign({}, DEFAULTS.jwt.accessToken.options(String(res.result)))
+				const refreshToken = jwt.sign({}, DEFAULTS.jwt.refreshToken.options(String(res.result)), JWT_REFRESH_SECRET)
+
+				reply
+					.code(200)
+					.setCookie("refreshToken", refreshToken, DEFAULTS.cookies.oauthToken.options())
+					.header('Access-Control-Allow-Credentials', 'true')
+					.send({ accessToken: accessToken, ok: true });
+			}
 			
 		} catch (error) {
 			reply
