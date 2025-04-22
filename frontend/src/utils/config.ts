@@ -5,7 +5,13 @@ console.log(import.meta.env)
 
 if (!BACKEND_URL)
     throw new Error("VITE_BACKEND_URL is necessary in the .env file! Please define it")
-if (!GOOGLE_CLIENT_ID)
-	throw new Error("VITE_GOOGLE_CLIENT_ID is necessary in the .env file! Please define it")
+const GOOGLE_OAUTH_ENABLED = Boolean(GOOGLE_CLIENT_ID);
+if (!GOOGLE_OAUTH_ENABLED)
+{
+	console.warn("VITE_GOOGLE_CLIENT_ID is necessary in the .env file! Please define it")
+}
 
-export { BACKEND_URL, GOOGLE_CLIENT_ID }
+export { 
+	BACKEND_URL, 
+	GOOGLE_OAUTH_ENABLED, GOOGLE_CLIENT_ID
+}
