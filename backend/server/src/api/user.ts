@@ -94,18 +94,4 @@ export default async function userRoutes(fastify: FastifyInstance) {
 			.clearCookie("refreshToken")
 			.send({ ok: true });
 	})
-
-	fastify.get("/:id", { preHandler: authJwtMiddleware }, async (request, reply) => {
-		const { id } = request.params as { id: string };
-		try {
-			const numberId = Number(id);
-			const res = await Database.getInstance().userTable.getById(numberId);
-			if (res.error) {
-				return reply.code(400).send({ message: res.error });
-			}
-			return { message: res.result };
-		} catch (error) {
-			return reply.code(400).send({ message: error })
-		}
-	});
 }
