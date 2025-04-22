@@ -4,7 +4,7 @@ import jwt from "@utils/jwt";
 import { authJwtMiddleware } from "@middleware/auth";
 import { JWT_REFRESH_SECRET } from "@config";
 import { UserAuthMethod } from "@enums/enums";
-import { OAuth2Client } from "google-auth-library";
+import DEFAULTS from "@utils/defaults";
 
 export default async function userRoutes(fastify: FastifyInstance) {
 	fastify.post("/signin", {
@@ -17,12 +17,13 @@ export default async function userRoutes(fastify: FastifyInstance) {
 					displayName: { type: "string", nullable: true },
 					avatarUrl: { type: "string", format: "uri", nullable: true },
 					password: { type: "string" },
-					authMethod: { type: "string", enum: [UserAuthMethod.LOCAL, UserAuthMethod.GOOGLE, UserAuthMethod.FORTY_TWO], default: UserAuthMethod.LOCAL },
+					authProvider: { type: "string", enum: Object.values(UserAuthMethod), default: UserAuthMethod.LOCAL },
 				},
 			},
 		},
 	}, async (request: FastifyRequest<{ Body: UserParams }>, reply: FastifyReply) => {
-		let { username, displayName, avatarUrl, password, authMethod } = request.body;
+		// TODO: make this add the jwt cookies so the user log's in right away
+		let { username, displayName, avatarUrl, password, authProvider } = request.body;
 
 		if (!displayName)
 			displayName = username;
@@ -32,26 +33,21 @@ export default async function userRoutes(fastify: FastifyInstance) {
 		// TODO: validate all input
 
 		try {
-			const res = await Database.getInstance().userTable.new({ username, displayName, avatarUrl, password, authMethod })
+			const res = await Database.getInstance().userTable.new({ username, displayName, avatarUrl, password, authProvider })
+			console.log("/signin res:", res);
 			if (res.error)
-				reply.code(400).send({ message: res.error })
+				return reply.code(400).send({ message: res.error })
 			else {
-				/*const accessToken = jwt.sign({}, { exp: 60 * 15, sub: res.result })
-				const refreshToken = jwt.sign({}, { exp: 60 * 60 * 24 * 7, sub: res.result }, JWT_REFRESH_SECRET)
-				console.log("accessToken creation:", accessToken);*/
+				const accessToken = jwt.sign({}, DEFAULTS.jwt.accessToken.options(String(res.result)))
+				const refreshToken = jwt.sign({}, DEFAULTS.jwt.refreshToken.options(String(res.result)), JWT_REFRESH_SECRET)
 
-				/*.setCookie("refreshToken", refreshToken, {
-					httpOnly: true,
-					sameSite: "strict",
-					secure: false, // TODO: after enabling https make secure: true aswell
-					expires: new Date(Date.now() + 60 * 60 * 24 * 7 * 1000) // 1 Week
-				})
-				.header('Access-Control-Allow-Credentials', 'true')*/
 				reply
 					.code(200)
-					.send({ ok: true });
-
+					.setCookie("refreshToken", refreshToken, DEFAULTS.cookies.oauthToken.options())
+					.header('Access-Control-Allow-Credentials', 'true')
+					.send({ accessToken: accessToken, ok: true });
 			}
+			
 		} catch (error) {
 			reply
 				.code(400)
@@ -71,26 +67,22 @@ export default async function userRoutes(fastify: FastifyInstance) {
 				},
 			}
 		}
-	}, async (request, reply) => {
+	}, async (request: FastifyRequest<{Body: { username: string, password: string }}>, reply) => {
 		let { username, password } = request.body;
+
 		try {
 			const res = await Database.getInstance().userTable.login(username, password);
 			if (res.error)
 				reply.code(400).send({ message: res.error })
 			else {
-				const accessToken = jwt.sign({}, { exp: 60 * 15, sub: res.result.id })
-				const refreshToken = jwt.sign({}, { exp: 60 * 60 * 24 * 7, sub: res.result.id }, JWT_REFRESH_SECRET)
+				const accessToken = jwt.sign({}, DEFAULTS.jwt.accessToken.options(String(res.result.id)))
+				const refreshToken = jwt.sign({}, DEFAULTS.jwt.refreshToken.options(String(res.result.id)), JWT_REFRESH_SECRET)
 
 				reply
 					.code(200)
-					.setCookie("refreshToken", refreshToken, {
-						httpOnly: true,
-						sameSite: "strict",
-						secure: false, // TODO: after enabling https make secure: true aswell
-						expires: new Date(Date.now() + 60 * 60 * 24 * 7 * 1000) // 1 Week
-					})
+					.setCookie("refreshToken", refreshToken, DEFAULTS.cookies.oauthToken.options())
 					.header('Access-Control-Allow-Credentials', 'true')
-					.send({ accessToken: accessToken, user: res.result });
+					.send({ accessToken: accessToken });
 			}
 		} catch (error) {
 			reply.code(400).send({ message: error })
@@ -102,11 +94,6 @@ export default async function userRoutes(fastify: FastifyInstance) {
 			.clearCookie("refreshToken")
 			.send({ ok: true });
 	})
-
-	// TODO: in the future if we implement JWT we can take the user id from the data stored in that token
-	/*fastify.get("/me", async (request, reply) => {
-		const {}
-	})*/
 
 	fastify.get("/:id", { preHandler: authJwtMiddleware }, async (request, reply) => {
 		const { id } = request.params as { id: string };

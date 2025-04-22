@@ -21,6 +21,14 @@ const FRONTEND_URL = process.env.FRONTEND_URL;
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
 
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET_ID;
+const GOOGLE_AUTH_ENABLED = GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET;
+if (!GOOGLE_AUTH_ENABLED)
+	console.warn("GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET env variables are not defined! This will cause Google OAuth to fail.");
+else 
+	console.info("Google OAuth is enabled.");
+
 // Drop the database on server start
 // only works in development mode
 const DEV_DROP_DB_ON_START = DEV_MODE ? process.env.DEV_DROP_DB_ON_START === "true" : false;
@@ -35,4 +43,10 @@ fs.mkdir(DATABASE_FILE_DIR, {recursive: true}, (err) => {
 
 const DATABASE_URI = path.join(DATABASE_FILE_DIR, DEV_MODE ? "dev.db" : "prod.db");
 
-export { PORT, DEV_MODE, JWT_SECRET, JWT_REFRESH_SECRET, DATABASE_URI, FRONTEND_URL, DEV_DROP_DB_ON_START };
+export { 
+	PORT, DEV_MODE, 
+	JWT_SECRET, JWT_REFRESH_SECRET,
+	DATABASE_URI, DEV_DROP_DB_ON_START,
+	GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_AUTH_ENABLED,
+	FRONTEND_URL
+};
