@@ -7,12 +7,15 @@
 		"skipLibCheck": true, // Skip library checks for performance
 		"outDir": "./dist", // Output directory for compiled files
 		"strict": true, // Enable all strict type-checking options
+		"strictNullChecks": true,
 		"paths": {
 			"@middleware/*": ["./src/middleware/*"],
 			"@enums/*": ["./src/enums/*"],
 			"@db/*": ["./src/database/*"],
 			"@db-table/*": ["./src/database/tables/*"],
 			"@utils/*": ["./src/utils/*"],
+			"@api/*": ["./src/api/*"],
+			"@types/*": ["./src/types/*"],
 			"@config": ["./src/config"],
 		},
 	},

@@ -16,3 +16,4 @@ interface User extends UserParams {
 }
 
 type UserNoPass = Omit<User, "password">
+type UserParamsNoPass = Omit<UserParams, "password">
