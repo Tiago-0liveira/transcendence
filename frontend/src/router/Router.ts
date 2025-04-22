@@ -153,7 +153,11 @@ class Router {
 
 			this.currentRoute = newRoute;
 			// Render component
-			await route.component();
+			const componentCleanupFunc = await route.component();
+			if (componentCleanupFunc)
+			{
+				componentCleanupFunc();
+			}
 
 
 		} catch (error: any) {

@@ -3,7 +3,7 @@ type QueryParams = Record<string, string>;
 
 interface RouteConfig {
 	path: string;
-	component: () => Promise<void> | void;
+	component: () => Promise<void | (() => void)>;
 	guards?: RouteGuard[];
 	middleware?: Middleware[];
 }

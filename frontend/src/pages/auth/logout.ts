@@ -18,6 +18,8 @@ const component = async () => {
 		<img src="/loading.svg" class="w-10 h-10" alt="loading spinner" />
 	`;
 
+	let timeout: null | number = null;
+
 	AuthManager.getInstance().logout().then((ok) => {
 		if (ok) {
 			h1Element!.innerHTML = `
@@ -32,7 +34,7 @@ const component = async () => {
 				<span>Redirecting to home in 4 seconds...</span>
 			`;
 		}
-		setTimeout(() => {
+		timeout = setTimeout(() => {
 			Router.getInstance().navigate("/");
 		}, 4000);
 	}).catch((error) => {
@@ -41,10 +43,16 @@ const component = async () => {
 			<img src="/cross.svg" class="w-10 h-10" alt="cross" />
 			<span>Redirecting to home in 4 seconds...</span>
 		`;
-		setTimeout(() => {
+		timeout = setTimeout(() => {
 			Router.getInstance().navigate("/");
 		}, 4000);
 	})
+	
+	return () => {
+		if (timeout) {
+			clearTimeout(timeout);
+		}
+	}
 }
 
 Router.getInstance().register({ path: '/logout', component });
