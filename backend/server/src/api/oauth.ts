@@ -54,7 +54,7 @@ export default async function oauthRoutes(fastify: FastifyInstance) {
 			}
 		
 			const accessToken = jwt.sign({}, DEFAULTS.jwt.accessToken.options(res.id))
-			const refreshToken = jwt.sign({}, DEFAULTS.jwt.accessToken.options(res.id), JWT_REFRESH_SECRET)
+			const refreshToken = jwt.sign({}, DEFAULTS.jwt.refreshToken.options(res.id), JWT_REFRESH_SECRET)
 
 			reply
 				.code(200)
@@ -69,6 +69,15 @@ export default async function oauthRoutes(fastify: FastifyInstance) {
 
 	fastify.post("/signup/google", {
 		preHandler: [googleOauthMiddleware],
+		schema: {
+			body: {
+				type: "object",
+				required: ["code"],
+				properties: {
+					code: { type: "string" },
+				},
+			},
+		}
 	},	async (request: FastifyRequest<{Body: {code: string}}>, reply) => {
 		try {
 			if (!googleClient) {
