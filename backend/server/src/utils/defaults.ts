@@ -4,19 +4,19 @@ import type { CookieSerializeOptions } from "@fastify/cookie"
 const BaseHttpCookieOptions: Partial<CookieSerializeOptions> = {
 	httpOnly: true,
 	sameSite: "strict",
-	secure: false, // TODO: after enabling https make secure: true aswell
+	secure: false, // TODO: after enabling https make secure: true aswell	
 }
 
 const DEFAULTS = {
 	jwt: {
 		accessToken: {
-			options: (sub: string) => ({ exp: 60 * 15, sub }),
+			options: (sub: string) => ({ sub, exp: 60 * 15 }),
 		},
 		refreshToken: {
-			options: (sub: string) => ({ exp: 60 * 60 * 24 * 7, sub }),
+			options: (sub: string) => ({ sub, exp: 60 * 60 * 24 * 7 }),
 		},
 		oauthToken: {
-			options: (sub: string) => ({ exp: 60 * 15, sub })
+			options: (sub: string) => ({ sub, exp: 60 * 15 })
 		}
 	},
 	cookies: {
@@ -29,7 +29,8 @@ const DEFAULTS = {
 		refreshToken: {
 			options: (): CookieSerializeOptions => ({
 				...BaseHttpCookieOptions,
-				expires: new Date(Date.now() + 60 * 60 * 24 * 7 * 1000) // 1 Week
+				expires: new Date(Date.now() + 60 * 60 * 24 * 7 * 1000), // 1 Week
+				path: "/auth/refresh" /* the only endpoint it is needed */
 			})
 		},
 		oauthToken: {
