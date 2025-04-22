@@ -3,10 +3,20 @@ import { authJwtMiddleware } from "@middleware/auth";
 import Database from "@db/Database";
 import jwt from "@utils/jwt";
 import { JWT_REFRESH_SECRET } from "@config";
+import DEFAULTS from "@utils/defaults";
 
 export default async function jwtRoutes(fastify: FastifyInstance) {
 	fastify.get("/me", { preHandler: authJwtMiddleware }, async (request, reply) => {
 		const user = await Database.getInstance().userTable.getById(request.user.id);
+		if (user.error) {
+			console.warn("database error: userTable.getById::", user.error)
+			return reply.code(401).send({ message: "Internal Database error" });
+		}
+		if (!user.result)
+		{
+			console.warn("/auth/me user.result is null: request.user::", request.user);
+			return reply.code(403).send({ message: "User is null, probably the user does not exist anymore!" });
+		}
 		return reply.code(200).send({ user: user.result });
 	})
 
@@ -14,29 +24,40 @@ export default async function jwtRoutes(fastify: FastifyInstance) {
 		if (!request.cookies || !request.cookies.refreshToken) {
 			return reply.code(403).send({ message: "Unauthorized" });
 		}
-		const refreshToken = request.cookies.refreshToken;
+		const CookieRefreshToken = request.cookies.refreshToken;
 		try {
-			const verified = jwt.verify(refreshToken, JWT_REFRESH_SECRET);
+			const verified = jwt.verify(CookieRefreshToken, JWT_REFRESH_SECRET);
 			if (!verified) return reply.code(403).send({ message: "Unauthorized" });
-			const dbRes = await Database.getInstance().jwtBlackListTokensTable.exists(refreshToken);
+			const dbRes = await Database.getInstance().jwtBlackListTokensTable.exists(CookieRefreshToken);
 			if (dbRes.error) {
 				console.info("Error in jwtBlackListTokensTable.exists::", dbRes.error);
-				return reply.code(403).send({ message: dbRes.error });
+				return reply.code(401).send({ message: dbRes.error });
 			}
-			else {
-				const decoded = jwt.decode(refreshToken);
-				if (!decoded) return reply.code(403).send({ message: "Unauthorized" });
-				const accessToken = jwt.sign({}, { exp: 60 * 15, sub: decoded.payload.id });
-				const newRefreshToken = jwt.sign({}, { exp: 60 * 60 * 24 * 7, sub: decoded.payload.id }, JWT_REFRESH_SECRET);
-				return reply.code(200)
-					.setCookie("refreshToken", newRefreshToken, {
-						httpOnly: true,
-						sameSite: "strict",
-						secure: false, // TODO: after enabling https make secure: true aswell
-						expires: new Date(Date.now() + 60 * 60 * 24 * 7 * 1000) /* 1 Week */
-					})
-					.send({ accessToken });
+			
+			const decoded = jwt.decode(CookieRefreshToken);
+			if (!decoded || !decoded.payload || !decoded.payload.sub)
+			{
+				return reply.code(401).send({ message: "Invalid Token" });
 			}
+			const dbUser = await Database.getInstance().userTable.getById(decoded.payload.sub)
+			if (dbUser.error)
+			{
+				console.info("Error in userTable.getById::", dbUser.error);
+				return reply.code(403).send({ message: dbUser.error })
+			}
+			if (!dbUser.result) {
+				return reply.code(401).send({ message: "The user does not exist anymore! "});
+			}
+
+			const accessToken = jwt.sign({}, DEFAULTS.jwt.accessToken.options(decoded?.payload.sub))
+			const refreshToken = jwt.sign({}, DEFAULTS.jwt.refreshToken.options(decoded?.payload.sub), JWT_REFRESH_SECRET)
+
+			return reply
+				.code(200)
+				.setCookie("refreshToken", refreshToken, DEFAULTS.cookies.refreshToken.options())
+				.header('Access-Control-Allow-Credentials', 'true')
+				.send({ accessToken: accessToken });
+			
 		} catch (error) {
 			console.info("Error in jwtRoutes::refresh::", error);
 			return reply.code(403).send({ message: "Unauthorized" });

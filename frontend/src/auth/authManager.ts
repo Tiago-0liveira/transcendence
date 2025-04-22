@@ -13,7 +13,12 @@ class AuthManager {
 		this.user = null;
 		this.accessToken = null;
 		console.log("Will try to recover login")
-		this.fetchUser().then((ok) => { console.log("AuthManager || fetchUser on constructor: ", ok); });
+		/* Add loading spinner on notification that resolves when this.fetchUser resolves */
+		this.fetchUser().then((ok) => { 
+			if (ok) {
+				Router.getInstance().navigate("/");
+			}
+		});
 	}
 
 	public static getInstance() {
@@ -67,7 +72,7 @@ class AuthManager {
 				return null;
 			}
 			headers.set("Authorization", `Bearer ${this.GetAccessToken()}`)
-			return fetch(url, { ...options });
+			return fetch(url, { ...options, headers });
 		}
 		return response;
 	}
