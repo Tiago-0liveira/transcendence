@@ -15,14 +15,12 @@
 			"@db-table/*": ["./src/database/tables/*"],
 			"@utils/*": ["./src/utils/*"],
 			"@api/*": ["./src/api/*"],
-			"@types/*": ["./src/types/*"],
 			"@config": ["./src/config"],
 		},
+		"baseUrl": "."
 	},
-	"include": [
-		"src/**/*.ts"
-	], // Include all .ts files in the src folder
+	"include": ["./src", "./src/types/*.d.ts"],
 	"exclude": [
 		"node_modules"
-	], // Exclude node_modules
+	]
 }

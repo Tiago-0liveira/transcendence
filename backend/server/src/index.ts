@@ -28,23 +28,11 @@ app.register(cors, {
 app.register(userRoutes, { prefix: "/user" })
 app.register(jwtRoutes, { prefix: "/auth" })
 app.register(oauthRoutes, { prefix: "/oauth" })
-	
 
-app.get("/", async () => {
-	return { message: "112asdasdasda12312312312312321312312sdasdasd3" }
-})
-
-
-// Serve API route
-app.get("/api/hello", async () => {
-	return { message: "Hello from Fastify API!" };
-});
-
-/*// Catch-all to serve SPA index.html
 app.setNotFoundHandler((req, reply) => {
-	reply.sendFile("index.html");
+	reply.code(404).send({ message: "Endpoint not found!" })
 });
-*/
+
 app.listen({ port: PORT, host: "0.0.0.0" }, (err, addr) => {
 	if (err) {
 		app.log.error(err);

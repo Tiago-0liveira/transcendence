@@ -19,6 +19,7 @@ abstract class BaseTable<T, TPARAMS> {
 		this.database.database.run(this._createStr);
 	}
 
+	public get tableName() { return this._tableName; }
 
 	// TODO: do not fetch password from db, very insecure (easy fix)
 	async getById(id: number): Promise<DatabaseResult<T>> {

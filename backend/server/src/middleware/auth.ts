@@ -2,6 +2,7 @@ import type { FastifyReply } from "fastify/types/reply";
 import type { FastifyRequest } from "fastify/types/request";
 import jwt from "@utils/jwt";
 
+
 export const authJwtMiddleware = async (request: FastifyRequest, reply: FastifyReply) => {
 	if (!request.headers.authorization || !request.headers.authorization.startsWith("Bearer ")) {
 		return reply.code(401).send({ error: "Unauthorized" });
@@ -11,8 +12,7 @@ export const authJwtMiddleware = async (request: FastifyRequest, reply: FastifyR
 		return reply.code(401).send({ error: "Unauthorized" })
 	}
 	const decodedToken = jwt.decode(accessToken);
-	if (decodedToken && decodedToken.payload && decodedToken.payload.sub)
-	{
+	if (decodedToken && decodedToken.payload && decodedToken.payload.sub) {
 		request.user = { id: decodedToken.payload.sub };
 	} else {
 		console.warn("authJwtMiddleware failed for token: ", accessToken);

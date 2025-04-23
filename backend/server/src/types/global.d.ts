@@ -9,8 +9,4 @@ declare namespace NodeJS {
 		GOOGLE_CLIENT_SECRET_ID: string;
 		FRONTEND_URL: string;
 	}
-
-	interface FastifyRequest {
-		accessToken: string
-	}
 }
