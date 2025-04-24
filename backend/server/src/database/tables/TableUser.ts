@@ -86,7 +86,7 @@ class UserTable extends BaseTable<User, UserParams> {
 	private async exists(args: Record<string, string>): Promise<boolean> {
 		return new Promise((resolve, reject) => {
 			const propertiesJoined = Object.keys(args).map((s) => s + " = ? ").join(" OR ")
-			this.database.database.get(`SELECT 1 FROM ${this._tableName} WHERE ${propertiesJoined}`, [Object.values(args)], (err, row) => {
+			this.database.database.get(`SELECT 1 FROM ${this._tableName} WHERE ${propertiesJoined}`, Object.values(args), (err, row) => {
 				if (err) {
 					console.log(err);
 					console.log(err.message)
