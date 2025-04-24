@@ -55,28 +55,14 @@ class Router {
 	}
 
 	public async navigate(pathOrUrl: string, routeParams?: RouteParams, queryParams?: QueryParams): Promise<void> {
-		let url = pathOrUrl;
-		if (routeParams || queryParams) {
-			if (routeParams) {
-				Object.entries(routeParams).forEach(([key, value]) => {
-					url = url.replace(`:${key}`, encodeURIComponent(String(value)));
-				});
-			}
-
-			if (queryParams && Object.keys(queryParams).length > 0) {
-				const searchParams = new URLSearchParams();
-				Object.entries(queryParams).forEach(([key, value]) => {
-					if (value !== undefined && value !== null) {
-						searchParams.append(key, String(value));
-					}
-				});
-
-				const queryString = searchParams.toString();
-				if (queryString) {
-					url += (url.includes('?') ? '&' : '?') + queryString;
-				}
+		const oldRoute = this.currentRoute;
+		if (oldRoute) {
+			const oldRouteCleanupFunc = oldRoute.cleanupFunc;
+			if (oldRouteCleanupFunc) {
+				oldRouteCleanupFunc();
 			}
 		}
+		let url = Router.makeUrl(pathOrUrl, routeParams, queryParams);
 
 		const fullUrl = new URL(url, window.location.origin);
 		const path = this.mode === 'hash'
@@ -154,12 +140,12 @@ class Router {
 			this.currentRoute = newRoute;
 			// Render component
 			const componentCleanupFunc = await route.component();
-			if (componentCleanupFunc)
-			{
-				componentCleanupFunc();
+			if (componentCleanupFunc) {
+				if (this.currentRoute) {
+					this.currentRoute.cleanupFunc = componentCleanupFunc || undefined;
+				}
 			}
-
-
+			
 		} catch (error: any) {
 			console.error('Routing error:', error);
 			this.handleError(error);
@@ -220,6 +206,32 @@ class Router {
 			params[key] = value;
 		});
 		return params;
+	}
+
+	static makeUrl(pathOrUrl: string, routeParams?: RouteParams, queryParams?: QueryParams): string {
+		let url = pathOrUrl;
+		
+		if (routeParams) {
+			Object.entries(routeParams).forEach(([key, value]) => {
+				url = url.replace(`:${key}`, encodeURIComponent(String(value)));
+			});
+		}
+
+		if (queryParams && Object.keys(queryParams).length > 0) {
+			const searchParams = new URLSearchParams();
+			Object.entries(queryParams).forEach(([key, value]) => {
+				if (value !== undefined && value !== null) {
+					searchParams.append(key, String(value));
+				}
+			});
+
+			const queryString = searchParams.toString();
+			if (queryString) {
+				url += (url.includes('?') ? '&' : '?') + queryString;
+			}
+		}
+
+		return url;
 	}
 
 	private handleError(error: Error): void {
