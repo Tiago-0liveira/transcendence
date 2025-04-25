@@ -96,6 +96,27 @@ div#app>div {
 	color: #888;
 }
 
+.badge {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	
+	padding: 0.125rem 0.25rem;
+	font-size: 0.75rem;
+	font-weight: 600;
+	border-radius: 1.5rem;
+}
+
+.error-message {
+	color: #dd0000;
+	background-color: #444;
+	font-size: 0.875em;
+	margin-top: 1em;
+	border-radius: 8px;
+	padding: 0.6em 1.2em;
+}
+
 button,
 input {
 	border-radius: 8px;

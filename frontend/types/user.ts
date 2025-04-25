@@ -1,3 +1,7 @@
+type UIDD = {
+	id: number;
+}
+
 type UserParams = {
 	username: string,
 	displayName?: string,
@@ -5,8 +9,7 @@ type UserParams = {
 	password: string
 }
 
-interface User extends UserParams {
-	id: number,
+interface User extends UserParams, UIDD {
 	createdAt: Date,
 	updatedAt: Date,
 	/*wins: number,
@@ -17,3 +20,10 @@ interface User extends UserParams {
 
 type UserNoPass = Omit<User, "password">
 type UserParamsNoPass = Omit<UserParams, "password">
+
+interface FriendUser extends UIDD, UserParamsNoPass {}
+
+interface PossibleFriendUser extends FriendUser {
+	hasInvitedMe: boolean;
+	isPending: boolean
+}

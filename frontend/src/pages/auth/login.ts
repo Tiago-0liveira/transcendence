@@ -38,7 +38,8 @@ const component = async () => {
 									required minlength="8" maxlength="100"
 									class="TODO: this is commented this is a pattern that checks all it says below -->  pattern=\"(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{8,}\""
 									title="At least 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special character"
-									onpaste="return false;"
+									/* TODO: remove comment onpaste="return false;"*/
+									
 								/>
 							</div>
 						</div>
@@ -118,21 +119,6 @@ const component = async () => {
 			} else {
 				console.error("Login failed");
 			}
-			/*window.user = { username };
-			const route = Router.getInstance().getCurrentRoute();
-			if (!route) {
-				console.error("route is null");
-			}
-			else {
-				try {
-					const redirectUri = decodeURIfromRoute(route);
-					console.log(redirectUri);
-					Router.getInstance().navigate(redirectUri);
-
-				} catch (error) {
-					console.error(error);
-				}
-			}*/
 		}
 	})
 }

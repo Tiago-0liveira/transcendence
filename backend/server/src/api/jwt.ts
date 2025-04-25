@@ -101,8 +101,106 @@ export default async function jwtRoutes(fastify: FastifyInstance) {
 		if (friendsRes.error) {
 			return reply.code(500).send(friendsRes);
 		}
-		
+
 		return reply.code(200).send({ requests: friendsRes.result });
+	})
+
+	fastify.post<{
+		Body: {
+			userId: string
+		};
+	}>("/friends/requests/pending/cancel", {
+		preHandler: authJwtMiddleware,
+		schema: {}
+	}, async (request, reply) => {
+		const { userId: userIdStr } = request.body;
+		const loggedInId = request.user.id as string;
+
+		try {
+			const friendId = Number(userIdStr);
+			const userId = Number(loggedInId);
+
+			const dbRes = await Database.getInstance().friendRequestsTable.delete(userId, friendId);
+			if (dbRes.error) {
+				return reply.code(422).send(dbRes);
+			}
+		} catch (e) {
+			return reply.code(400).send({ message: "Invalid userId" })
+		}
+
+		return reply.code(200).send({});
+	})
+
+	fastify.post<{
+		Body: {
+			userId: string
+		}
+	}>("/friends/requests/accept", {
+		preHandler: authJwtMiddleware,
+		schema: {
+			body: {
+				type: "object",
+				required: ["userId"],
+				properties: {
+					userId: { type: "string" },
+				},
+			}
+		}
+	}, async (request, reply) => {
+		const { userId: userIdStr } = request.body;
+		const loggedInId = request.user.id as string;
+
+		try {
+			const receiverId = Number(userIdStr);
+			const senderId = Number(loggedInId);
+
+			const dbRes = await Database.getInstance().friendRequestsTable.acceptRequest(senderId, receiverId);
+			if (dbRes.error) {
+				return reply.code(422).send(dbRes);
+			}
+			const dbRes2 = await Database.getInstance().friendsTable.new({ userId: senderId, friendId: receiverId });
+			if (dbRes2.error) {
+				return reply.code(422).send(dbRes2);
+			}
+			return reply.code(201).send({});
+
+		} catch (e) {
+			return reply.code(400).send({ message: "Invalid request" })
+		}
+	})
+
+	fastify.post<{
+		Body: {
+			userId: string
+		}
+	}>("/friends/requests/reject", {
+		preHandler: authJwtMiddleware,
+		schema: {
+			body: {
+				type: "object",
+				required: ["userId"],
+				properties: {
+					userId: { type: "string" },
+				},
+			}
+		}
+	}, async (request, reply) => {
+		const { userId: userIdStr } = request.body;
+		const loggedInId = request.user.id as string;
+
+		try {
+			const receiverId = Number(userIdStr);
+			const senderId = Number(loggedInId);
+
+			const dbRes = await Database.getInstance().friendRequestsTable.rejectRequest(senderId, receiverId);
+			if (dbRes.error) {
+				return reply.code(422).send(dbRes);
+			}
+			return reply.code(201).send({});
+
+		} catch (e) {
+			return reply.code(400).send({ message: "Invalid request" })
+		}
 	})
 
 	fastify.post<{
@@ -130,60 +228,70 @@ export default async function jwtRoutes(fastify: FastifyInstance) {
 
 			const user = await Database.getInstance().userTable.getById(receiverId);
 			if (user.error) {
-				return reply.code(400).send(user)
+				return reply.code(500).send(user)
 			}
 			if (!user.result) {
-				return reply.code(400).send({ message: "Invalid userId "})
+				return reply.code(404).send({ message: "Invalid userId " })
 			}
 			const friendRequest = await Database.getInstance().friendRequestsTable.new({ receiverId, senderId })
 			if (friendRequest.error) {
-				return reply.code(400).send({ message: friendRequest.error.message })
+				return reply.code(422).send({ message: friendRequest.error.message })
 			}
-			return reply.code(200)
+			return reply.code(201).send({})
 		} catch (e) {
 			return reply.code(400).send({ message: "Invalid userId" })
 		}
 	})
 
-	fastify.post("/friends/remove", {
-		preHandler: authJwtMiddleware,
-		schema: {}
-	}, async (request, reply) => {
-
-		return reply.code(200).send({ message: "remove friend" });
-	})
-
 	fastify.post<{
 		Body: {
 			userId: string
-		}
-	}>("/friends/accept", {
+		};
+	}>("/friends/remove", {
 		preHandler: authJwtMiddleware,
-		schema: {
-			body: {
-				type: "object",
-				required: ["userId"],
-				properties: {
-					userId: { type: "string" },
-				},
-			}
-		}
+		schema: {}
 	}, async (request, reply) => {
 		const { userId: userIdStr } = request.body;
 		const loggedInId = request.user.id as string;
 
 		try {
-			const receiverId = Number(userIdStr);
-			const senderId = Number(loggedInId);
+			const friendId = Number(userIdStr);
+			const userId = Number(loggedInId);
 
-			const dbRes = await Database.getInstance().friendRequestsTable.acceptRequest(senderId, receiverId);
+			const dbRes = await Database.getInstance().friendsTable.delete(userId, friendId);
 			if (dbRes.error) {
-				return reply.code(400).send(dbRes);
+				return reply.code(422).send(dbRes);
 			}
-			return reply.code(200);
-
 		} catch (e) {
-			return reply.code(400).send({ message: "Invalid request" })
+			return reply.code(400).send({ message: "Invalid userId" })
 		}
+
+		return reply.code(200).send({});
+	})
+
+	fastify.get<{
+		Querystring: {
+			name: string,
+			page?: number;
+			limit?: number;
+		};
+	}>("/users", {
+		preHandler: authJwtMiddleware
+	}, async (request, reply) => {
+		const userId = Number(request.user.id as string);
+		let { name, page = 1, limit = 50 } = request.query;
+		let offset = (page - 1) * limit;
+		name = name.trim();
+
+		if (!name) {
+			return reply.code(400).send({ message: "Invalid name query" })
+		}
+
+		const dbRes = await Database.getInstance().friendsTable.getPossibleFriends(userId, name, offset, limit)
+		if (dbRes.error) {
+			return reply.code(500).send(dbRes)
+		}
+
+		return reply.code(200).send({ users: dbRes.result })
 	})
 }

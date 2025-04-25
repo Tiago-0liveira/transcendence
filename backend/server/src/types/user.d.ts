@@ -52,3 +52,8 @@ type FriendParams = {
 };
 
 interface FriendUser extends UIDD, BaseUserParams {}
+
+interface PossibleFriendUser extends FriendUser {
+	hasInvitedMe: boolean;
+	isPending: boolean
+}

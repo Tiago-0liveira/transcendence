@@ -16,6 +16,8 @@ class AuthManager {
 		/* Add loading spinner on notification that resolves when this.fetchUser resolves */
 		this.fetchUser().then((ok) => { 
 			if (ok) {
+				/* TODO: change this back to / */
+				/* this is here to quickly route to this because im developing that window */
 				Router.getInstance().navigate("/");
 			}
 		});
@@ -60,12 +62,15 @@ class AuthManager {
 	public async authFetch(url: string, options: RequestInit = {}) {
 		url = backendEndpoint(url)
 		const headers = new Headers(options.headers);
+		if (options.method !== "GET") {
+			headers.set("Accept", "application/json");
+		}
+		headers.set("Content-Type", "application/json");
 		headers.set("Authorization", `Bearer ${this.GetAccessToken()}`)
 
 		const response = await fetch(url, { ...options, headers });
-		console.info(response);
 
-		if (!response.ok) {
+		if (response.status === 401) {
 			console.info("Access token expired, trying to refresh!");
 			const refreshed = await this.refreshToken();
 			if (!refreshed) {
@@ -196,7 +201,7 @@ class AuthManager {
 	/* Sends the user to /login and resets accessToken and user in-memory stored data */
 	public async logout(redirect = false) {
 		try {
-			const response = await this.authFetch("user/logout", { credentials: "include" });
+			const response = await this.authFetch("auth/refresh/logout", { method: "GET", credentials: "include" });
 			this.accessToken = null;
 			this.user = null;
 			if (!response || !response.ok) throw new Error("Refresh failed");

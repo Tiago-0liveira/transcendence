@@ -1,5 +1,5 @@
-type RouteParams = Record<string, string>;
-type QueryParams = Record<string, string>;
+type RouteParams = StringsObject;
+type QueryParams = StringsObject;
 
 interface RouteConfig {
 	path: string;
@@ -16,6 +16,7 @@ interface Route {
 	params: RouteParams;
 	query: QueryParams;
 	hash: string;
+	cleanupFunc?: () => void;
 }
 
 interface RouterOptions {

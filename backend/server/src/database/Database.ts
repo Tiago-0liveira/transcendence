@@ -38,10 +38,11 @@ class Database {
 		this._database = new sqlite3.Database(DATABASE_URI);
 
 		// Tables constructors
+		// TODO: instead of passing tableName as params, just move the JOIN sql statements to this class
 		this._userTable = new TableUser(this);
 		this._jwtBlackListTokensTable = new TableBlackListTokens(this);
-		this._friendsTable = new TableFriends(this, this._userTable.tableName);
 		this._friendRequestsTable = new TableFriendRequests(this, this._userTable.tableName);
+		this._friendsTable = new TableFriends(this, this._userTable.tableName, this._friendRequestsTable.tableName);
 	}
 
 	public get database() { return this._database; }

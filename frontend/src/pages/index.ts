@@ -15,6 +15,7 @@ const component = async () => {
 			<nav>
 				<a href="/about">About</a>
 				<a href="/contact">Contact</a>
+				<a href="/players" ${!loggedIn && `class="text-gray-400 cursor-not-allowed pointer-events-none"`}>Players</a>
 				${userElement}
 			</nav>
 		</div>

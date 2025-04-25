@@ -17,7 +17,7 @@ class FriendRequestsTable extends BaseTable<FriendRequest, FriendRequestParams> 
 		UNIQUE(senderId, receiverId)
 	);`;
 	protected _insertStr = `INSERT INTO ${this._tableName} (senderId, receiverId, status) VALUES (?, ?, ?)`;
-	protected _deleteStr = `DELETE FROM ${this._tableName} WHERE id = ?`;
+	protected _deleteStr = `DELETE FROM ${this._tableName} WHERE senderId = ? AND receiverId = ?`;
 	protected _updateStr = `UPDATE ${this._tableName} SET status = ?, updatedAt = CURRENT_TIMESTAMP WHERE senderId = ? AND receiverId = ?`;
 	protected _getFriendRequests;
 
@@ -55,10 +55,15 @@ class FriendRequestsTable extends BaseTable<FriendRequest, FriendRequestParams> 
 		});
 	}
 	
-
-	async delete(id: number): Promise<DatabaseResult<boolean>> {
+	/**
+	 - Delete requires both userId and friendId or it will throw an Error
+	*/
+	async delete(userId: number, friendId?: number): Promise<DatabaseResult<boolean>> {
+		if (friendId == null) {
+			throw new Error(`${this._tableName}.delete requires both userId and friendId.`)
+		}
 		return new Promise((resolve, reject) => {
-			this.database.database.run(this._deleteStr, [id], function (err) {
+			this.database.database.run(this._deleteStr, [userId, friendId], function (err) {
 				if (err) reject({ error: err });
 				else resolve({ result: true });
 			});
@@ -87,11 +92,11 @@ class FriendRequestsTable extends BaseTable<FriendRequest, FriendRequestParams> 
 	}
 
 	async acceptRequest(senderId: number, receiverId: number): Promise<DatabaseResult<number>> {
-		return this.updateRequest({ senderId, receiverId, status: "accepted" });
-	}
+		return this.updateRequest({ receiverId: senderId, senderId: receiverId, status: "accepted" });
+	}	
 	
 	async rejectRequest(senderId: number, receiverId: number): Promise<DatabaseResult<number>> {
-		return this.updateRequest({ senderId, receiverId, status: "rejected" });
+		return this.updateRequest({ receiverId: senderId, senderId: receiverId, status: "rejected" });
 	}
 	
 
