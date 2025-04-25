@@ -104,7 +104,10 @@ const component = async () => {
 	}
 
 	const clickHandler = (e: MouseEvent) => {
-		const fetchMoreButton = e.target?.closest("#FetchMore")
+		if (!e.target) return;
+		if (!(e.target instanceof Element)) return;
+
+		const fetchMoreButton = e.target.closest("#FetchMore")
 		if (fetchMoreButton) {
 			console.log("Fetch more button clicked")
 			fetchFriends(requestPage, requestSize, postRequestUpdate("append"))

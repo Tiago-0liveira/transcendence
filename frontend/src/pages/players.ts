@@ -122,7 +122,10 @@ const component = async () => {
 	}, 300);
 
 	const handleClick = (e: MouseEvent) => {
-		const fetchMoreButton = e.target?.closest("#FetchMore")
+		if (!e.target) return;
+		if (!(e.target instanceof Element)) return;
+		
+		const fetchMoreButton = e.target.closest("#FetchMore")
 		if (fetchMoreButton) {
 			fetchUsers(inputQueryEl.value.trim(), requestPage, requestSize, postRequestUpdate("append"))
 		}

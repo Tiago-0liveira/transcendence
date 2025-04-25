@@ -1,5 +1,4 @@
 import AuthManager from "@/auth/authManager";
-import { defineValidator } from "@/utils/components";
 import { conditionalRender } from "@/utils/conditionalRender";
 import BaseAttributeValidationElement from "@component/BaseAttributeValidationElement";
 
@@ -205,8 +204,11 @@ const RejectFriendRequestHandler = (userId: string) => {
 	})
 }
 
-const getButtonAndHandleClick = (e: EventTarget, classId: ButtonClassId, cb: (userId: string) => void) => {
-	const button = e.target?.closest(`#${classId}-button`)
+const getButtonAndHandleClick = (e: MouseEvent, classId: ButtonClassId, cb: (userId: string) => void) => {
+	if (!e.target) return;
+	if (!(e.target instanceof Element)) return;
+	
+	const button = e.target.closest(`#${classId}-button`)
 	if (button && button instanceof HTMLButtonElement) {
 		const userId = button.dataset.userId
 		if (userId) {
