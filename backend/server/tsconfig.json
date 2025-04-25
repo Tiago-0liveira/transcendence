@@ -1,26 +1,48 @@
 {
 	"compilerOptions": {
-		"module": "ESNext", // Use ES modules
-		"target": "ESNext", // Target modern JavaScript
-		"moduleResolution": "Node", // Resolve modules like Node.js
-		"esModuleInterop": true, // Enable compatibility with commonjs modules
-		"skipLibCheck": true, // Skip library checks for performance
-		"outDir": "./dist", // Output directory for compiled files
-		"strict": true, // Enable all strict type-checking options
+		"module": "ESNext",
+		"strict": true,
+		"resolveJsonModule": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"noFallthroughCasesInSwitch": true,
+		"target": "ESNext",
+		"moduleResolution": "Node",
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"outDir": "./dist",
 		"strictNullChecks": true,
 		"paths": {
-			"@middleware/*": ["./src/middleware/*"],
-			"@enums/*": ["./src/enums/*"],
-			"@db/*": ["./src/database/*"],
-			"@db-table/*": ["./src/database/tables/*"],
-			"@utils/*": ["./src/utils/*"],
-			"@api/*": ["./src/api/*"],
-			"@config": ["./src/config"],
+			"@middleware/*": [
+				"./src/middleware/*"
+			],
+			"@enums/*": [
+				"./src/enums/*"
+			],
+			"@db/*": [
+				"./src/database/*"
+			],
+			"@db-table/*": [
+				"./src/database/tables/*"
+			],
+			"@utils/*": [
+				"./src/utils/*"
+			],
+			"@api/*": [
+				"./src/api/*"
+			],
+			"@config": [
+				"./src/config"
+			],
 		},
-		"baseUrl": "."
+		"baseUrl": ".",
 	},
-	"include": ["./src", "./src/types/*.d.ts"],
+	"include": [
+		"./src",
+		"./src/types/*.d.ts",
+		"../../shared/types",
+	],
 	"exclude": [
 		"node_modules"
-	]
+	],
 }

@@ -1,39 +1,55 @@
 {
 	"compilerOptions": {
-	  "target": "ES2020",
-	  "useDefineForClassFields": true,
-	  "module": "ESNext",
-	  "lib": ["ES2020", "DOM", "DOM.Iterable"],
-	  "skipLibCheck": true,
-	  "moduleResolution": "bundler",
-	  "allowImportingTsExtensions": true,
-	  "resolveJsonModule": true,
-	  "isolatedModules": true,
-	  "noEmit": true,
-	  "strict": true,
-	  "noUnusedLocals": true,
-	  "noUnusedParameters": true,
-	  "noFallthroughCasesInSwitch": true,
-	  "baseUrl": ".",
-	  "paths": {
-		"@/*": ["src/*"],
-		"@component/*": ["src/components/*"],
-	  	"@page/*": ["src/pages/*"],
-		"@types/*": ["types/*"],
-	  },
-	  "typeRoots": [
-		"./types",
-		"./node_modules/@types"
-	  ],
-	  "types": ["vite/client"]
+		"target": "ES2020",
+		"module": "ESNext",
+		"skipLibCheck": true,
+		"strict": true,
+		"resolveJsonModule": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"noFallthroughCasesInSwitch": true,
+		"lib": [
+			"ES2020",
+			"DOM",
+			"DOM.Iterable"
+		],
+		"moduleResolution": "bundler",
+		"isolatedModules": true,
+		"noEmit": true,
+		"baseUrl": ".",
+		"paths": {
+			"@/*": [
+				"src/*"
+			],
+			"@component/*": [
+				"src/components/*"
+			],
+			"@page/*": [
+				"src/pages/*"
+			],
+			"@types/*": [
+				"types/*"
+			]
+		},
+		"typeRoots": [
+			"./types",
+			"../shared/types",
+			"./node_modules/@types"
+		],
+		"types": [
+			"vite/client"
+		]
 	},
 	"include": [
-	  "src/**/*.ts",
-	  "src/**/*.tsx",
-	  "types/**/*.ts",
-	  "types/**/*.d.ts"
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"types/**/*.ts",
+		"types/**/*.d.ts",
+		"../shared/types/*.ts"
 	],
 	"references": [
-	  { "path": "./tsconfig.node.json" }
+		{
+			"path": "./tsconfig.node.json"
+		}
 	]
-  }
+}

@@ -1,5 +1,3 @@
-
-
 export const encodeURIforLogin = (to: string, route: Route): string => {
 	let path = encodeURIComponent(route.path);
 
