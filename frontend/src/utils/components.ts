@@ -5,7 +5,7 @@
  * @param values optional array of valid values for the attribute
  * @returns true if the attribute is valid, throws an error if not ensuring attribute presence
  */
-export const validateElementStringAttribute = (el: HTMLElement, attrs: ObjectStringAttributeValidator, attrName: string): boolean => {
+export const validateElementStringAttribute = <T extends StringsObject>(el: HTMLElement, attrs: ObjectStringAttributeValidator<T>, attrName: string): boolean => {
 	if (!isValidAttributeName(attrName)) {
 		throw new Error(`Invalid attribute name: ${attrName}`);
 	}
@@ -31,13 +31,14 @@ export const validateElementStringAttribute = (el: HTMLElement, attrs: ObjectStr
 			}
 		}
 	}
-	if (validator.values && validator.values.length > 0 && !validator.values.includes(attrValue)) {
+
+	if (validator.values && validator.values.length > 0 && !validator.values.includes(attrValue as T[string])) {
 		throw new Error(`Element ${el.tagName} attribute ${attrName} must be one of ${validator.values.join(", ")}`);
 	}
 	return true;
 }
 
-export const validateElementMultipleStringAttributes = (el: HTMLElement, attrs: ObjectStringAttributeValidator): boolean => {
+export const validateElementMultipleStringAttributes = <T extends StringsObject>(el: HTMLElement, attrs: ObjectStringAttributeValidator<T>): boolean => {
 	for (const attrName in attrs) {
 		validateElementStringAttribute(el, attrs, attrName);
 	}

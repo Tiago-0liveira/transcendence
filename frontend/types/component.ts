@@ -1,10 +1,12 @@
-type ElementStringAttributeValidator<T extends StringsObject> = {
+type ElementStringAttributeValidator<T extends StringsObject, K extends keyof T = keyof T> = {
 	required?: boolean;
-	values?: T[keyof T][];
+	values?: T[K][];
 	requireAttrs?: string[];
 	conditional?: Partial<T>;
 }
-type ObjectStringAttributeValidator<T extends StringsObject> = Record<keyof T, ElementStringAttributeValidator<T>>;
+type ObjectStringAttributeValidator<T extends StringsObject> = {
+	[K in keyof T]: ElementStringAttributeValidator<T, K>
+}
 
 type UserCardAttributes = {
 	"variant": "profile" | "possibleFriend" | "friend";
