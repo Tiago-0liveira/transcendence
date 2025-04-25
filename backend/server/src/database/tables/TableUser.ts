@@ -1,6 +1,7 @@
 import { UserAuthMethod } from "@enums/enums";
 import Database from "@db/Database";
 import BaseTable from "@db-table/BaseTable"
+import { generateUser } from "@db/fakeData";
 
 
 // TODO: display name can be null so it is defaulted to username
@@ -114,7 +115,25 @@ class UserTable extends BaseTable<User, UserParams> {
 			})
 		})
 	}
-
+	bulkInsert(count: number) {
+		const rawDb = this.database.database;
+		console.log(`||Database |INFO| || Will insert ${count} users to the ${this._tableName} table!`)
+		rawDb.serialize(() => {
+			rawDb.run("BEGIN TRANSACTION")
+			for (let i = 0; i < count; i++) {
+				const user = generateUser();
+				console.log(`User< username=${user.username} displayName=${user.displayName} password=${user.password} ...>`)
+				rawDb.run(this._insertStr, [user.username, user.displayName, user.avatarUrl, user.password, UserAuthMethod.LOCAL, ""]);
+			}
+			rawDb.run("COMMIT", (err) => {
+				if (err) {
+					console.error("Seeding failed:", err);
+					rawDb.close();
+				}
+				else console.log(`||Database |INFO| || ${count} users inserted successfully.`);
+			});
+		})
+	}
 }
 
 export default UserTable;

@@ -1,5 +1,5 @@
 import sqlite3 from "sqlite3";
-import { DATABASE_URI, DEV_DROP_DB_ON_START } from "@config"
+import { DATABASE_URI, DEV_DB_INSERT_FAKE_DATA, DEV_DROP_DB_ON_START } from "@config"
 import TableUser from "@db-table/TableUser";
 import TableBlackListTokens from "@db-table/TableBlackListTokens";
 import TableFriends from "@db-table/TableFriends";
@@ -18,6 +18,10 @@ class Database {
 	public static getInstance(): Database {
 		if (!Database.s_instance) {
 			Database.s_instance = new Database();
+
+			if (DEV_DB_INSERT_FAKE_DATA) {
+				Database.s_instance.userTable.bulkInsert(200);
+			}
 		}
 		return Database.s_instance;
 	}
