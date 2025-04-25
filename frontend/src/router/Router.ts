@@ -31,7 +31,10 @@ class Router {
 
 	public initializeRouter(): void {
 		// Handle browser navigation events
-		window.addEventListener('popstate', () => this.handleRoute());
+		window.addEventListener('popstate', () => {
+			this.handleComponentUnmount()
+			this.handleRoute()
+		});
 
 		// Intercept link clicks for SPA navigation
 		document.addEventListener('click', (e: MouseEvent) => {
@@ -54,14 +57,19 @@ class Router {
 		this.routes.set(path, config);
 	}
 
-	public async navigate(pathOrUrl: string, routeParams?: RouteParams, queryParams?: QueryParams): Promise<void> {
+	private handleComponentUnmount() {
 		const oldRoute = this.currentRoute;
 		if (oldRoute) {
 			const oldRouteCleanupFunc = oldRoute.cleanupFunc;
 			if (oldRouteCleanupFunc) {
 				oldRouteCleanupFunc();
+				oldRoute.cleanupFunc = undefined;
 			}
 		}
+	}
+
+	public async navigate(pathOrUrl: string, routeParams?: RouteParams, queryParams?: QueryParams): Promise<void> {
+		this.handleComponentUnmount()
 		let url = Router.makeUrl(pathOrUrl, routeParams, queryParams);
 
 		const fullUrl = new URL(url, window.location.origin);
