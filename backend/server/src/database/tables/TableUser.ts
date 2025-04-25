@@ -74,11 +74,11 @@ class UserTable extends BaseTable<User, UserParams> {
 	}
 	async login(username: string, password: string): Promise<DatabaseResult<Omit<UserParams, "password"> & UIDD>> {
 		const userIsRegistered = await this.existsUsername(username);
-		if (!userIsRegistered) return Promise.reject({ error: "User not found!" });
+		if (!userIsRegistered) return Promise.resolve({ error: new Error("User not found!") });
 
 		return new Promise((resolve, reject) => {
 			this.database.database.get(`SELECT id, username, displayName, avatarUrl FROM ${this._tableName} WHERE username = ? AND password = ?`, [username, password], (err, row: Omit<UserParams, "password"> & UIDD) => {
-				if (err) reject({ error: err });
+				if (err) resolve({ error: err });
 				else resolve({ result: row });
 			})
 		})
