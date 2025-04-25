@@ -72,26 +72,22 @@ export default async function userRoutes(fastify: FastifyInstance) {
 
 		try {
 			const res = await Database.getInstance().userTable.login(username, password);
-			if (res.error)
+			if (res.error) {
+				console.log("Error in userTable.login::", res.error)
 				reply.code(400).send({ message: res.error })
+			}
 			else {
 				const accessToken = jwt.sign({}, DEFAULTS.jwt.accessToken.options(String(res.result.id)))
 				const refreshToken = jwt.sign({}, DEFAULTS.jwt.refreshToken.options(String(res.result.id)), JWT_REFRESH_SECRET)
 
 				reply
 					.code(200)
-					.setCookie("refreshToken", refreshToken, DEFAULTS.cookies.oauthToken.options())
+					.setCookie("refreshToken", refreshToken, DEFAULTS.cookies.refreshToken.options())
 					.header('Access-Control-Allow-Credentials', 'true')
 					.send({ accessToken: accessToken });
 			}
 		} catch (error) {
 			reply.code(400).send({ message: error })
 		}
-	})
-
-	fastify.post("/logout", { preHandler: authJwtMiddleware }, async (request, reply) => {
-		reply
-			.clearCookie("refreshToken")
-			.send({ ok: true });
 	})
 }

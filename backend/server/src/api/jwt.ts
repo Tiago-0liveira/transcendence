@@ -48,6 +48,13 @@ export default async function jwtRoutes(fastify: FastifyInstance) {
 		}
 	})
 
+	fastify.get("/refresh/logout", { preHandler: authJwtMiddleware }, async (request, reply) => {
+		reply
+			.code(200)
+			.clearCookie("refreshToken", DEFAULTS.cookies.refreshToken.clearOptions())
+			.send({ ok: true });
+	})
+
 	fastify.get("/me", { preHandler: authJwtMiddleware }, async (request, reply) => {
 		const user = await Database.getInstance().userTable.getById(request.user.id);
 		if (user.error) {
