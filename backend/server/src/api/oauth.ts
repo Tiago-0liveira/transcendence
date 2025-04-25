@@ -7,7 +7,6 @@ import { OAuth2Client } from "google-auth-library";
 import { UserAuthMethod } from "@enums/enums";
 import DEFAULTS from "@utils/defaults";
 import { googleOauthMiddleware, oauthJwtMiddleware } from "@middleware/google";
-import { RequestPostGoogleSignUpComplete, RequestWithGoogleOauthPayload } from "@types/requests";
 
 export let googleClient: OAuth2Client | null = null;
 if (GOOGLE_AUTH_ENABLED) {
@@ -124,7 +123,7 @@ export default async function oauthRoutes(fastify: FastifyInstance) {
 
 	fastify.post("/signup/google/complete",  {
 		preHandler: [googleOauthMiddleware, oauthJwtMiddleware],
-	},	async (request: RequestPostGoogleSignUpComplete, reply) => {
+	},	async (request, reply) => {
 
 		try {
 			const { user } = request.body;
