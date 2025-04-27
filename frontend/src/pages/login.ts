@@ -53,42 +53,48 @@ const component = async () => {
 		const data = new FormData(form as HTMLFormElement);
 		// TODO: change this login form (needs validation here and in the backend)
 		// TODO: just some tests and boilerplate code
-		if (isValidLoginFormData(data)) {
-			// TODO: validate in backend
-			// TODO: maybe send a notification here?
-			const username = data.get("username")?.toString() ?? "";
-			const password = data.get("password")?.toString() ?? "";
-			const displayName = data.get("displayName")?.toString() ?? "";
-			const avatarURL = data.get("avatarUrl")?.toString() ?? "";
+		// if (isValidLoginFormData(data)) {
+		// 	// TODO: validate in backend
+		// 	// TODO: maybe send a notification here?
+		// 	const username = data.get("username")?.toString() ?? "";
+		// 	const password = data.get("password")?.toString() ?? "";
+		// 	const displayName = data.get("displayName")?.toString() ?? "";
+		// 	const avatarURL = data.get("avatarUrl")?.toString() ?? "";
 
-			fetch("http://localhost:4000/user", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ username, password, displayName, avatarURL }),
-			})
-				.then((response) => {
-					if (response.status !== 200) {
-						throw new Error(`Server responded with status ${response.status}`);
-					}
-					return response.json();
-				})
-				.then((data) => {
-					console.log(data);
-					if (!data || !data.message) {
-						throw new Error("Invalid response: missing message property");
-					}
-					fetch(`http://localhost:4000/user/${data.message}`)
-						.then((response) => response.json())
-						.then(({ message }) => {
-							console.log(message);
-							window.user = message;
-							Router.getInstance().navigate("/user");
-						});
-				})
-				.catch(console.error);
-			/*window.user = { username };
+		// 	fetch("http://localhost:4000/user", {
+		// 		method: "POST",
+		// 		headers: {
+		// 			"Content-Type": "application/json",
+		// 		},
+		// 		body: JSON.stringify({ username, password, displayName, avatarURL }),
+		// 	})
+		// 		.then((response) => {
+		// 			if (response.status !== 200) {
+		// 				throw new Error(`Server responded with status ${response.status}`);
+		// 			}
+		// 			return response.json();
+		// 		})
+		// 		.then((data) => {
+		// 			console.log(data);
+		// 			if (!data || !data.message) {
+		// 				throw new Error("Invalid response: missing message property");
+		// 			}
+		// 			fetch(`http://localhost:4000/user/${data.message}`)
+		// 				.then((response) => response.json())
+		// 				.then(({ message }) => {
+		// 					console.log(message);
+		// 					window.user = message;
+		// 					Router.getInstance().navigate("/user");
+		// 				});
+		// 		})
+		// 		.catch(console.error);
+		window.user = {
+			username: data.get("username")?.toString() ?? "test_user",
+			displayName: data.get("displayName")?.toString() ?? "Test User",
+			avatarUrl:
+				data.get("avatarUrl")?.toString() ??
+				"https://i.pinimg.com/originals/3f/1b/0c/3f1b0c4e2a8d7c5a9d3e5f5f5f5f5f5.jpg",
+			/*
 			const route = Router.getInstance().getCurrentRoute();
 			if (!route) {
 				console.error("route is null");
@@ -103,7 +109,8 @@ const component = async () => {
 					console.error(error);
 				}
 			}*/
-		}
+		};
+		Router.getInstance().navigate("/user");
 	});
 };
 
