@@ -7,3 +7,4 @@ import "@page/game";
 import "@page/chat";
 import "@page/chatSettings";
 import "@page/leaderboard";
+import "@page/signUp";
