@@ -41,7 +41,13 @@ const DEFAULTS = {
 		oauthToken: {
 			options: (): CookieSerializeOptions => ({
 				...BaseHttpCookieOptions,
-				expires: new Date(Date.now() + 60 * 15 * 1000)
+				expires: new Date(Date.now() + 60 * 15 * 1000),
+				path: "/oauth/google/signup"
+			}),
+			clearOptions: () => ({
+				...BaseHttpCookieOptions,
+				expires: new Date(0),
+				path: "/oauth/google/signup"
 			})
 		}
 	}
