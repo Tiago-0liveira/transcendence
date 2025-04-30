@@ -35,6 +35,5 @@ const routeTree = {
 } as const;
 
 const API = buildPaths(routeTree);
-console.log(API)
 
 export default API;
