@@ -2,7 +2,7 @@ import type { FastifyReply } from "fastify/types/reply";
 import type { FastifyRequest } from "fastify/types/request";
 import { GOOGLE_AUTH_ENABLED } from "@config";
 import jwt from "@utils/jwt";
-import { googleClient } from "@api/oauth";
+import { googleClient } from "@api/oauth/google";
 
 
 export const googleOauthMiddleware = async (request: FastifyRequest, reply: FastifyReply) => {

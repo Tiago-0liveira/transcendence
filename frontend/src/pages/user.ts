@@ -1,6 +1,7 @@
 import AuthManager from "@/auth/authManager";
 import Router from "@/router/Router";
 import { authGuard } from "@/router/guards"
+import API from "@/utils/BackendApi";
 
 const fetchMoreButtonDynamicClasses = "opacity-0 pointer-events-none".split(" ")
 
@@ -20,7 +21,7 @@ const getPlayerLi = (user: FriendUser) => {
 const fetchFriends = (page: number, limit: number, cb: (data: { friends?: FriendUser[] }) => void) => {
 	const auth = AuthManager.getInstance()
 
-	auth.authFetch(Router.makeUrl(`/auth/friends/me`, {}, {
+	auth.authFetch(Router.makeUrl(API.auth.friends.me, {}, {
 		page: String(page), limit: String(limit)
 	}), {
 		method: "GET",
@@ -68,7 +69,6 @@ const component = async () => {
 
 	let requestPage = 1;
 	let requestSize = 30;
-	let lastQuery = ""
 	let canFetchMore = false;
 
 	const postRequestUpdate = (updateMode: UIUpdateMode) =>

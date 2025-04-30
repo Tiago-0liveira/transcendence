@@ -30,12 +30,12 @@ const DEFAULTS = {
 			options: (): CookieSerializeOptions => ({
 				...BaseHttpCookieOptions,
 				expires: new Date(Date.now() + 60 * 60 * 24 * 7 * 1000), // 1 Week
-				path: "/auth/refresh" /* the only endpoint it is needed */
+				path: "/jwt/refresh" /* the only endpoint it is needed */
 			}),
 			clearOptions: (): CookieSerializeOptions => ({
 				...BaseHttpCookieOptions,
 				expires: new Date(0),
-				path: "/auth/refresh"
+				path: "/jwt/refresh"
 			})
 		},
 		oauthToken: {

@@ -1,12 +1,18 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import Database from "@db/Database";
 import jwt from "@utils/jwt";
-import { authJwtMiddleware } from "@middleware/auth";
 import { JWT_REFRESH_SECRET } from "@config";
 import { UserAuthMethod } from "@enums/enums";
+import { CookieName } from "@enums/auth";
 import DEFAULTS from "@utils/defaults";
 
-export default async function userRoutes(fastify: FastifyInstance) {
+/**
+ * path: /auth/
+ */
+export default async function authenticationRoutes(fastify: FastifyInstance) {
+	/**
+	 * Default SignUp
+	 */
 	fastify.post("/signin", {
 		schema: {
 			body: {
@@ -34,7 +40,6 @@ export default async function userRoutes(fastify: FastifyInstance) {
 
 		try {
 			const res = await Database.getInstance().userTable.new({ username, displayName, avatarUrl, password, authProvider })
-			console.log("/signin res:", res);
 			if (res.error)
 				return reply.code(400).send({ message: res.error })
 			else {
@@ -43,11 +48,11 @@ export default async function userRoutes(fastify: FastifyInstance) {
 
 				reply
 					.code(200)
-					.setCookie("refreshToken", refreshToken, DEFAULTS.cookies.oauthToken.options())
+					.setCookie(CookieName.REFRESH_TOKEN, refreshToken, DEFAULTS.cookies.oauthToken.options())
 					.header('Access-Control-Allow-Credentials', 'true')
 					.send({ accessToken: accessToken, ok: true });
 			}
-			
+
 		} catch (error) {
 			reply
 				.code(400)
@@ -56,6 +61,9 @@ export default async function userRoutes(fastify: FastifyInstance) {
 		}
 	});
 
+	/**
+	 * Default Login
+	 */
 	fastify.post("/login", {
 		schema: {
 			body: {
@@ -67,7 +75,7 @@ export default async function userRoutes(fastify: FastifyInstance) {
 				},
 			}
 		}
-	}, async (request: FastifyRequest<{Body: { username: string, password: string }}>, reply) => {
+	}, async (request: FastifyRequest<{ Body: { username: string, password: string } }>, reply) => {
 		let { username, password } = request.body;
 
 		try {
@@ -82,7 +90,7 @@ export default async function userRoutes(fastify: FastifyInstance) {
 
 				reply
 					.code(200)
-					.setCookie("refreshToken", refreshToken, DEFAULTS.cookies.refreshToken.options())
+					.setCookie(CookieName.REFRESH_TOKEN, refreshToken, DEFAULTS.cookies.refreshToken.options())
 					.header('Access-Control-Allow-Credentials', 'true')
 					.send({ accessToken: accessToken });
 			}

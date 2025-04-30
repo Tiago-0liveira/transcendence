@@ -1,4 +1,5 @@
 import AuthManager from "@/auth/authManager";
+import API from "@/utils/BackendApi";
 import { conditionalRender } from "@/utils/conditionalRender";
 import BaseAttributeValidationElement from "@component/BaseAttributeValidationElement";
 
@@ -99,7 +100,7 @@ class UserCard extends BaseAttributeValidationElement<UserCardAttributes> {
 }
 
 const RemoveFriendHandler = (userId: string) => {
-	AuthManager.getInstance().authFetch(`/auth/friends/remove`, {
+	AuthManager.getInstance().authFetch(API.auth.friends.remove, {
 		method: "POST",
 		body: JSON.stringify({ userId }),
 	}).then(res => {
@@ -120,7 +121,7 @@ const RemoveFriendHandler = (userId: string) => {
 }
 
 const AddFriendHandler = (userId: string) => {
-	AuthManager.getInstance().authFetch(`/auth/friends/add`, {
+	AuthManager.getInstance().authFetch(API.auth.friends.add, {
 		method: "POST",
 		body: JSON.stringify({ userId }),
 	}).then(res => {
@@ -141,7 +142,7 @@ const AddFriendHandler = (userId: string) => {
 }
 
 const CancelFriendRequestHandler = (userId: string) => {
-	AuthManager.getInstance().authFetch(`/auth/friends/requests/pending/cancel`, {
+	AuthManager.getInstance().authFetch(API.auth.friends.requests.pending.cancel, {
 		method: "POST",
 		body: JSON.stringify({ userId }),
 	}).then(res => {
@@ -162,7 +163,7 @@ const CancelFriendRequestHandler = (userId: string) => {
 }
 
 const AcceptFriendRequestHandler = (userId: string) => {
-	AuthManager.getInstance().authFetch(`/auth/friends/requests/accept`, {
+	AuthManager.getInstance().authFetch(API.auth.friends.requests.accept, {
 		method: "POST",
 		body: JSON.stringify({ userId }),
 	}).then(res => {
@@ -184,7 +185,7 @@ const AcceptFriendRequestHandler = (userId: string) => {
 }
 
 const RejectFriendRequestHandler = (userId: string) => {
-	AuthManager.getInstance().authFetch(`/auth/friends/requests/reject`, {
+	AuthManager.getInstance().authFetch(API.auth.friends.requests.reject, {
 		method: "POST",
 		body: JSON.stringify({ userId }),
 	}).then(res => {

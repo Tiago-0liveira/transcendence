@@ -1,6 +1,7 @@
 import AuthManager from "@/auth/authManager";
 import Router from "@/router/Router";
 import { authGuard } from "@/router/guards"
+import API from "@/utils/BackendApi";
 import { debounce } from "@/utils/requests";
 
 const fetchMoreButtonDynamicClasses = "opacity-0 pointer-events-none".split(" ")
@@ -8,7 +9,7 @@ const fetchMoreButtonDynamicClasses = "opacity-0 pointer-events-none".split(" ")
 const fetchUsers = (query: string, page: number, limit: number, cb: (query: string, data: { users?: PossibleFriendUser[] }) => void) => {
 	const auth = AuthManager.getInstance()
 
-	auth.authFetch(Router.makeUrl(`/auth/users`, {}, {
+	auth.authFetch(Router.makeUrl(API.auth.friends.possibleFriends, {}, {
 		name: query, page: String(page), limit: String(limit)
 	}), {
 		method: "GET",

@@ -1,5 +1,5 @@
 import Router from "@/router/Router";
-import { BACKEND_URL } from "@/utils/config";
+import API from "@/utils/BackendApi";
 import { backendEndpoint } from "@/utils/path";
 
 
@@ -49,7 +49,7 @@ class AuthManager {
 	}
 
 	public async fetchUser(): Promise<boolean> {
-		const res = await this.authFetch("auth/me", { credentials: "include" });
+		const res = await this.authFetch(API.auth.me, { credentials: "include" });
 		if (!res || !res.ok) return false;
 
 		const body = await res.json();
@@ -85,7 +85,7 @@ class AuthManager {
 	/* Default login */
 	/* TODO: make this request get the jwt cookie from the backend so it logins right after sign up UX all the way */
 	public async register(userParams: UserParams): Promise<boolean> {
-		const res = await fetch(backendEndpoint("user/signin"), {
+		const res = await fetch(backendEndpoint(API.auth.signup), {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json"
@@ -101,7 +101,7 @@ class AuthManager {
 	}
 
 	public async oauthGoogleLogin(googleCode: string): Promise<string | null> {
-		const res = await fetch(backendEndpoint("oauth/login/google"), {
+		const res = await fetch(backendEndpoint(API.oauth.google.login), {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json"
@@ -112,7 +112,7 @@ class AuthManager {
 		const data = await res.json()
 		if (!res.ok) {
 			// TODO: send notification here
-			console.error("/oauth/login/google error:", data.error);
+			console.error(`${API.oauth.google.login} error:`, data.error);
 			return data.error;
 		}
 		this.accessToken = data.accessToken;
@@ -124,7 +124,7 @@ class AuthManager {
 		else return the error
 	*/
 	public async oauthGoogleSignUp(googleCode: string): Promise<string | null> {
-		const res = await fetch(backendEndpoint("oauth/signup/google"), {
+		const res = await fetch(backendEndpoint(API.oauth.google.signup.path), {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json"
@@ -134,14 +134,14 @@ class AuthManager {
 		})
 		const data = await res.json();
 		if (!res.ok) {
-			console.error("/oauth/signup/google error:", data.error)
+			console.error(`${API.oauth.google.signup.path} error:`, data.error)
 			return data.error;
 		}
 		return data.error || null;
 	}
 
 	public async oauthGoogleCompleteSignUp(userParams: UserParamsNoPass): Promise<string | null> {
-		const res = await fetch(backendEndpoint("oauth/signup/google/complete"), {
+		const res = await fetch(backendEndpoint(API.oauth.google.signup.complete), {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json"
@@ -152,7 +152,7 @@ class AuthManager {
 		const data = await res.json()
 		if (!res.ok) {
 			// TODO: send notification here
-			console.error("/oauth/signup/google/complete error:", data.error);
+			console.error(`${API.oauth.google.signup.complete}:`, data.error);
 			if (res.status === 401) {
 				Router.getInstance().navigate("/login")
 			}
@@ -166,7 +166,7 @@ class AuthManager {
 	}
 
 	public async login(userParams: UserParams): Promise<boolean> {
-		const res = await fetch(backendEndpoint("user/login"), {
+		const res = await fetch(backendEndpoint(API.auth.login), {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json"
@@ -184,7 +184,7 @@ class AuthManager {
 
 	public async refreshToken() {
 		try {
-			const response = await fetch(backendEndpoint("auth/refresh"), { credentials: "include" });
+			const response = await fetch(backendEndpoint(API.jwt.refresh.path), { credentials: "include" });
 
 			if (!response.ok) throw new Error("Refresh failed");
 
@@ -201,7 +201,7 @@ class AuthManager {
 	/* Sends the user to /login and resets accessToken and user in-memory stored data */
 	public async logout(redirect = false) {
 		try {
-			const response = await this.authFetch("auth/refresh/logout", { method: "GET", credentials: "include" });
+			const response = await this.authFetch(API.jwt.refresh.logout, { method: "GET", credentials: "include" });
 			this.accessToken = null;
 			this.user = null;
 			if (!response || !response.ok) throw new Error("Refresh failed");

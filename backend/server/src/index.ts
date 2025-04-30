@@ -1,14 +1,9 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors"
 import fastifyCookie from "@fastify/cookie"
-import { PORT, DEV_MODE, FRONTEND_URL, JWT_SECRET } from "@config"
-import Database from "@db/Database";
+import { PORT, FRONTEND_URL, JWT_SECRET } from "@config"
+import registerRoutes from "./routes";
 
-import userRoutes from "./api/user";
-import jwtRoutes from "./api/jwt"
-import oauthRoutes from "./api/oauth";
-
-const db = Database.getInstance();
 const app = Fastify({ logger: true });
 
 app.register(fastifyCookie, {
@@ -25,12 +20,14 @@ app.register(cors, {
 	optionsSuccessStatus: 200
 })
 
-app.register(userRoutes, { prefix: "/user" })
-app.register(jwtRoutes, { prefix: "/auth" })
-app.register(oauthRoutes, { prefix: "/oauth" })
+registerRoutes(app);
 
 app.setNotFoundHandler((req, reply) => {
 	reply.code(404).send({ message: "Endpoint not found!" })
+});
+
+app.ready().then(() => {
+	console.log(app.printRoutes());
 });
 
 app.listen({ port: PORT, host: "0.0.0.0" }, (err, addr) => {
