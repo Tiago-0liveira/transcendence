@@ -59,17 +59,21 @@ class AuthManager {
 	}
 
 	public async authFetch(url: string, options: RequestInit = {}) {
+		let response: Response | null = null;
+		const headers = new Headers(options.headers)
 		url = backendEndpoint(url)
-		const headers = new Headers(options.headers);
 		if (options.method !== "GET") {
 			headers.set("Accept", "application/json");
 		}
 		headers.set("Content-Type", "application/json");
-		headers.set("Authorization", `Bearer ${this.GetAccessToken()}`)
+		
+		// Do not make the request if accessToken is null (there's no need if we know it requires authentication)
+		if (this.accessToken) {
+			headers.set("Authorization", `Bearer ${this.GetAccessToken()}`)
+			response = await fetch(url, { ...options, headers });
+		}
 
-		const response = await fetch(url, { ...options, headers });
-
-		if (response.status === 401) {
+		if (!this.accessToken || response?.status === 401) {
 			console.info("Access token expired, trying to refresh!");
 			const refreshed = await this.refreshToken();
 			if (!refreshed) {
