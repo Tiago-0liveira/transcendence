@@ -51,13 +51,13 @@ const component = async () => {
 					</div>
 					<div class="relative flex flex-col justify-between items-center h-40 w-44 mb-2">
 						<div class="relative flex flex-col w-full">
-							<a href="/login" class="link h-10">Have an account?</a>
+							<a href="/auth/login" class="link h-10">Have an account?</a>
 							<div class="flex flex-row justify-evenly w-full">
 								<span id="42-oauth" class="hover:cursor-pointer rounded-md p-2 transition-colors hover:bg-zinc-900">
-									<img class="aspect-auto w-8" src="42-logo.svg" alt="42 school logo svg">
+									<img class="aspect-auto w-8" src="/42-logo.svg" alt="42 school logo svg">
 								</span>
 								<span id="google-oauth" class="hover:cursor-pointer rounded-md p-2 transition-colors hover:bg-zinc-900">
-									<img class="aspect-auto w-8" src="google-logo.svg" alt="Google logo svg">
+									<img class="aspect-auto w-8" src="/google-logo.svg" alt="Google logo svg">
 								</span>
 							</div>
 						</div>
@@ -128,27 +128,12 @@ const component = async () => {
 
 			const res = await AuthManager.getInstance().register(payload);
 			if (res) {
-				Router.getInstance().navigate("/user");
+				Router.getInstance().returnToOrPath("/user")
 			} else {
 				console.error("Sigin failed");
 			}
-			/*window.user = { username };
-			const route = Router.getInstance().getCurrentRoute();
-			if (!route) {
-				console.error("route is null");
-			}
-			else {
-				try {
-					const redirectUri = decodeURIfromRoute(route);
-					console.log(redirectUri);
-					Router.getInstance().navigate(redirectUri);
-
-				} catch (error) {
-					console.error(error);
-				}
-			}*/
 		}
 	})
 }
 
-Router.getInstance().register({ path: '/signin', component });
+Router.getInstance().register({ path: '/auth/signin', component });

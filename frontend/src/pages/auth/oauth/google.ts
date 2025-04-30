@@ -1,10 +1,6 @@
-import { isValidGoogleOauthFormData, isValidLoginFormData } from "@/auth/validation";
+import { isValidGoogleOauthFormData } from "@/auth/validation";
 import Router from "@/router/Router";
 import AuthManager from "@/auth/authManager"
-import { decodeURIfromRoute } from "@/uri-encoding";
-import { BACKEND_URL, GOOGLE_CLIENT_ID } from "@/utils/config";
-import { backendEndpoint, normalizePath } from "@/utils/path";
-
 
 
 const component = async () => {
@@ -81,11 +77,11 @@ const component = async () => {
 			if (displayName) payload["displayName"] = displayName
 			if (avatarUrl) payload["avatarUrl"] = avatarUrl
 
-			/* disable form submit and enable right after this line */
+			/* TODO: disable form submit and enable right after this line */
 			const res = await AuthManager.getInstance().oauthGoogleCompleteSignUp(payload)
 			if (!res)
 			{
-				Router.getInstance().navigate("/user")
+				Router.getInstance().returnToOrPath("/user")
 			} else {
 				console.error("res: ", res);
 			}

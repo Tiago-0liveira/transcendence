@@ -12,9 +12,8 @@ const checkAuth: () => Promise<boolean> = async () => {
 // Authentication guard example
 export const authGuard: RouteGuard = async (to, _from) => {
 	const isAuthenticated = await checkAuth(); // Your auth check implementation
-	console.log("authGuard: ", to, _from);
 	if (!isAuthenticated) {
-		Router.getInstance().navigate("/login", {}, { returnTo: Router.makeUrl(to.path, to.params, to.query) });
+		Router.getInstance().navigate("/auth/login", {}, { returnTo: Router.makeUrl(to.path, to.params, to.query) });
 		return false;
 	}
 	return true;

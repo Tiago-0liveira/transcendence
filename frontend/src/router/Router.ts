@@ -68,22 +68,44 @@ class Router {
 		}
 	}
 
-	public async navigate(pathOrUrl: string, routeParams?: RouteParams, queryParams?: QueryParams): Promise<void> {
+	public async navigate(pathOrUrl: string, routeParams: RouteParams = {}, queryParams: QueryParams = {}): Promise<void> {
 		this.handleComponentUnmount()
+
 		let url = Router.makeUrl(pathOrUrl, routeParams, queryParams);
 
-		const fullUrl = new URL(url, window.location.origin);
-		const path = this.mode === 'hash'
-			? fullUrl.hash.slice(1) || '/'
-			: fullUrl.pathname;
+		const currentPath = this.getCurrentPath()
+		const currentRoute = this.getCurrentRoute()
+		// Persist returnTo query param whitin /auth and /oauth
+		const fullToUrl = new URL(url, window.location.origin)
+		if ((currentPath.startsWith("/auth") || currentPath.startsWith("/oauth")) &&
+			(fullToUrl.pathname.startsWith("/auth") || fullToUrl.pathname.startsWith("/oauth")) && currentRoute?.query.returnTo) {
+			url = Router.makeUrl(pathOrUrl, routeParams, {...queryParams, returnTo: currentRoute.query.returnTo})
+		}
 
+		const fullUrl = new URL(url, window.location.origin);
 		if (this.mode === 'history') {
 			window.history.pushState({}, '', url);
 		} else {
-			window.location.hash = path;
+			const locationHash = this.mode === 'hash'
+				? fullUrl.hash.slice(1) || '/'
+				: fullUrl.pathname;
+			window.location.hash = locationHash;
 		}
 
 		await this.handleRoute();
+	}
+
+	/**
+	 * @description this function tries to check if this.getCurrentRoute().query.returnTo is set and returns otherwise uses argument
+	 * @argument 
+	 */
+	public async returnToOrPath(fallbackPath: string, routeParams: RouteParams = {}, queryParams: QueryParams = {}) {
+		const currentRoute = this.getCurrentRoute()
+		if (currentRoute?.query.returnTo) {
+			this.navigate(currentRoute.query.returnTo)
+		} else {
+			this.navigate(fallbackPath, routeParams, queryParams)
+		}
 	}
 
 	public parseUri(uri: string): {
@@ -153,7 +175,7 @@ class Router {
 					this.currentRoute.cleanupFunc = componentCleanupFunc || undefined;
 				}
 			}
-			
+
 		} catch (error: any) {
 			console.error('Routing error:', error);
 			this.handleError(error);
@@ -218,7 +240,7 @@ class Router {
 
 	static makeUrl(pathOrUrl: string, routeParams?: RouteParams, queryParams?: QueryParams): string {
 		let url = pathOrUrl;
-		
+
 		if (routeParams) {
 			Object.entries(routeParams).forEach(([key, value]) => {
 				url = url.replace(`:${key}`, encodeURIComponent(String(value)));

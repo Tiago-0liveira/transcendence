@@ -55,4 +55,4 @@ const component = async () => {
 	}
 }
 
-Router.getInstance().register({ path: '/logout', component });
+Router.getInstance().register({ path: '/auth/logout', component });

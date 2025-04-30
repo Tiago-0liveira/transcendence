@@ -1,10 +1,7 @@
 import { isValidLoginFormData } from "@/auth/validation";
 import Router from "@/router/Router";
 import AuthManager from "@/auth/authManager"
-import { decodeURIfromRoute } from "@/uri-encoding";
-import { BACKEND_URL, GOOGLE_CLIENT_ID, GOOGLE_OAUTH_ENABLED } from "@/utils/config";
-import { backendEndpoint, normalizePath } from "@/utils/path";
-
+import { GOOGLE_CLIENT_ID } from "@/utils/config";
 
 
 const component = async () => {
@@ -45,13 +42,13 @@ const component = async () => {
 						</div>
 						
 						<div>
-							<a href="/signin" class="link h-10">Don't have an account?</a>
+							<a href="/auth/signin" class="link h-10">Don't have an account?</a>
 							<div class="flex flex-row justify-evenly mt-2">
 								<span id="42-oauth" class="hover:cursor-pointer rounded-md p-2 transition-colors hover:bg-zinc-900">
-									<img class="aspect-auto w-8" src="42-logo.svg" alt="42 school logo svg">
+									<img class="aspect-auto w-8" src="/42-logo.svg" alt="42 school logo svg">
 								</span>
 								<span id="google-oauth" class="hover:cursor-pointer rounded-md p-2 transition-colors hover:bg-zinc-900">
-									<img class="aspect-auto w-8" src="google-logo.svg" alt="Google logo svg">
+									<img class="aspect-auto w-8" src="/google-logo.svg" alt="Google logo svg">
 								</span>
 							</div>
 						</div>
@@ -86,7 +83,7 @@ const component = async () => {
 
 					AuthManager.getInstance().oauthGoogleLogin(response.code).then(err => {
 						if (!err)
-							Router.getInstance().navigate("/user")
+							Router.getInstance().returnToOrPath("/user")
 						else
 							console.error("oauthGoogleLogin err: ", err)
 					})
@@ -115,7 +112,7 @@ const component = async () => {
 
 			const res = await AuthManager.getInstance().login(payload);
 			if (res) {
-				Router.getInstance().navigate("/user");
+				Router.getInstance().returnToOrPath("/user")
 			} else {
 				console.error("Login failed");
 			}
@@ -123,4 +120,4 @@ const component = async () => {
 	})
 }
 
-Router.getInstance().register({ path: '/login', component });
+Router.getInstance().register({ path: '/auth/login', component });

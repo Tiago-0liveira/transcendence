@@ -53,7 +53,6 @@ class AuthManager {
 		if (!res || !res.ok) return false;
 
 		const body = await res.json();
-		console.log("fetchUser", body);
 		this.user = body.user;
 
 		return true;
@@ -154,7 +153,7 @@ class AuthManager {
 			// TODO: send notification here
 			console.error(`${API.oauth.google.signup.complete}:`, data.error);
 			if (res.status === 401) {
-				Router.getInstance().navigate("/login")
+				Router.getInstance().navigate("/auth/login")
 			}
 
 			return data.error;
