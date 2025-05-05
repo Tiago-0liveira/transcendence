@@ -1,7 +1,7 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import Database from "@db/Database";
 import jwt from "@utils/jwt";
-import { JWT_REFRESH_SECRET, GOOGLE_AUTH_ENABLED, GOOGLE_CLIENT_SECRET, FRONTEND_URL, GOOGLE_CLIENT_ID } from "@config";
+import { JWT_REFRESH_SECRET, GOOGLE_HAS_CREDENTIALS, GOOGLE_CLIENT_SECRET, FRONTEND_URL, GOOGLE_CLIENT_ID } from "@config";
 import { OAuth2Client } from "google-auth-library";
 import { UserAuthMethod } from "@enums/enums";
 import DEFAULTS from "@utils/defaults";
@@ -9,7 +9,7 @@ import { googleOauthMiddleware, oauthJwtMiddleware } from "@middleware/google";
 import { CookieName } from "@enums/auth";
 
 export let googleClient: OAuth2Client | null = null;
-if (GOOGLE_AUTH_ENABLED) {
+if (GOOGLE_HAS_CREDENTIALS) {
 	googleClient = new OAuth2Client(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, FRONTEND_URL);
 }
 
