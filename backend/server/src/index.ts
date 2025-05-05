@@ -26,10 +26,6 @@ app.setNotFoundHandler((req, reply) => {
 	reply.code(404).send({ message: "Endpoint not found!" })
 });
 
-app.ready().then(() => {
-	console.log(app.printRoutes());
-});
-
 app.listen({ port: PORT, host: "0.0.0.0" }, (err, addr) => {
 	if (err) {
 		app.log.error(err);
