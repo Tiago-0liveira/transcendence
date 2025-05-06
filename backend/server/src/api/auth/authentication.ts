@@ -13,7 +13,7 @@ export default async function authenticationRoutes(fastify: FastifyInstance) {
 	/**
 	 * Default SignUp
 	 */
-	fastify.post("/signin", {
+	fastify.post("/signup", {
 		schema: {
 			body: {
 				type: "object",

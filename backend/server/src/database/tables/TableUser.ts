@@ -36,65 +36,65 @@ class UserTable extends BaseTable<User, UserParams> {
 			return Promise.reject({ error: "User already exists!" });
 		}
 		return new Promise((resolve, reject) => {
-			this.database.database.run(this._insertStr, [params.username, params.displayName, params.avatarUrl, params.password, params.authProvider ?? UserAuthMethod.LOCAL, params.authProviderId ?? UserAuthMethod.LOCAL],
-				function (err) {
-					if (err) reject({ error: err });
-					else resolve({ result: this.lastID });
-				}
-			)
+			const insert = this.database.database.prepare(this._insertStr)
+			const run1 = insert.run(params.username, params.displayName, params.avatarUrl, params.password, params.authProvider ?? UserAuthMethod.LOCAL, params.authProviderId ?? UserAuthMethod.LOCAL)
+			if (run1.changes === 0) {
+				reject({ error: new Error("could not insert") })
+			}
+			resolve({ result: run1.lastInsertRowid as number })
 		})
 	}
 	async delete(id: number): Promise<DatabaseResult<boolean>> {
 		return new Promise((resolve, reject) => {
-			this.database.database.run(this._deleteStr, [id], function (err) {
-				if (err) reject({ error: err })
-				else resolve({ result: true })
-			})
+			const del = this.database.database.prepare(this._deleteStr)
+			const run1 = del.run(id);
+			if (run1.changes === 0) {
+				reject({ error: new Error(`could not delete ${id}`) })
+			}
+			resolve({ result: true })
 		})
 	}
-	async update(id: number, params: Omit<UserParams, "password">): Promise<DatabaseResult<number>> {
+	async update(id: number, params: UserParamsNoPass): Promise<DatabaseResult<number>> {
 		return new Promise((resolve, reject) => {
-			this.database.database.run(this._updateStr, [params.username, params.displayName, params.avatarUrl, id],
-				function (err) {
-					if (err) reject({ error: err })
-					else resolve({ result: this.lastID });
-				}
-			)
+			const update = this.db.prepare(this._updateStr)
+			const update1 = update.run(params.username, params.displayName, params.avatarUrl, id)
+			if (update1.changes === 0) {
+				reject({ error: new Error("Could not update ") })
+			}
+			resolve({ result: update1.lastInsertRowid as number })
 		})
 	}
 	async updatePassword(id: number, password: string): Promise<DatabaseResult<number>> {
 		return new Promise((resolve, reject) => {
-			this.database.database.run(this._updatePasswordStr, [password, id],
-				function (err) {
-					if (err) reject({ error: err })
-					else resolve({ result: this.lastID });
-				}
-			)
+			const update = this.db.prepare(this._updatePasswordStr)
+			const update1 = update.run(password, id)
+			if (update1.changes === 0) {
+				reject({ error: new Error("Could not update ") })
+			}
+			resolve({ result: update1.lastInsertRowid as number })
 		})
 	}
-	async login(username: string, password: string): Promise<DatabaseResult<Omit<UserParams, "password"> & UIDD>> {
+	async login(username: string, password: string): Promise<DatabaseResult<UserParamsNoPass & UIDD>> {
 		const userIsRegistered = await this.existsUsername(username);
 		if (!userIsRegistered) return Promise.resolve({ error: new Error("User not found!") });
 
 		return new Promise((resolve, reject) => {
-			this.database.database.get(`SELECT id, username, displayName, avatarUrl FROM ${this._tableName} WHERE username = ? AND password = ?`, [username, password], (err, row: Omit<UserParams, "password"> & UIDD) => {
-				if (err) resolve({ error: err });
-				else resolve({ result: row });
-			})
+			const select = this.db.prepare(`SELECT id, username, displayName, avatarUrl FROM ${this._tableName} WHERE username = ? AND password = ?`)
+			const select1 = select.get(username, password)
+			if (select1) {
+				resolve({ result: select1 as UserParamsNoPass & UIDD })
+			} else
+				resolve({ error: new Error("Invalid login credentials!") })
 		})
 	}
 	/* args properties must be valid table column names */
 	private async exists(args: Record<string, string>): Promise<boolean> {
 		return new Promise((resolve, reject) => {
 			const propertiesJoined = Object.keys(args).map((s) => s + " = ? ").join(" OR ")
-			this.database.database.get(`SELECT 1 FROM ${this._tableName} WHERE ${propertiesJoined}`, Object.values(args), (err, row) => {
-				if (err) {
-					console.log(err);
-					console.log(err.message)
-					reject(err)
-				}
-				else resolve(!!row);
-			})
+			const select = this.db.prepare(`SELECT 1 FROM ${this._tableName} WHERE ${propertiesJoined}`)
+			const select1 = select.get(Object.values(args))
+
+			resolve(Boolean(select1))
 		})
 	}
 	async existsDisplayName(displayName: string): Promise<boolean> {
@@ -106,33 +106,32 @@ class UserTable extends BaseTable<User, UserParams> {
 	async existsUsernameOrDisplayName(username: string, displayName: string): Promise<boolean> {
 		return this.exists({ username, displayName })
 	}
-	async existsGoogleId(googleId: string): Promise<{id: string} | undefined> {
+	async existsGoogleId(googleId: string): Promise<{ id: string } | null> {
 		return new Promise((resolve, reject) => {
-			this.database.database.get(`SELECT id FROM ${this._tableName} WHERE authProvider = ? AND authProviderId = ?`, [UserAuthMethod.GOOGLE, googleId], (err, row: {id: string} | undefined) => {
-				console.log("existsGoogleId::err:", err, "||row:", row)
-				if (err) reject(err);
-				else resolve(row);
-			})
+			const select = this.db.prepare(`SELECT id FROM ${this._tableName} WHERE authProvider = ? AND authProviderId = ?`)
+			const select1 = select.get(UserAuthMethod.GOOGLE, googleId)
+			console.log("existsGoogleId:", select1)
+			if (select1) resolve(select1 as { id: string })
+			else resolve(null)
 		})
 	}
+
+	bulkInsertTransaction = this.db.transaction((count: number) => {
+		if (count <= 0) throw new Error("Cannot call bulkInsert with count 0")
+		const stmt = this.db.prepare(this._insertStr)
+		for (let i = 0; i < count; i++) {
+			const user = generateUser();
+			stmt.run(user.username, user.displayName, user.avatarUrl, user.password, UserAuthMethod.LOCAL, "");
+		}
+	})
 	bulkInsert(count: number) {
-		const rawDb = this.database.database;
 		console.log(`||Database |INFO| || Will insert ${count} users to the ${this._tableName} table!`)
-		rawDb.serialize(() => {
-			rawDb.run("BEGIN TRANSACTION")
-			for (let i = 0; i < count; i++) {
-				const user = generateUser();
-				console.log(`User< username=${user.username} displayName=${user.displayName} password=${user.password} ...>`)
-				rawDb.run(this._insertStr, [user.username, user.displayName, user.avatarUrl, user.password, UserAuthMethod.LOCAL, ""]);
-			}
-			rawDb.run("COMMIT", (err) => {
-				if (err) {
-					console.error("Seeding failed:", err);
-					rawDb.close();
-				}
-				else console.log(`||Database |INFO| || ${count} users inserted successfully.`);
-			});
-		})
+		try {
+			this.bulkInsertTransaction(count)
+		} catch (error) {
+			console.log("Something went wrong when bulk inserting")
+			console.error(error)
+		}
 	}
 }
 

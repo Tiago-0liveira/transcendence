@@ -19,15 +19,12 @@ class BlackListTokensTable extends BaseTable<BlackListToken, BlackListToken> {
 
 	async new(params: BlackListToken): Promise<DatabaseResult<number>> {
 		return new Promise((resolve, reject) => {
-			try {
-				this.database.database.run(this._insertStr, [params.token],
-					function (err) {
-						if (err) reject({ error: err })
-						else resolve({ result: this.lastID });
-					}
-				)
-			} catch (error) {
-				reject({ error })
+			const insert = this.db.prepare(this._insertStr)
+			const run1 = insert.run(params.token)
+			if (run1.changes === 0) {
+				resolve({ error: new Error(`Could not insert to ${this._tableName}`) })
+			} else {
+				resolve({ result: run1.lastInsertRowid as number })
 			}
 		})
 	}
@@ -42,12 +39,14 @@ class BlackListTokensTable extends BaseTable<BlackListToken, BlackListToken> {
 	}
 	async exists(token: string): Promise<DatabaseResult<boolean>> {
 		return new Promise((resolve, reject) => {
-			this.database.database.get(this._getStr, [token],
-				function (err, row) {
-					if (err) reject({ error: err })
-					else resolve(({ result: !!row }))
-				}
-			)
+			const get = this.db.prepare(this._getStr)
+			const run = get.get(token)
+			console.log("run:", run)
+			if (run) {
+				resolve({ result: Boolean(run) })
+			} else {
+				resolve({ error: new Error("Token does not exist!") })
+			}
 		})
 	}
 }

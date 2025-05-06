@@ -150,8 +150,6 @@ export default async function oauthGoogleRoutes(fastify: FastifyInstance) {
 				password: "",
 			};
 
-			console.log("newUserData:", newUserData)
-
 			const newDbUser = await db.userTable.new(newUserData);
 			if (newDbUser.error) {
 				return reply.status(400).send({ error: newDbUser.error })

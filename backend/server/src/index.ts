@@ -3,6 +3,9 @@ import cors from "@fastify/cors"
 import fastifyCookie from "@fastify/cookie"
 import { PORT, FRONTEND_URL, JWT_SECRET } from "@config"
 import registerRoutes from "./routes";
+import Database from "@db/Database";
+
+Database.getInstance()/* Force db creation */
 
 const app = Fastify({ logger: true });
 
