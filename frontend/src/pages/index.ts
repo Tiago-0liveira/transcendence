@@ -10,16 +10,22 @@ const component = async () => {
 		"<a href=\"/login\">Login</a>"
 
 	const template = `
-		<div class="home h-40 flex flex-col justify-evenly">
-			<h1 class="">Welcome Home</h1>
-			<nav>
-				<a href="/about">About</a>
-				<a href="/contact">Contact</a>
-				${userElement}
-			</nav>
-		</div>
+    <nav class="bg-blue-600 text-white p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="/" class="text-xl font-bold hover:text-purple-400">Transcendence</a>
+            <div class="space-x-4">
+                <a href="/login" class="hover:text-purple-400">Sign In</a>
+                <a href="/signUp" class="hover:text-purple-400">Sign Up</a>
+            </div>
+        </div>
+    </nav>
+    <div class="flex items-center justify-center min-h-screen"> <!-- Added padding for better spacing -->
+       <span class="px-4 py-4 bg-blue-600 rounded-lg shadow-2xl  hover:text-purple-400 text-white">
+           ${userElement}
+       </span>
+    </div>
 	`;
-	document.querySelector('#app')!.innerHTML = template;
-}
+	document.querySelector("#app")!.innerHTML = template;
+};
 
-Router.getInstance().register({ path: '/', component });
+Router.getInstance().register({ path: "/", component });

@@ -1,0 +1,32 @@
+{
+    "name": "transcendence",
+    "dockerComposeFile": "docker-compose.yml",
+    "service": "front-dev",
+    "workspaceFolder": "/app",
+    "shutdownAction": "stopCompose",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "esbenp.prettier-vscode",
+                "dbaeumer.vscode-eslint",
+                "ms-vscode.vscode-typescript-next"
+            ]
+        }
+    },
+    "postCreateCommand": "npm install",
+    "forwardPorts": [
+        3000,
+        4000
+    ],
+    "remoteEnv": {
+        "NODE_ENV": "development"
+    },
+    "runServices": [
+        "front-dev",
+        "back-dev"
+    ],
+    "mounts": [
+        "source=${localWorkspaceFolder}/frontend,target=/app,type=bind,consistency=cached",
+        "source=${localWorkspaceFolder}/backend/server,target=/server,type=bind,consistency=cached"
+    ]
+}
