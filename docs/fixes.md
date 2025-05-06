@@ -9,3 +9,10 @@
 ### Frontend
 	- [x] in the auth middleware change from /user to the actual path the user wants to go to
 	- [x] in Auth Manager authFetch instead of doing the request right away check at least if accessToken is valid especially for recovering the user on first page load (reduce 1 request)
+	- [x] replace tailwind script tag with actual library loading with something like postCSS plugin
+	- [ ] replace google oauth script tag loader with actual library
+	- [ ] look at all pages and check if we are removing the event listeners
+
+
+### Both
+	- [ ] use remember option on login and signin forms or just delete it

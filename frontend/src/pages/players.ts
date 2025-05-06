@@ -25,7 +25,7 @@ const fetchUsers = (query: string, page: number, limit: number, cb: (query: stri
 }
 
 const getPlayerLi = (user: PossibleFriendUser) => {
-	return `
+	return /* html */`
 		<user-card 
 			variant="possibleFriend" 
 			user-id="${user.id}" 
@@ -40,21 +40,20 @@ const getPlayerLi = (user: PossibleFriendUser) => {
 }
 
 const component = async () => {
-	const template = `
-		<div class="user">
+	const template = /* html */`
+		<div class="user relative flex-1 flex flex-col items-center">
 			<nav class="my-5">
-				<a href="/">Home</a>
+				<h1>Players</h1>
 			</nav>
-			<main class="relative flex h-[90%] flex-col gap-4 items-center">
-				<div class="flex w-[70%] flex-col gap-4">
-					<h1>Players</h1>
+			<main class="relative flex w-[95%] min-h-0 flex-1 flex-col gap-5 items-center">
+				<div class="flex min-w-[50%] max-w-[70%] flex-col items-center justify-center gap-4">
 					<div class="flex gap-4 items-center">
 						<label class="text-xl">Search Player</label>
-						<input class="flex-1 rounded-md" name="search-query" placeholder="Search for a user">
+						<input class="flex-1 rounded-md bg-slate-200" name="search-query" placeholder="Search for a user">
 						<button id="FetchMore" class="${fetchMoreButtonDynamicClasses.join(" ")} rounded-md bg-blue-500 p-2 text-white">Fetch More</button>
 					</div>
 				</div>
-				<ul class="relative grid gap-4 w-full grid-cols-[repeat(auto-fit,minmax(250px,1fr))] players-list max-h-[90%] overflow-y-auto">
+				<ul style="max-height: calc(100vh - 250px);" class="grid gap-4 w-full grid-cols-[repeat(auto-fit,minmax(250px,1fr))] players-list overflow-y-auto">
 
 				</ul>
 			</main>
@@ -125,7 +124,7 @@ const component = async () => {
 	const handleClick = (e: MouseEvent) => {
 		if (!e.target) return;
 		if (!(e.target instanceof Element)) return;
-		
+
 		const fetchMoreButton = e.target.closest("#FetchMore")
 		if (fetchMoreButton) {
 			fetchUsers(inputQueryEl.value.trim(), requestPage, requestSize, postRequestUpdate("append"))

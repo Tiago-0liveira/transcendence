@@ -5,59 +5,43 @@ import { GOOGLE_CLIENT_ID } from "@/utils/config";
 
 
 const component = async () => {
-	const template = `
-		<style>
-			div.login form#loginForm div.input-wrapper {
-				box-shadow: 5px 5px 10px -1px rgba(80,80,80,0.51);
-				-webkit-box-shadow: 5px 5px 10px -1px rgba(80,80,80,0.51);
-				-moz-box-shadow: 5px 5px 10px -1px rgba(80,80,80,0.51);
-			}
-			div.login form#loginForm div.input-wrapper a.oauth {
-				box-shadow: 2px 2px 10px -1px rgba(80,80,80,0.51);
-				-webkit-box-shadow: 2px 2px 10px -1px rgba(80,80,80,0.51);
-				-moz-box-shadow: 2px 2px 10px -1px rgba(80,80,80,0.51);
-			}
-		</style>
-
-		<div class="login p-20 pb-30">
-			<form id="loginForm" class="flex flex-col justify-around items-center min-w-full min-h-full">
-				<h1 class="font-medium">Login</h1>
-				<div class="input-wrapper flex flex-col relative rounded-xl border-2 border-[rgb(80,80,80)] items-center justify-around min-w-sm max-w-120 min-h-90 max-h-110">
-					<div class="inputs flex flex-col min-h-[90%]">
-						<div class="flex flex-col">
-							<div class="flex flex-col mt-2 min-w-50 max-w-90">
-								<label for="username" class="ml-1 text-left">Username</label>
-								<input type="text" id="username" name="username" for="username" placeholder="Username" required minlength="5" maxlength="100"/>
-							</div>
-							<div class="flex flex-col mt-2 min-w-50 max-w-90">
-								<label for="password" class="ml-1 text-left">Password</label>
-								<input type="password" id="password" name="password" for="password" placeholder="Password" 
-									required minlength="8" maxlength="100"
-									class="TODO: this is commented this is a pattern that checks all it says below -->  pattern=\"(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{8,}\""
-									title="At least 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special character"
-									/* TODO: remove comment onpaste="return false;"*/
-									
-								/>
-							</div>
-						</div>
-						
-						<div>
-							<a href="/auth/signin" class="link h-10">Don't have an account?</a>
-							<div class="flex flex-row justify-evenly mt-2">
-								<span id="42-oauth" class="hover:cursor-pointer rounded-md p-2 transition-colors hover:bg-zinc-900">
-									<img class="aspect-auto w-8" src="/42-logo.svg" alt="42 school logo svg">
-								</span>
-								<span id="google-oauth" class="hover:cursor-pointer rounded-md p-2 transition-colors hover:bg-zinc-900">
-									<img class="aspect-auto w-8" src="/google-logo.svg" alt="Google logo svg">
-								</span>
-							</div>
-						</div>
+	const template = /* html */`
+		<div class="flex-1 flex items-center justify-center bg-white">
+			<div class="w-full max-w-sm bg-white border border-gray-200 rounded-lg shadow-sm">
+				<form id="loginForm" class="p-6 space-y-6" action="#">
+					<h5 class="text-xl text-center font-medium mb-4 text-gray-900">Login</h5>
+					<div>
+						<label for="username" class="block mb-2 text-sm font-medium text-left text-gray-900 ">Your Username</label>
+						<input type="text" name="username" id="username" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2.5" placeholder="username" required>
 					</div>
-					
-					<button class="w-40">Login</button>
-					
-				</div>
-			</form>
+					<div>
+						<label for="password" class="block mb-2 text-sm font-medium text-left text-gray-900 ">Your password</label>
+						<input type="password" name="password" id="password" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2.5" placeholder="***********" required>
+					</div>
+					<div class="flex items-start">
+						<div class="flex items-start">
+							<div class="flex items-center h-5">
+								<input id="remember" type="checkbox" value="" class="w-4 h-4 border border-gray-300 rounded-sm focus:ring-3 ring-white focus:ring-purple-500">
+							</div>
+							<label for="remember" class="ms-2 text-sm font-medium text-gray-900">Remember me</label>
+						</div>
+						<a href="#" class="ms-auto text-sm text-blue-700 hover:underline">Lost password</a>
+					</div>
+					<button type="submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-1 text-center" >Sign In</button>
+					<div class= "flex justify-center flex-row space-x-6">
+						<div id="google-oauth" class="border rounded-lg p-1 hover:cursor-pointer border-yellow-300">
+							<span class="text-lg text-yellow-600 flex items-center">Login w/ <img class="w-7 h-7 rounded-full mx-1" src="/google-logo.svg" alt=""></span>
+						</div>
+						<div id="42-oauth" class="border rounded-lg p-1 hover:cursor-pointer border-gray-700">
+							<span class="text-lg text-black flex items-center">Login w/ <img class="w-7 h-7 rounded-none mx-1" src="/42-logo.svg" alt=""></span>
+						</div> 
+					</div>  
+					<div class="text-sm font-medium text-gray-500 dark:text-gray-300 space-x-1">
+						<span class="">Not registered?</span>
+						<a href="/auth/signup" class="text-blue-700 hover:underline dark:text-blue-500">Create account</a>
+					</div>
+				</form>
+			</div>
 		</div>
 	`;
 	document.querySelector('#app')!.innerHTML = template;
@@ -70,7 +54,6 @@ const component = async () => {
 
 	if (googleOauth && google?.accounts?.oauth2?.initCodeClient) {
 		googleOauth.addEventListener("click", () => {
-			console.log("her32")
 			google.accounts.oauth2.initCodeClient({
 				client_id: GOOGLE_CLIENT_ID,
 				scope: "profile email",
@@ -87,7 +70,7 @@ const component = async () => {
 						else
 							console.error("oauthGoogleLogin err: ", err)
 					})
-					
+
 				},
 			}).requestCode();
 		})

@@ -1,8 +1,8 @@
 import Router from "@/router/Router";
 
 const component = async () => {
-	const template = `
-		<div class="home">
+	const template = /* html */`
+		<div class="home flex-1">
 			<h1>Page not found!</h1>
 			<nav>
 				<a href="/">Home</a>

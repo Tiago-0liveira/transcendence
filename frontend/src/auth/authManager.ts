@@ -1,3 +1,4 @@
+import NavBar, { getNav } from "@/components/NavBar";
 import Router from "@/router/Router";
 import API from "@/utils/BackendApi";
 import { backendEndpoint } from "@/utils/path";
@@ -16,9 +17,7 @@ class AuthManager {
 		/* Add loading spinner on notification that resolves when this.fetchUser resolves */
 		this.fetchUser().then((ok) => { 
 			if (ok) {
-				/* TODO: change this back to / */
-				/* this is here to quickly route to this because im developing that window */
-				Router.getInstance().navigate("/");
+				Router.getInstance().returnToOrPath("/")
 			}
 		});
 	}
@@ -54,7 +53,7 @@ class AuthManager {
 
 		const body = await res.json();
 		this.user = body.user;
-
+		NavBar.updateNav()
 		return true;
 	}
 
@@ -207,7 +206,8 @@ class AuthManager {
 			const response = await this.authFetch(API.jwt.refresh.logout, { method: "GET", credentials: "include" });
 			this.accessToken = null;
 			this.user = null;
-			if (!response || !response.ok) throw new Error("Refresh failed");
+			NavBar.updateNav()
+			if (!response || !response.ok) throw new Error("Logout failed");
 			return true;
 		} catch (error) {
 			console.log("Could not logout, maybe was already logged out?");

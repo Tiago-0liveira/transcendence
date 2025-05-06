@@ -5,59 +5,39 @@ import AuthManager from "@/auth/authManager"
 
 const component = async () => {
 	/* TODO: check if google Oauth is active, if not redirect back to signin */
-	const template = `
-		<style>
-			div.signin form#signinForm div.input-wrapper {
-				box-shadow: 5px 5px 10px -1px rgba(80,80,80,0.51);
-				-webkit-box-shadow: 5px 5px 10px -1px rgba(80,80,80,0.51);
-				-moz-box-shadow: 5px 5px 10px -1px rgba(80,80,80,0.51);
-			}
-			div.signin form#signinForm div.input-wrapper a.oauth {
-				box-shadow: 2px 2px 10px -1px rgba(80,80,80,0.51);
-				-webkit-box-shadow: 2px 2px 10px -1px rgba(80,80,80,0.51);
-				-moz-box-shadow: 2px 2px 10px -1px rgba(80,80,80,0.51);
-			}
-		</style>
-
-		<div class="signin p-20 pb-20">
-			<form id="signinForm" class="flex flex-col justify-around items-center min-w-full min-h-full">
-				<h1 class="font-medium flex items-center justify-between">
-					<span id="42-oauth" class="hover:cursor-pointer rounded-md p-2 transition-colors hover:bg-zinc-900">
-						<img class="mr-4 aspect-auto w-12" src="/google-logo.svg" alt="42 school logo svg">
+	const template = /*html*/`
+		<div class="flex-1 flex items-center justify-center bg-white">
+			<div class="w-full max-w-sm bg-white border border-gray-200 rounded-lg shadow-sm">
+				<form id="form-oauth-google-completeSignin" class="p-6 space-y-7">
+					<span class="text-2xl text-center flex space-x-2 items-center justify-center font-medium mb-4 text-gray-900">
+						<img class="aspect-auto w-11 h-11" src="/google-logo.svg" alt="">
+						<span >Complete Signup</span>
 					</span>
-					<span>Complete Signin</span>
-				</h1>
-				<div class="input-wrapper flex flex-col relative rounded-xl border-2 border-[rgb(80,80,80)] items-center justify-around min-w-sm max-w-120 h-[24rem]">
-					<div class="inputs flex flex-col min-h-[50%]">
-						<div class="flex flex-col mt-2 min-w-50 max-w-90 cursor-not-allowed">
-							<label for="username" class="ml-1 text-left">Username</label>
-							<input type="text" id="username" name="username" for="username" placeholder="Username" required minlength="5" maxlength="100"/>
-						</div>
-						<div class="flex flex-col mt-2 min-w-50 max-w-90">
-							<label for="displayName" class="ml-1 text-left">Display Name (Google avatar)</label>
-							<input type="text" name="displayName" id="displayName" for="displayName" placeholder="Default is Username" />
-						</div>
-						<div class="flex flex-col mt-2 min-w-50 max-w-90">
-							<label for="avatarUrl" class="ml-1 text-left">Avatar Url</label>
-							<input type="url" name="avatarUrl" id="avatarUrl" for="avatarUrl" placeholder="Default is google Avatar" />
-						</div>
-						<input class="hidden" id="googleId" for="googleId" />
+					<div>
+						<label for="username" class="form-input-label">Your Username</label>
+						<input type="text" name="username" id="username" placeholder="Username" required class="form-input">
 					</div>
-					<div class="relative flex flex-col justify-between items-center h-12 w-44 mb-2">
-						<button class="w-40" type="submit">Signin</button>
+					<div>
+						<label for="displayName" class="form-input-label">Display Name</label>
+						<input type="text" name="displayName" id="displayName" placeholder="Default to Username" class="form-input">
 					</div>
-				</div>
-			</form>
+					<div>
+						<label for="avatarUrl" class="form-input-label">Your avatarUrl</label>
+						<input type="text" name="avatarUrl" id="avatarUrl" placeholder="Default to Google avatar" class="form-input">
+					</div>
+					<button class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-1 text-center" >Sign In</button>
+				</form>
+			</div>
 		</div>
 	`;
 	document.querySelector('#app')!.innerHTML = template;
 
-	const form = document.getElementById("signinForm")
+	const form = document.getElementById("form-oauth-google-completeSignin")
 	if (!form) return;
 
 	form.addEventListener("submit", async (e) => {
 		e.preventDefault()
-		console.log("ola");
+		console.log("kjdmakmsd")
 		const data = new FormData(form as HTMLFormElement);
 		// TODO: change this login form (needs validation here and in the backend)
 		if (isValidGoogleOauthFormData(data)) {
@@ -67,8 +47,7 @@ const component = async () => {
 			const displayName = data.get("displayName")?.toString() ?? "";
 			const avatarUrl = data.get("avatarUrl")?.toString() ?? "";
 
-			if (!username)
-			{
+			if (!username) {
 				// TODO: error notification here
 				console.warn("Username cannot be empty");
 			}
@@ -79,8 +58,7 @@ const component = async () => {
 
 			/* TODO: disable form submit and enable right after this line */
 			const res = await AuthManager.getInstance().oauthGoogleCompleteSignUp(payload)
-			if (!res)
-			{
+			if (!res) {
 				Router.getInstance().returnToOrPath("/user")
 			} else {
 				console.error("res: ", res);

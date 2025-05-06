@@ -268,7 +268,7 @@ class Router {
 		// You can customize error handling here
 		console.error('Router error:', error);
 		this.rootElement.innerHTML = `
-			<div class="error">
+			<div class="flex-1 text-red-500">
 				<h1>Error</h1>
 				<p>${error.message}</p>
 			</div>

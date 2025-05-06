@@ -1,5 +1,6 @@
 import Router from '@/router/Router.ts';
 import UserCard from '@/components/UserCard.ts';
+import NavBar from '@/components/NavBar';
 
 declare global {
 	interface ImportMeta {
@@ -14,6 +15,7 @@ declare global {
 	 *  */
 	interface HTMLElementTagNameMap {
 		"user-card": UserCard;
+		"nav-bar": NavBar;
 	}
 
 	type StringsObject = Record<string, string>;

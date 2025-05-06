@@ -6,7 +6,7 @@ import API from "@/utils/BackendApi";
 const fetchMoreButtonDynamicClasses = "opacity-0 pointer-events-none".split(" ")
 
 const getPlayerLi = (user: FriendUser) => {
-	return `
+	return /* html */`
 		<user-card
 			variant="friend"
 			user-id="${user.id}"
@@ -40,8 +40,8 @@ const fetchFriends = (page: number, limit: number, cb: (data: { friends?: Friend
 const component = async () => {
 	const auth = AuthManager.getInstance()
 	const user = auth.User!;
-	const template = `
-		<div class="user">
+	const template = /* html */`
+		<div class="user flex-1">
 			<nav class="m-7">
 				<a href="/">Home</a>
 			</nav>

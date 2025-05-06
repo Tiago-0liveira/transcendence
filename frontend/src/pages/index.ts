@@ -6,18 +6,9 @@ const component = async () => {
 
 	const loggedIn = Boolean(AuthManager.getInstance().User);
 
-	const template = `
-		<div class="home h-40 flex flex-col justify-evenly">
-			<h1 class="">Welcome Home</h1>
-			<nav>
-				<a href="/players" ${conditionalRender(!loggedIn, `class="text-gray-400 cursor-not-allowed pointer-events-none"`)}>Players</a>
-				${conditionalRender(loggedIn, `
-					<a href="/user">My User</a>
-					<a href="/auth/logout">Logout</a>
-				`, `
-					<a href="/auth/login">Login</a>
-				`)}
-			</nav>
+	const template = /* html */`
+		<div class="home flex-1 flex flex-col justify-evenly">
+			<h1 class="text-black">Welcome Home</h1>
 		</div>
 	`;
 	document.querySelector('#app')!.innerHTML = template;
