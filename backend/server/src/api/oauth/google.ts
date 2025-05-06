@@ -163,7 +163,7 @@ export default async function oauthGoogleRoutes(fastify: FastifyInstance) {
 			reply
 				.code(200)
 				.clearCookie(CookieName.OAUTH_GOOGLE_TOKEN, DEFAULTS.cookies.oauthToken.clearOptions())
-				.setCookie(CookieName.REFRESH_TOKEN, refreshToken, DEFAULTS.cookies.oauthToken.options())
+				.setCookie(CookieName.REFRESH_TOKEN, refreshToken, DEFAULTS.cookies.refreshToken.options())
 				.header('Access-Control-Allow-Credentials', 'true')
 				.send({ accessToken: accessToken, user: newDbUser.result });
 
