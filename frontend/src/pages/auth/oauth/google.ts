@@ -35,7 +35,7 @@ const component = async () => {
 	const form = document.getElementById("form-oauth-google-completeSignin")
 	if (!form) return;
 
-	form.addEventListener("submit", async (e) => {
+	const formSubmitHandler = async (e) => {
 		e.preventDefault()
 		console.log("kjdmakmsd")
 		const data = new FormData(form as HTMLFormElement);
@@ -64,7 +64,12 @@ const component = async () => {
 				console.error("res: ", res);
 			}
 		}
-	})
+	}
+
+	form.addEventListener("submit", formSubmitHandler)
+	return () => {
+		form.removeEventListener("submit", formSubmitHandler)
+	}
 }
 
 Router.getInstance().register({ path: '/oauth/google/complete', component });

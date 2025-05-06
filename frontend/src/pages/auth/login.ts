@@ -52,35 +52,29 @@ const component = async () => {
 	const googleOauth = document.getElementById("google-oauth");
 	const fortyTwoOauth = document.getElementById("42-oauth");
 
-	if (googleOauth && google?.accounts?.oauth2?.initCodeClient) {
-		googleOauth.addEventListener("click", () => {
-			google.accounts.oauth2.initCodeClient({
-				client_id: GOOGLE_CLIENT_ID,
-				scope: "profile email",
-				ux_mode: "popup",
-				callback: (response) => {
-					if (response.error) {
-						console.error("google callback error:", response.error)
-						return;
-					}
+	const googleOauthLoginHandler = () => {
+		google.accounts.oauth2.initCodeClient({
+			client_id: GOOGLE_CLIENT_ID,
+			scope: "profile email",
+			ux_mode: "popup",
+			callback: (response) => {
+				if (response.error) {
+					console.error("google callback error:", response.error)
+					return;
+				}
 
-					AuthManager.getInstance().oauthGoogleLogin(response.code).then(err => {
-						if (!err)
-							Router.getInstance().returnToOrPath("/user")
-						else
-							console.error("oauthGoogleLogin err: ", err)
-					})
+				AuthManager.getInstance().oauthGoogleLogin(response.code).then(err => {
+					if (!err)
+						Router.getInstance().returnToOrPath("/user")
+					else
+						console.error("oauthGoogleLogin err: ", err)
+				})
 
-				},
-			}).requestCode();
-		})
-	} else {
-		console.log("here");
-		googleOauth?.setAttribute("disabled", "true");
-		/* disable button so user knows google auth is disabled */
+			},
+		}).requestCode();
 	}
 
-	form.addEventListener("submit", async (e) => {
+	const formSubmitHandler = async (e) => {
 		e.preventDefault()
 		const data = new FormData(form as HTMLFormElement);
 		// TODO: change this login form (needs validation here and in the backend)
@@ -100,7 +94,23 @@ const component = async () => {
 				console.error("Login failed");
 			}
 		}
-	})
+	}
+
+	if (googleOauth && google?.accounts?.oauth2?.initCodeClient) {
+		googleOauth.addEventListener("click", googleOauthLoginHandler)
+	} else {
+		console.log("here");
+		googleOauth?.setAttribute("disabled", "true");
+		/* disable button so user knows google auth is disabled */
+	}
+
+	form.addEventListener("submit", formSubmitHandler)
+	return () => {
+		if (googleOauth && google?.accounts?.oauth2?.initCodeClient) {
+			googleOauth.removeEventListener("click", googleOauthLoginHandler)
+		}
+		form.removeEventListener("submit", formSubmitHandler)
+	}
 }
 
 Router.getInstance().register({ path: '/auth/login', component });

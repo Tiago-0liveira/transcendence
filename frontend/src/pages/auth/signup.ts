@@ -61,36 +61,30 @@ const component = async () => {
 
 	const authMethodInput = document.getElementById("input-authMethod")
 
-	if (googleOauth && google?.accounts?.oauth2?.initCodeClient) {
-		googleOauth.addEventListener("click", () => {
-			google.accounts.oauth2.initCodeClient({
-				client_id: GOOGLE_CLIENT_ID,
-				scope: "profile email",
-				ux_mode: "popup",
-				callback: (response) => {
-					if (response.error) {
-						/* did not accept the required permissions ti */
-						console.warn(response.error);
-						return;
+	const googleSignUpWithGoogleHandler = () => {
+		google.accounts.oauth2.initCodeClient({
+			client_id: GOOGLE_CLIENT_ID,
+			scope: "profile email",
+			ux_mode: "popup",
+			callback: (response) => {
+				if (response.error) {
+					/* did not accept the required permissions ti */
+					console.warn(response.error);
+					return;
+				}
+				console.log("User google authenticated:", response);
+				AuthManager.getInstance().oauthGoogleSignUp(response.code).then((err) => {
+					if (!err) {
+						Router.getInstance().navigate("/oauth/google/complete")
+					} else {
+						// TODO: deactivate google button and message (notification of the error)
 					}
-					console.log("User google authenticated:", response);
-					AuthManager.getInstance().oauthGoogleSignUp(response.code).then((err) => {
-						if (!err) {
-							Router.getInstance().navigate("/oauth/google/complete")
-						} else {
-							// TODO: deactivate google button and message (notification of the error)
-						}
-					})
-				},
-			}).requestCode();
-		})
-	} else {
-		console.log("here");
-		googleOauth?.setAttribute("disabled", "true");
-		/* disable button so user knows google auth is disabled */
+				})
+			},
+		}).requestCode();
 	}
 
-	form.addEventListener("submit", async (e) => {
+	const formSubmitHandler = async (e) => {
 		e.preventDefault()
 		const data = new FormData(form as HTMLFormElement);
 		// TODO: change this login form (needs validation here and in the backend)
@@ -114,7 +108,23 @@ const component = async () => {
 				console.error("Sigin failed");
 			}
 		}
-	})
+	}
+
+	if (googleOauth && google?.accounts?.oauth2?.initCodeClient) {
+		googleOauth.addEventListener("click", googleSignUpWithGoogleHandler)
+	} else {
+		console.log("here");
+		googleOauth?.setAttribute("disabled", "true");
+		/* disable button so user knows google auth is disabled */
+	}
+
+	form.addEventListener("submit", formSubmitHandler)
+	return () => {
+		if (googleOauth && google?.accounts?.oauth2?.initCodeClient) {
+			googleOauth.removeEventListener("click", googleSignUpWithGoogleHandler)
+		}
+		form.removeEventListener("submit", formSubmitHandler)
+	}
 }
 
 Router.getInstance().register({ path: '/auth/signup', component });
