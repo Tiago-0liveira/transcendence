@@ -11,7 +11,7 @@
 	- [x] in Auth Manager authFetch instead of doing the request right away check at least if accessToken is valid especially for recovering the user on first page load (reduce 1 request)
 	- [x] replace tailwind script tag with actual library loading with something like postCSS plugin
 	- [x] look at all pages and check if we are removing the event listeners
-	- [ ] replace google oauth script tag loader with actual library
+	- [x](FIXED but the actual library does not exist, so i added a fallback so the app never crashes) replace google oauth script tag loader with actual library
 
 
 ### Both
