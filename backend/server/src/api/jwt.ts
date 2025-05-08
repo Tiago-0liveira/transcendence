@@ -23,9 +23,8 @@ export default async function jwtRoutes(fastify: FastifyInstance) {
 			const verified = jwt.verify(CookieRefreshToken, JWT_REFRESH_SECRET);
 			if (!verified) return reply.code(401).send({ message: "Unauthorized" });
 			const dbRes = await Database.getInstance().jwtBlackListTokensTable.exists(CookieRefreshToken);
-			if (dbRes.error) {
-				console.info("Error in jwtBlackListTokensTable.exists::", dbRes.error);
-				return reply.code(500).send({ message: dbRes.error });
+			if (dbRes.result) {
+				return reply.code(401).send({ message: new Error("Token already used") });
 			}
 
 			const decoded = jwt.decode(CookieRefreshToken);

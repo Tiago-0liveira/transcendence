@@ -16,18 +16,20 @@ abstract class BaseTable<T, TPARAMS> {
 
 	// INFO: needs to be called only after super(...)
 	protected init() {
-		this.database.database.run(this._createStr);
+		this.database.database.exec(this._createStr);
 	}
+
+	protected get db() { return this.database.database }
 
 	public get tableName() { return this._tableName; }
 
 	// TODO: do not fetch password from db, very insecure (easy fix)
 	async getById(id: number): Promise<DatabaseResult<T>> {
 		return new Promise((resolve, reject) => {
-			this.database.database.get(`SELECT * FROM ${this._tableName} WHERE id = ?`, [id], function (err, row: T) {
-				if (err) reject({ error: err })
-				else resolve({ result: row })
-			})
+			const select = this.database.database.prepare(`SELECT * FROM ${this._tableName} WHERE id = ?`)
+			const get1 = select.get(id)
+			if (get1) resolve({result: get1 as T})
+			reject({error: new Error(`Could not get by id: ${id}`)})
 		})
 	}
 	abstract new(params: TPARAMS): Promise<DatabaseResult<number>>;

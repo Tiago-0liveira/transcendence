@@ -37,21 +37,14 @@ class FriendRequestsTable extends BaseTable<FriendRequest, FriendRequestParams> 
 
 	async new(params: FriendRequestParams): Promise<DatabaseResult<number>> {
 		return new Promise((resolve, reject) => {
-			this.database.database.run(
-				this._insertStr,
-				[params.senderId, params.receiverId, params.status ?? "pending"],
-				function (err) {
-					if (err) {
-						if (err.code === "SQLITE_CONSTRAINT") {
-							resolve({ error: new Error("Friend request already exists") });
-						} else {
-							resolve({ error: err });
-						}
-					} else {
-						resolve({ result: this.lastID });
-					}
-				}
-			);
+			const insert = this.db.prepare(this._insertStr)
+			const run1 = insert.run(params.senderId, params.receiverId, params.status ?? "pending")
+			
+			if (run1.changes === 0) {
+				resolve({ error: new Error("Friend request already exists") })
+			} else {
+				resolve({ result: run1.lastInsertRowid as number })
+			}
 		});
 	}
 	
@@ -63,10 +56,13 @@ class FriendRequestsTable extends BaseTable<FriendRequest, FriendRequestParams> 
 			throw new Error(`${this._tableName}.delete requires both userId and friendId.`)
 		}
 		return new Promise((resolve, reject) => {
-			this.database.database.run(this._deleteStr, [userId, friendId], function (err) {
-				if (err) reject({ error: err });
-				else resolve({ result: true });
-			});
+			const del = this.db.prepare(this._deleteStr)
+			const run1 = del.run(userId, friendId)
+			if (run1.changes === 0) {
+				resolve({ error: new Error("Could not delete FriendRequest") })
+			} else {
+				resolve({ result: true })
+			}
 		});
 	}
 
@@ -80,14 +76,13 @@ class FriendRequestsTable extends BaseTable<FriendRequest, FriendRequestParams> 
 
 	private async updateRequest(params: FriendRequestParams): Promise<DatabaseResult<number>> {
 		return new Promise((resolve, reject) => {
-			this.database.database.run(this._updateStr, [params.status ?? "accepted", params.senderId, params.receiverId], function (err) {
-				if (err) resolve({ error: err });
-				else if (this.changes === 0) {
-					resolve({ error: new Error("No request found to update.") });
-				} else {
-					resolve({ result: this.lastID });
-				}
-			});
+			const insert = this.db.prepare(this._updateStr)
+			const run1 = insert.run(params.status ?? "accepted", params.senderId, params.receiverId)
+			if (run1.changes === 0) {
+				resolve({ error: new Error("No request found to update.") });
+			} else {
+				resolve({ result: run1.lastInsertRowid as number });
+			}
 		});
 	}
 
@@ -102,14 +97,13 @@ class FriendRequestsTable extends BaseTable<FriendRequest, FriendRequestParams> 
 
 	async getFriendRequestsWithInfo(userId: number, offset = 0, limit = 50): Promise<DatabaseResult<FriendUser[]>> {
 		return new Promise((resolve, reject) => {
-			this.database.database.all(
-				this._getFriendRequests,
-				[userId, limit, offset],
-				(err, rows: FriendUser[]) => {
-					if (err) resolve({ error: err });
-					else resolve({ result: rows });
-				}
-			);
+			const getFriends = this.db.prepare(this._getFriendRequests)
+			const run1 = getFriends.all(userId, limit, offset)
+			if (run1) {
+				resolve({ result: run1 as FriendUser[] })
+			} else {
+				resolve({ result: [] })
+			}
 		});
 	}
 }
