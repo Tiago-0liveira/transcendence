@@ -86,20 +86,38 @@ class AuthManager {
 
 	/* Default login */
 	/* TODO: make this request get the jwt cookie from the backend so it logins right after sign up UX all the way */
-	public async register(userParams: UserParams): Promise<boolean> {
-		const res = await fetch(backendEndpoint(API.auth.signup), {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json"
-			},
-			body: JSON.stringify(userParams)
-		})
-		if (!res.ok) return false;
-		const data = await res.json();
-		this.accessToken = data.accessToken;
+	public async register(userParams: UserParams): Promise<{ success: boolean; message?: string }> {
+		try {
+			const res = await fetch(backendEndpoint(API.auth.signup), {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify(userParams)
+			});
 
-		await this.fetchUser()
-		return data.ok
+			const data = await res.json();
+
+			if (!res.ok) {
+				return {
+					success: false,
+					message: data?.message || "Registration failed"
+				};
+			}
+
+			this.accessToken = data.accessToken;
+			await this.fetchUser();
+
+			return {
+				success: true
+			};
+		} catch (error: any) {
+			console.error("Register request failed", error);
+			return {
+				success: false,
+				message: "Network or server error"
+			};
+		}
 	}
 
 	public async oauthGoogleLogin(googleCode: string): Promise<string | null> {

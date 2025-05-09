@@ -24,11 +24,18 @@ abstract class BaseTable<T, TPARAMS> {
 	// TODO: do not fetch password from db, very insecure (easy fix)
 	async getById(id: number): Promise<DatabaseResult<T>> {
 		return new Promise((resolve, reject) => {
-			this.database.database.get(`SELECT * FROM ${this._tableName} WHERE id = ?`, [id], function (err, row: T) {
-				if (err) reject({ error: err })
-				else resolve({ result: row })
-			})
-		})
+			this.database.database.get(
+				`SELECT id, username, displayName, avatarUrl, authProvider, authProviderId FROM ${this._tableName} WHERE id = ?`,
+				[id],
+				(err, row: T | undefined) => {
+					if (err) {
+						reject(new Error(`Database error: ${err.message}`));
+					} else {
+						resolve({ result: row ?? null }); // Явно возвращаем null
+					}
+				}
+			);
+		});
 	}
 	abstract new(params: TPARAMS): Promise<DatabaseResult<number>>;
 	abstract delete(id: number): Promise<DatabaseResult<boolean>>;

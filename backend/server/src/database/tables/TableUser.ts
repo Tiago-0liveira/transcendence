@@ -2,7 +2,9 @@ import { UserAuthMethod } from "@enums/enums";
 import Database from "@db/Database";
 import BaseTable from "@db-table/BaseTable"
 import { generateUser } from "@db/fakeData";
+import bcrypt from 'bcrypt'
 
+const SALT_ROUNDS = 10
 
 // TODO: display name can be null so it is defaulted to username
 // TODO: avatarUrl can be defaulted to available avatars (add to public folder some avatars)
@@ -21,10 +23,13 @@ class UserTable extends BaseTable<User, UserParams> {
 		createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
 		updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
 	);`;
-	protected _insertStr = `INSERT INTO ${this._tableName} (username, displayName, avatarUrl, password, authProvider, authProviderId) VALUES (?, ?, ?, ?, ?, ?)`;
+	protected _insertStr = `INSERT INTO ${this._tableName} (username, displayName, avatarUrl, password, 
+                   authProvider, authProviderId) VALUES (?, ?, ?, ?, ?, ?)`;
 	protected _deleteStr = `DELETE FROM ${this._tableName} WHERE id = ?`;
-	protected _updateStr = `UPDATE ${this._tableName} SET username = ?, displayName = ?, avatarUrl = ? WHERE id = ?`;
-	private _updatePasswordStr = `UPDATE ${this._tableName} SET password = ? WHERE id = ?`;
+	protected _updateStr = `UPDATE ${this._tableName} SET username = ?, displayName = ?, avatarUrl = ?, 
+                 updatedAt = CURRENT_TIMESTAMP WHERE id = ?`;
+	private _updatePasswordStr = `UPDATE ${this._tableName} SET password = ?, 
+                 updatedAt = CURRENT_TIMESTAMP WHERE id = ?`;
 
 	constructor(database: Database) {
 		super(database);
@@ -32,17 +37,48 @@ class UserTable extends BaseTable<User, UserParams> {
 	}
 
 	async new(params: UserParams): Promise<DatabaseResult<number>> {
-		if (await this.existsUsernameOrDisplayName(params.username, params.displayName)) {
-			return Promise.reject({ error: "User already exists!" });
+		// Checking for uniqueness
+		const exists = await this.existsUsernameAndDisplayName(params.username, params.displayName);
+		if (exists) {
+			throw new Error('User already exists');
 		}
+
+		const userNameExist = await this.existsUsername(params.username);
+		if (userNameExist) {
+			throw new Error('Username already in use');
+		}
+
+		const displayNameExist = await this.existsDisplayName(params.displayName);
+		if (displayNameExist) {
+			throw new Error('Display name already in use');
+		}
+
+		// Hashing password
+		const passwordHash = params.password
+			? await bcrypt.hash(params.password, SALT_ROUNDS)
+			: null
+
+		//  Inserting data
 		return new Promise((resolve, reject) => {
-			this.database.database.run(this._insertStr, [params.username, params.displayName, params.avatarUrl, params.password, params.authProvider ?? UserAuthMethod.LOCAL, params.authProviderId ?? UserAuthMethod.LOCAL],
+			this.database.database.run(
+				this._insertStr,
+				[
+					params.username,
+					params.displayName,
+					params.avatarUrl,
+					passwordHash,
+					params.authProvider ?? UserAuthMethod.LOCAL,
+					params.authProviderId ?? UserAuthMethod.LOCAL
+				],
 				function (err) {
-					if (err) reject({ error: err });
-					else resolve({ result: this.lastID });
+					if (err) {
+						reject(new Error(`Database error: ${err.message}`));
+					} else {
+						resolve({ result: this.lastID });
+					}
 				}
-			)
-		})
+			);
+		});
 	}
 	async delete(id: number): Promise<DatabaseResult<boolean>> {
 		return new Promise((resolve, reject) => {
@@ -73,29 +109,68 @@ class UserTable extends BaseTable<User, UserParams> {
 		})
 	}
 	async login(username: string, password: string): Promise<DatabaseResult<Omit<UserParams, "password"> & UIDD>> {
-		const userIsRegistered = await this.existsUsername(username);
-		if (!userIsRegistered) return Promise.resolve({ error: new Error("User not found!") });
+		// 1. Check if a user exists
+		const userExists = await this.existsUsername(username);
+		if (!userExists) {
+			throw new Error("User not found");
+		}
+
+		// 2. Retrieve user data and validate password
+		return new Promise((resolve, reject) => {
+			this.database.database.get(
+				`SELECT id, username, displayName, avatarUrl, password FROM ${this._tableName} WHERE username = ?`,
+				[username],
+				async (err, row: (UserParams & UIDD) | undefined) => {
+					if (err) {
+						return reject(new Error(`Database error: ${err.message}`));
+					}
+
+					if (!row) {
+						return reject(new Error("User not found"));
+					}
+
+					try {
+						const isPasswordValid = await bcrypt.compare(password, row.password);
+						if (!isPasswordValid) {
+							return reject(new Error("Invalid password"));
+						}
+
+						// Remove password from result
+						const { password: _, ...userWithoutPassword } = row;
+						resolve({ result: userWithoutPassword });
+					} catch (compareErr: any) {
+						reject(new Error(`Password comparison failed: ${compareErr.message}`));
+					}
+				}
+			);
+		});
+	}
+	private async exists(
+		args: Record<string, string>,
+		logic: "OR" | "AND" = "OR"
+	): Promise<boolean> {
+		if (!args || Object.keys(args).length === 0) {
+			throw new Error("No fields provided for existence check.");
+		}
+
+		// create sql string
+		const condition = Object.keys(args)
+			.map(key => `${key} = ?`)
+			.join(` ${logic} `);
+
+		const values = Object.values(args);
+
+		const query = `SELECT 1 FROM ${this._tableName} WHERE ${condition} LIMIT 1`;
 
 		return new Promise((resolve, reject) => {
-			this.database.database.get(`SELECT id, username, displayName, avatarUrl FROM ${this._tableName} WHERE username = ? AND password = ?`, [username, password], (err, row: Omit<UserParams, "password"> & UIDD) => {
-				if (err) resolve({ error: err });
-				else resolve({ result: row });
-			})
-		})
-	}
-	/* args properties must be valid table column names */
-	private async exists(args: Record<string, string>): Promise<boolean> {
-		return new Promise((resolve, reject) => {
-			const propertiesJoined = Object.keys(args).map((s) => s + " = ? ").join(" OR ")
-			this.database.database.get(`SELECT 1 FROM ${this._tableName} WHERE ${propertiesJoined}`, Object.values(args), (err, row) => {
+			this.database.database.get(query, values, (err, row) => {
 				if (err) {
-					console.log(err);
-					console.log(err.message)
-					reject(err)
+					console.error("Database exists() error:", err);
+					return reject(err);
 				}
-				else resolve(!!row);
-			})
-		})
+				resolve(!!row); // true found something
+			});
+		});
 	}
 	async existsDisplayName(displayName: string): Promise<boolean> {
 		return this.exists({ displayName })
@@ -105,6 +180,9 @@ class UserTable extends BaseTable<User, UserParams> {
 	}
 	async existsUsernameOrDisplayName(username: string, displayName: string): Promise<boolean> {
 		return this.exists({ username, displayName })
+	}
+	async existsUsernameAndDisplayName(username: string, displayName: string): Promise<boolean> {
+		return this.exists({ username, displayName }, "AND")
 	}
 	async existsGoogleId(googleId: string): Promise<{id: string} | undefined> {
 		return new Promise((resolve, reject) => {

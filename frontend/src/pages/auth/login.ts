@@ -15,7 +15,7 @@ const component = async () => {
 						<input type="text" name="username" id="username" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2.5" placeholder="username" required>
 					</div>
 					<div>
-						<label for="password" class="block mb-2 text-sm font-medium text-left text-gray-900 ">Your password</label>
+						<label for="password" class="block mb-2 text-sm font-medium text-left text-gray-900 ">Your Рassword</label>
 						<input type="password" name="password" id="password" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2.5" placeholder="***********" required>
 					</div>
 					<div class="flex items-start">
