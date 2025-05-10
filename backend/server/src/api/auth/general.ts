@@ -12,7 +12,6 @@ export default async function AuthGeneralRoutes(fastify: FastifyInstance) {
 	fastify.get("/me", { preHandler: authJwtMiddleware }, async (request, reply) => {
 		try {
 			const userId = request.user?.id;
-			fastify.log.info({ user: request.user }, "Decoded JWT user object");
 
 			if (!userId) {
 				fastify.log.warn({ msg: "/me accessed without user ID", user: request.user });
@@ -22,7 +21,6 @@ export default async function AuthGeneralRoutes(fastify: FastifyInstance) {
 				});
 			}
 
-			fastify.log.warn({ msg: "/me accessed without user ID", user: userId });
 			const user = await Database.getInstance().userTable.getById(userId);
 
 			if (user.error) {
@@ -54,20 +52,3 @@ export default async function AuthGeneralRoutes(fastify: FastifyInstance) {
 		}
 	});
 }
-// export default async function AuthGeneralRoutes(fastify: FastifyInstance) {
-// 	/**
-// 	 * Gets the User and his information
-// 	 */
-// 	fastify.get("/me", { preHandler: authJwtMiddleware }, async (request, reply) => {
-// 		const user = await Database.getInstance().userTable.getById(request.user.id);
-// 		if (user.error) {
-// 			console.warn("database error: userTable.getById::", user.error)
-// 			return reply.code(500).send({ message: "Internal Database error" });
-// 		}
-// 		if (!user.result) {
-// 			console.warn("/user/me user.result is null: request.user::", request.user);
-// 			return reply.code(404).send({ message: "User is null, probably the user does not exist anymore!" });
-// 		}
-// 		return reply.code(200).send({ user: user.result });
-// 	})
-// }

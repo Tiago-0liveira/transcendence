@@ -3,7 +3,7 @@ import { buildPaths } from "@/utils/path";
 const routeTree = {
 	auth: {
 		me: "me",
-		signup: "signin",
+		signup: "signup",
 		login: "login",
 		friends: {
 			possibleFriends: "possibleFriends",
