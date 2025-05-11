@@ -47,6 +47,7 @@
 		"src/**/*.ts",
 		"src/**/*.tsx",
 		"types/**/*.ts",
+		"src/types",
 		"types/**/*.d.ts",
 		"../shared/types/*.ts",
 		"../shared/utils/*.ts",

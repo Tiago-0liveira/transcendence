@@ -1,41 +1,48 @@
-import toast from 'tailwind-toast';
+import { toast } from 'tailwind-toast';
 
-const defaultOptions = {
-    duration: 5000,
-    positionX: 'right' as const,
-    positionY: 'bottom' as const,
-};
+const POSITION_Y = 'bottom' as const;
+const POSITION_X = 'end' as const;
+const DURATION = 5000;
+const SHAPE = 'pill' as const;
 
 export const toastHelper = {
     success: (message: string, title: string = 'Success') => {
         toast()
-            .success(title, message)
-            .with({ ...defaultOptions, color: 'green' })
-            .dismissible()
+            .default(title, message)
+            .with({ color: 'green' })
+            .as(SHAPE)
+            .from(POSITION_Y, POSITION_X)
+            .for(DURATION)
             .show();
     },
 
     error: (message: string, title: string = 'Error') => {
         toast()
-            .error(title, message)
-            .with({ ...defaultOptions, color: 'red' })
-            .dismissible()
+            .default(title, message)
+            .with({ color: 'red' })
+            .as(SHAPE)
+            .from(POSITION_Y, POSITION_X)
+            .for(DURATION)
             .show();
     },
 
     info: (message: string, title: string = 'Info') => {
         toast()
-            .info(title, message)
-            .with({ ...defaultOptions, color: 'blue' })
-            .dismissible()
+            .default(title, message)
+            .with({ color: 'blue' })
+            .as(SHAPE)
+            .from(POSITION_Y, POSITION_X)
+            .for(DURATION)
             .show();
     },
 
     warning: (message: string, title: string = 'Warning') => {
         toast()
-            .warning(title, message)
-            .with({ ...defaultOptions, color: 'yellow' })
-            .dismissible()
+            .default(title, message)
+            .with({ color: 'yellow' })
+            .as(SHAPE)
+            .from(POSITION_Y, POSITION_X)
+            .for(DURATION)
             .show();
     },
 };

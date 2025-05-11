@@ -1,4 +1,5 @@
-import { isValidLoginFormData } from "@/auth/validation";
+import { userLoginSchema } from "@/auth/validation";
+import { toastHelper } from "@/utils/toastHelper";
 import Router from "@/router/Router";
 import AuthManager from "@/auth/authManager"
 import { GOOGLE_CLIENT_ID } from "@/utils/config";
@@ -10,6 +11,9 @@ const component = async () => {
 			<div class="w-full max-w-sm bg-white border border-gray-200 rounded-lg shadow-sm">
 				<form id="loginForm" class="p-6 space-y-6" action="#">
 					<h5 class="text-xl text-center font-medium mb-4 text-gray-900">Login</h5>
+
+					<p id="login-error" class="text-center text-sm text-red-600 hidden"></p>
+
 					<div>
 						<label for="username" class="block mb-2 text-sm font-medium text-left text-gray-900 ">Your Username</label>
 						<input type="text" name="username" id="username" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2.5" placeholder="username" required>
@@ -28,7 +32,7 @@ const component = async () => {
 						<a href="#" class="ms-auto text-sm text-blue-700 hover:underline">Lost password</a>
 					</div>
 					<button type="submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-1 text-center" >Sign In</button>
-					<div class= "flex justify-center flex-row space-x-6">
+					<div class="flex justify-center flex-row space-x-6">
 						<div id="google-oauth" class="border rounded-lg p-1 hover:cursor-pointer border-yellow-300">
 							<span class="text-lg text-yellow-600 flex items-center">Login w/ <img class="w-7 h-7 rounded-full mx-1" src="/google-logo.svg" alt=""></span>
 						</div>
@@ -48,6 +52,8 @@ const component = async () => {
 
 	const form = document.getElementById("loginForm")
 	if (!form) return;
+
+	const errorElement = document.getElementById("login-error")!;
 
 	const googleOauth = document.getElementById("google-oauth");
 	const fortyTwoOauth = document.getElementById("42-oauth");
@@ -74,27 +80,29 @@ const component = async () => {
 		}).requestCode();
 	}
 
-	const formSubmitHandler = async (e) => {
-		e.preventDefault()
+	const formSubmitHandler = async (e: Event) => {
+		e.preventDefault();
+
+		errorElement.textContent = "";
+		errorElement.classList.add("hidden");
+
 		const data = new FormData(form as HTMLFormElement);
-		// TODO: change this login form (needs validation here and in the backend)
-		// TODO: just some tests and boilerplate code
-		if (isValidLoginFormData(data)) {
-			// TODO: validate in backend 
-			// TODO: maybe send a notification here?
-			const username = data.get("username")?.toString() ?? "";
-			const password = data.get("password")?.toString() ?? "";
+		const username = data.get("username")?.toString() ?? "";
+		const password = data.get("password")?.toString() ?? "";
 
-			const payload: UserParams = { username, password };
+		const result = userLoginSchema.safeParse({ username, password });
 
-			const res = await AuthManager.getInstance().login(payload);
-			if (res) {
-				Router.getInstance().returnToOrPath("/user")
-			} else {
-				console.error("Login failed");
-			}
+		try {
+			await AuthManager.getInstance().login(result.data);
+			await Router.getInstance().returnToOrPath("/user");
+			toastHelper.success("Welcome back!", "Login Successful");
+
+		} catch (err: any) {
+			console.error("Login error:", err);
+			errorElement.textContent = err?.message;
+			errorElement.classList.remove("hidden");
 		}
-	}
+	};
 
 	if (googleOauth && google?.accounts?.oauth2?.initCodeClient) {
 		googleOauth.addEventListener("click", googleOauthLoginHandler)
