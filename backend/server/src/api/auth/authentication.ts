@@ -1,10 +1,8 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
+import { userLoginSchema, userSignupSchema } from "@utils/userSchemas";
+import { z } from "zod";
 import Database from "@db/Database";
-import jwt from "@utils/jwt";
-import { JWT_REFRESH_SECRET } from "@config";
-import { UserAuthMethod } from "@enums/enums";
-import { CookieName } from "@enums/auth";
-import DEFAULTS from "@utils/defaults";
+import { generateTokens, sendLoginResponse } from "@utils/auth";
 
 /**
  * path: /auth/
@@ -13,89 +11,105 @@ export default async function authenticationRoutes(fastify: FastifyInstance) {
 	/**
 	 * Default SignUp
 	 */
-	fastify.post("/signup", {
-		schema: {
-			body: {
-				type: "object",
-				required: ["username", "password"],
-				properties: {
-					username: { type: "string" },
-					displayName: { type: "string", nullable: true },
-					avatarUrl: { type: "string", format: "uri", nullable: true },
-					password: { type: "string" },
-					authProvider: { type: "string", enum: Object.values(UserAuthMethod), default: UserAuthMethod.LOCAL },
-				},
-			},
-		},
-	}, async (request: FastifyRequest<{ Body: UserParams }>, reply: FastifyReply) => {
-		// TODO: make this add the jwt cookies so the user log's in right away
-		let { username, displayName, avatarUrl, password, authProvider } = request.body;
-
-		if (!displayName)
-			displayName = username;
-		// TODO: add default avatarURL (maybe randomize)
-		if (!avatarUrl)
-			avatarUrl = "dummy URL"
-		// TODO: validate all input
-
+	fastify.post("/signup", async (request: FastifyRequest, reply: FastifyReply) => {
 		try {
-			const res = await Database.getInstance().userTable.new({ username, displayName, avatarUrl, password, authProvider })
-			if (res.error)
-				return reply.code(400).send({ message: res.error })
-			else {
-				const accessToken = jwt.sign({}, DEFAULTS.jwt.accessToken.options(String(res.result)))
-				const refreshToken = jwt.sign({}, DEFAULTS.jwt.refreshToken.options(String(res.result)), JWT_REFRESH_SECRET)
+			// validate inputs
+			const parsed = userSignupSchema.parse(request.body);
 
-				reply
-					.code(200)
-					.setCookie(CookieName.REFRESH_TOKEN, refreshToken, DEFAULTS.cookies.oauthToken.options())
-					.header('Access-Control-Allow-Credentials', 'true')
-					.send({ accessToken: accessToken, ok: true });
-			}
+			const displayName = parsed.displayName ?? parsed.username;
+			const avatarUrl = parsed.avatarUrl ?? 'https://st2.depositphotos.com/1955233/8351/i/450/depositphotos_83513428-stock-photo-star-wars-storm-trooper-costume.jpg';
+
+			// create new user
+			const res = await Database.getInstance().userTable.new({
+				username: parsed.username,
+				displayName,
+				avatarUrl,
+				password: parsed.password,
+				authProvider: parsed.authProvider,
+			});
+
+			const userId = String(res.result);
+			const tokens = generateTokens(userId);
+			sendLoginResponse(reply, tokens);
 
 		} catch (error) {
-			reply
-				.code(400)
-				.send({ message: error, ok: false })
+			if (error instanceof z.ZodError) {
+				fastify.log.warn({
+					type: "ValidationError",
+					issues: error.flatten().fieldErrors,
+				}, "Validation failed in /login");
 
+				return reply.status(400).send({
+					message: 'Validation error',
+					errors: error.flatten().fieldErrors,
+					ok: false,
+				});
+			} else if (error instanceof Error) {
+				fastify.log.warn({
+					type: "ApplicationError",
+					error: error.message,
+					stack: error.stack,
+				});
+
+				return reply.status(409).send({
+					error: error.message,
+					ok: false,
+				});
+			} else {
+				fastify.log.error({
+					type: "UnknownError",
+					error,
+				}, "Unexpected server error");
+
+				return reply.status(500).send({
+					error: 'Unexpected server error',
+					ok: false,
+				});
+			}
 		}
 	});
 
 	/**
 	 * Default Login
 	 */
-	fastify.post("/login", {
-		schema: {
-			body: {
-				type: "object",
-				required: ["username", "password"],
-				properties: {
-					username: { type: "string" },
-					password: { type: "string" },
-				},
-			}
-		}
-	}, async (request: FastifyRequest<{ Body: { username: string, password: string } }>, reply) => {
-		let { username, password } = request.body;
-
+	fastify.post("/login", async (request: FastifyRequest, reply: FastifyReply) => {
 		try {
-			const res = await Database.getInstance().userTable.login(username, password);
-			if (res.error) {
-				console.log("Error in userTable.login::", res.error)
-				reply.code(400).send({ message: res.error })
-			}
-			else {
-				const accessToken = jwt.sign({}, DEFAULTS.jwt.accessToken.options(String(res.result.id)))
-				const refreshToken = jwt.sign({}, DEFAULTS.jwt.refreshToken.options(String(res.result.id)), JWT_REFRESH_SECRET)
+			const parsed = userLoginSchema.parse(request.body);
+			const { username, password } = parsed;
 
-				reply
-					.code(200)
-					.setCookie(CookieName.REFRESH_TOKEN, refreshToken, DEFAULTS.cookies.refreshToken.options())
-					.header('Access-Control-Allow-Credentials', 'true')
-					.send({ accessToken: accessToken });
+			const res = await Database.getInstance().userTable.login(username, password);
+			if ('error' in res) {
+				return reply.status(401).send({
+					error: res.error.message,
+					ok: false
+				});
 			}
+
+			const userId = String(res.result?.id);
+			const tokens = generateTokens(userId);
+			sendLoginResponse(reply, tokens);
+
 		} catch (error) {
-			reply.code(400).send({ message: error })
+			if (error instanceof Error) {
+				fastify.log.warn({
+					err: error,
+					message: error.message,
+				});
+				return reply.status(401).send({
+					error: error.message,
+					ok: false,
+				});
+			} else {
+				fastify.log.error({
+					err: error,
+					payload: request.body,
+					msg: "Unhandled error in /login",
+				});
+				return reply.status(500).send({
+					error: "Unexpected server error",
+					ok: false,
+				});
+			}
 		}
-	})
+	});
 }

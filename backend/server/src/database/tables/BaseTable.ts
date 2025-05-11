@@ -23,15 +23,26 @@ abstract class BaseTable<T, TPARAMS> {
 
 	public get tableName() { return this._tableName; }
 
-	// TODO: do not fetch password from db, very insecure (easy fix)
 	async getById(id: number): Promise<DatabaseResult<T>> {
-		return new Promise((resolve, reject) => {
-			const select = this.database.database.prepare(`SELECT * FROM ${this._tableName} WHERE id = ?`)
-			const get1 = select.get(id)
-			if (get1) resolve({result: get1 as T})
-			reject({error: new Error(`Could not get by id: ${id}`)})
-		})
+		try {
+			const stmt = this.database.database.prepare(`
+			SELECT id, username, displayName, avatarUrl
+			FROM ${this._tableName}
+			WHERE id = ?
+		`);
+			const row = stmt.get(id);
+
+			if (row) {
+				return { result: row as T };
+			} else {
+				return { error: new Error(`User with id ${id} not found`) };
+			}
+		} catch (err: any) {
+			return { error: new Error(`Database error: ${err.message}`) };
+		}
 	}
+
+
 	abstract new(params: TPARAMS): Promise<DatabaseResult<number>>;
 	abstract delete(id: number): Promise<DatabaseResult<boolean>>;
 	abstract update(id: number, params: TPARAMS): Promise<DatabaseResult<number>>;

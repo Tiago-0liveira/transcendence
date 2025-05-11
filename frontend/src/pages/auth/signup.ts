@@ -11,11 +11,11 @@ const component = async () => {
 				<form id="form-signup" class="p-6 space-y-6" action="#">
 					<h5 class="text-xl text-center font-medium mb-4 text-gray-900">Sign Up</h5> 
 					<div>
-						<label for="username" class="block mb-0.5 text-sm font-medium text-gray-900 text-left">Your username</label>
+						<label for="username" class="block mb-0.5 text-sm font-medium text-gray-900 text-left">Your Username</label>
 						<input type="username" name="username" id="username" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2.5" placeholder="Username" required>
 					</div>
 					<div>
-						<label for="displayName" class="block mb-0.5 text-sm font-medium text-gray-900 text-left">Your displayName</label>
+						<label for="displayName" class="block mb-0.5 text-sm font-medium text-gray-900 text-left">Your Display Name</label>
 						<input type="text" name="displayName" id="displayName" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2.5" placeholder="Display Name" required>
 					</div>
 					<div>
@@ -23,7 +23,7 @@ const component = async () => {
 						<input type="text" name="avatarUrl" id="avatarUrl" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2.5" placeholder="https://avatar.xxxxxx" required>
 					</div>
 					<div>
-						<label for="password" class="block mb-0.5 text-sm font-medium text-gray-900 text-left">Your password</label>
+						<label for="password" class="block mb-0.5 text-sm font-medium text-gray-900 text-left">Your Password</label>
 						<input type="password" name="password" id="password" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2.5" placeholder="***********" required>
 					</div>
 					<div class="flex items-start">

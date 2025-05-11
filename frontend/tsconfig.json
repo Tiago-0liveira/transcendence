@@ -29,6 +29,9 @@
 			],
 			"@types/*": [
 				"types/*"
+			],
+			"@shared/*": [
+				"../shared/*"
 			]
 		},
 		"typeRoots": [
@@ -45,7 +48,8 @@
 		"src/**/*.tsx",
 		"types/**/*.ts",
 		"types/**/*.d.ts",
-		"../shared/types/*.ts"
+		"../shared/types/*.ts",
+		"../shared/utils/*.ts",
 	],
 	"references": [
 		{
