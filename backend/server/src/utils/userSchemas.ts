@@ -2,7 +2,7 @@ import { z } from "zod";
 import { UserAuthMethod } from "@enums/enums";
 
 export const userSignupSchema = z.object({
-    username: z.string().trim().min(3, 'Username must be at least 3 characters long'),
+    username: z.string().trim().toLowerCase().min(3, 'Username must be at least 3 characters long'),
     displayName: z.string().trim().min(3, 'Display name must be at least 3 characters').optional(),
     avatarUrl: z.string().trim().url('Invalid avatar URL').optional(),
     password: z
