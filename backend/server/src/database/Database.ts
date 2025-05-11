@@ -1,4 +1,6 @@
-import sqlite3 from "sqlite3";
+/*import sqlite3 from "sqlite3";*/
+import Sqlite3Database from 'better-sqlite3';
+import type { Database as Sqlite3DatabaseType } from "better-sqlite3"
 import { DATABASE_URI, DEV_DB_INSERT_FAKE_DATA, DEV_DROP_DB_ON_START } from "@config"
 import TableUser from "@db-table/TableUser";
 import TableBlackListTokens from "@db-table/TableBlackListTokens";
@@ -8,7 +10,7 @@ import fs from "fs"
 
 class Database {
 	private static s_instance: Database | null;
-	private _database: sqlite3.Database;
+	private _database: Sqlite3DatabaseType;
 
 	private _userTable: TableUser;
 	private _jwtBlackListTokensTable: TableBlackListTokens;
@@ -35,7 +37,8 @@ class Database {
 				console.error(err);
 			}
 		}
-		this._database = new sqlite3.Database(DATABASE_URI);
+		this._database = new Sqlite3Database(DATABASE_URI);
+		this._database.pragma('journal_mode = WAL');/* Increases overall database performance */
 
 		// Tables constructors
 		// TODO: instead of passing tableName as params, just move the JOIN sql statements to this class

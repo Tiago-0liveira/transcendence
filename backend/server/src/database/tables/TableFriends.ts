@@ -90,50 +90,52 @@ class FriendsTable extends BaseTable<Friend, FriendParams> {
 		this.init();
 	}
 
+	private newTransaction = this.db.transaction((userId: number, friendId: number) => {
+		const insert = this.db.prepare(this._insertStr)
+		insert.run(userId, friendId)
+		insert.run(friendId, userId)
+		return { result: 2 }
+	})
 	async new(params: FriendParams): Promise<DatabaseResult<number>> {
 		const { userId, friendId } = params;
 
 		return new Promise((resolve, reject) => {
-			const db = this.database.database;
-			db.serialize(() => {
-				db.run("BEGIN TRANSACTION");
-				db.run(this._insertStr, [userId, friendId]);
-				db.run(this._insertStr, [friendId, userId]);
-				db.run("COMMIT", function (err) {
-					if (err) {
-						db.run("ROLLBACK");
-						resolve({ error: err });
-					} else {
-						resolve({ result: 2 }); // 2 rows inserted
-					}
-				});
-			});
+			try {
+				resolve(this.newTransaction(userId, friendId))
+			} catch (error) {
+				resolve({ error: new Error("could not insert new rows ")})
+				console.error(error)
+			}
 		});
 	}
 
 	/**
 	 - Delete requires both userId and friendId or it will throw an Error
 	*/
+	private delTransaction = this.db.transaction((userId: number, friendId: number) => {
+		const del = this.db.prepare(this._deleteStr)
+		const del1 = del.run(userId, friendId)
+		const del2 = del.run(friendId, userId)
+		if (del1.changes === 0 || del2.changes === 0) {
+			return { error: new Error("Error deleting from friendsTable") }
+		}
+		const delFriendRequest = this.db.prepare(`DELETE FROM ${this._friendRequestsTableName} WHERE (senderId = ? AND receiverId = ?) OR (senderId = ? AND receiverId = ?)`)
+		if (delFriendRequest.run(userId, friendId, friendId, userId).changes === 0) {
+			return { error: new Error("Error deleting from friendRequestsTable") }
+		}
+		return { result: true }
+	})
 	async delete(userId: number, friendId?: number): Promise<DatabaseResult<boolean>> {
 		if (friendId == null) {
 			throw new Error(`${this._tableName}.delete requires both userId and friendId.`)
 		}
-		const db = this.database.database;
 		return new Promise((resolve, reject) => {
-			db.serialize(() => {
-				db.run("BEGIN TRANSACTION");
-				db.run(this._deleteStr, [userId, friendId]);
-				db.run(this._deleteStr, [friendId, userId]);
-				db.run(`DELETE FROM ${this._friendRequestsTableName} WHERE (senderId = ? AND receiverId = ?) OR (senderId = ? AND receiverId = ?)`, [userId, friendId, friendId, userId]);
-				db.run("COMMIT", function (err) {
-					if (err) {
-						db.run("ROLLBACK");
-						resolve({ error: err });
-					} else {
-						resolve({ result: true });
-					}
-				});
-			});
+			try {
+				resolve(this.delTransaction(userId, friendId))
+			} catch (error) {
+				resolve({ error: new Error("could not delete") })
+				console.error(error)
+			}
 		});
 	}
 
@@ -143,14 +145,10 @@ class FriendsTable extends BaseTable<Friend, FriendParams> {
 
 	async getFriendsWithInfo(userId: number, offset = 0, limit = 50): Promise<DatabaseResult<FriendUser[]>> {
 		return new Promise((resolve, reject) => {
-			this.database.database.all(
-				this._getFriendsWithInfoStr,
-				[userId, limit, offset],
-				(err, rows: FriendUser[]) => {
-					if (err) resolve({ error: err });
-					else resolve({ result: rows });
-				}
-			);
+			const getFriends = this.db.prepare(this._getFriendsWithInfoStr)
+			const run1 = getFriends.all(userId, limit, offset)
+			if (run1) resolve({ result: run1 as FriendUser[] })
+			else resolve({ result: [] as FriendUser[] })
 		});
 	}
 
@@ -164,19 +162,18 @@ class FriendsTable extends BaseTable<Friend, FriendParams> {
 	async getPossibleFriends(userId: number, name: string, offset = 0, limit = 50): Promise<DatabaseResult<FriendUser[]>> {
 		const nameSearch = `%${name}%`;
 		return new Promise((resolve, reject) => {
-			this.database.database.all(
-				this._getPossibleFriendsStr,
-				[
-					userId, userId, userId,
-					nameSearch,
-					userId, userId, userId,
-					limit, offset
-				],
-				(err, rows: FriendUser[]) => {
-					if (err) resolve({ error: err });
-					else resolve({ result: rows });
-				}
-			);
+			const possibleFriends = this.db.prepare(this._getPossibleFriendsStr)
+			const get1 = possibleFriends.all(
+				userId, userId, userId,
+				nameSearch,
+				userId, userId, userId,
+				limit, offset
+			)
+			if (get1) {
+				return resolve({ result: get1 as FriendUser[] })
+			} else {
+				return resolve({ result: [] })
+			}
 		});
 	}
 

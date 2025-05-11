@@ -132,7 +132,7 @@ class AuthManager {
 		const data = await res.json()
 		if (!res.ok) {
 			// TODO: send notification here
-			console.error(`${API.oauth.google.login} error:`, data.error);
+			console.error(`${API.oauth.google.login} error:`, data.message);
 			return data.error;
 		}
 		this.accessToken = data.accessToken;
