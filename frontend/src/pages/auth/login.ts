@@ -95,7 +95,7 @@ const component = async () => {
 		try {
 			await AuthManager.getInstance().login(result.data);
 			await Router.getInstance().returnToOrPath("/user");
-			toastHelper.success("Welcome back!", "Login Successful");
+			toastHelper.success("Login Successful");
 
 		} catch (err: any) {
 			console.error("Login error:", err);

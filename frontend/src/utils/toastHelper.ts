@@ -1,48 +1,75 @@
-import { toast } from 'tailwind-toast';
+import Toastify from "toastify-js"
 
-const POSITION_Y = 'bottom' as const;
-const POSITION_X = 'end' as const;
+
 const DURATION = 5000;
-const SHAPE = 'pill' as const;
+
+const defaultToastOptions: Toastify.Options = {
+	duration: DURATION,
+	gravity: "top",
+	position: "right",
+	stopOnFocus: true,
+	close: true,
+	style: {
+		display: "flex",
+		alignItems: "center",
+		fontSize: "20px",
+		borderRadius: "8px",
+		padding: "10px",
+		margin: "10px",
+		marginTop: "50px",
+	}
+} as const;
+
+const deployToast = (text: string, options: Toastify.Options) => {
+	Toastify({
+		text: text,
+		...defaultToastOptions,
+		...options,
+		style: {
+			...defaultToastOptions.style,
+			...options.style
+		}
+	}).showToast()
+}
 
 export const toastHelper = {
-    success: (message: string, title: string = 'Success') => {
-        toast()
-            .default(title, message)
-            .with({ color: 'green' })
-            .as(SHAPE)
-            .from(POSITION_Y, POSITION_X)
-            .for(DURATION)
-            .show();
-    },
+	success: (message: string) => {
+		deployToast(message, {
+			avatar: "/notifications/success-circle.svg",
+			className: "success",
+			style: {
+				background: "green"
+			}
+		})
+	},
 
-    error: (message: string, title: string = 'Error') => {
-        toast()
-            .default(title, message)
-            .with({ color: 'red' })
-            .as(SHAPE)
-            .from(POSITION_Y, POSITION_X)
-            .for(DURATION)
-            .show();
-    },
+	error: (message: string) => {
+		deployToast(message, {
+			avatar: "/notifications/error-circle.svg",
+			className: "error",
+			style: {
+				background: "red"
+			}
+		})
+	},
 
-    info: (message: string, title: string = 'Info') => {
-        toast()
-            .default(title, message)
-            .with({ color: 'blue' })
-            .as(SHAPE)
-            .from(POSITION_Y, POSITION_X)
-            .for(DURATION)
-            .show();
-    },
+	info: (message: string) => {
+		deployToast(message, {
+			className: "info",
+			avatar: "/notifications/info-circle.svg",
+			style: {
+				
+			}
+		})
+	},
 
-    warning: (message: string, title: string = 'Warning') => {
-        toast()
-            .default(title, message)
-            .with({ color: 'yellow' })
-            .as(SHAPE)
-            .from(POSITION_Y, POSITION_X)
-            .for(DURATION)
-            .show();
-    },
+	warning: (message: string) => {
+		deployToast(message, {
+			avatar: "/notifications/warning-circle.svg",
+			className: "warning",
+			style: {
+				background: "orange"
+			}
+		})
+	},
 };

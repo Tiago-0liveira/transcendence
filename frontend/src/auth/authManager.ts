@@ -1,7 +1,8 @@
-import NavBar, { getNav } from "@/components/NavBar";
+import NavBar from "@/components/NavBar";
 import Router from "@/router/Router";
 import API from "@/utils/BackendApi";
 import { backendEndpoint } from "@/utils/path";
+import { toastHelper } from "@/utils/toastHelper";
 import {objectOutputType, ZodString, ZodType} from "zod";
 
 
@@ -19,6 +20,7 @@ class AuthManager {
 		this.fetchUser().then((ok) => { 
 			if (ok) {
 				Router.getInstance().returnToOrPath("/")
+				toastHelper.info("Welcome Back!")
 			}
 		});
 	}

@@ -159,7 +159,7 @@ const component = async () => {
 				formError.textContent = "";
 			}
 			await Router.getInstance().returnToOrPath("/user");
-			toastHelper.success("Hello new user!", "Registration Successful");
+			toastHelper.success("Registration Successful");
 		} else {
 			//Show backend/server error message under "Sign Up"
 			if (formError) {
