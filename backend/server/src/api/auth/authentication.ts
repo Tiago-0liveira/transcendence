@@ -43,8 +43,8 @@ export default async function authenticationRoutes(fastify: FastifyInstance) {
 			if (res.error)
 				return reply.code(400).send({ message: res.error })
 			else {
-				const accessToken = jwt.sign({}, DEFAULTS.jwt.accessToken.options(String(res.result)))
-				const refreshToken = jwt.sign({}, DEFAULTS.jwt.refreshToken.options(String(res.result)), JWT_REFRESH_SECRET)
+				const accessToken = jwt.sign({}, DEFAULTS.jwt.accessToken.options(res.result))
+				const refreshToken = jwt.sign({}, DEFAULTS.jwt.refreshToken.options(res.result), JWT_REFRESH_SECRET)
 
 				reply
 					.code(200)
@@ -85,8 +85,8 @@ export default async function authenticationRoutes(fastify: FastifyInstance) {
 				reply.code(400).send({ message: res.error })
 			}
 			else {
-				const accessToken = jwt.sign({}, DEFAULTS.jwt.accessToken.options(String(res.result.id)))
-				const refreshToken = jwt.sign({}, DEFAULTS.jwt.refreshToken.options(String(res.result.id)), JWT_REFRESH_SECRET)
+				const accessToken = jwt.sign({}, DEFAULTS.jwt.accessToken.options(res.result.id))
+				const refreshToken = jwt.sign({}, DEFAULTS.jwt.refreshToken.options(res.result.id), JWT_REFRESH_SECRET)
 
 				reply
 					.code(200)

@@ -1,7 +1,6 @@
 import * as dotenv from "dotenv";
-import path, { dirname } from "path"
+import path from "path"
 import fs from "fs"
-import { fileURLToPath } from "url";
 
 // Load environment variables from .env file
 dotenv.config();

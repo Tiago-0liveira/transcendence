@@ -5,7 +5,9 @@
 	"main": "src/index.ts",
 	"scripts": {
 		"dev": "nodemon",
-		"build": "vite build",
+		"build": "tsup",
+		"check-code": "tsc --noEmit",
+		"run:dev": "npx tsx ./src/index.ts",
 		"start": "node dist/index.js"
 	},
 	"dependencies": {
@@ -23,6 +25,7 @@
 		"@types/dotenv": "^6.1.1",
 		"@types/node": "^22.13.1",
 		"nodemon": "3.1.9",
+		"tsup": "^8.4.0",
 		"tsx": "4.19.2",
 		"typescript": "^5.7.3"
 	}

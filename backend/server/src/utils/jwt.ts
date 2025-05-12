@@ -35,7 +35,7 @@ function createJWT(payload: object, options: Omit<JWTOptions, "iat">, secret: st
 	return `${encodedHeader}.${encodedPayload}.${signature}`
 }
 
-function decodeJWT(token: string): { header: any; payload: any } | null {
+function decodeJWT<T extends object = {}>(token: string): DecodedJWT<T> | null {
 	try {
 		const [headerB64, payloadB64] = token.split(".")
 

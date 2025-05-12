@@ -4,7 +4,7 @@
 	],
 	"ext": ".ts,.js",
 	"ignore": [],
-	"exec": "npx tsx ./src/index.ts",
+	"exec": "npm run run:dev",
 	"legacyWatch": true,
 	"verbose": true
 }

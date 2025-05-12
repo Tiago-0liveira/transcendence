@@ -1,4 +1,5 @@
 // src/types/global.d.ts
+import "fastify";
 
 declare namespace NodeJS {
 	interface ProcessEnv {
@@ -19,5 +20,18 @@ declare namespace NodeJS {
 
 		GOOGLE_CLIENT_ID: string;
 		GOOGLE_CLIENT_SECRET_ID: string;
+	}
+}
+
+declare module 'fastify' {
+	interface FastifyRequest {
+		/**
+		 * @description Only available after passing by authJwtMiddleware
+		 */
+		user: RequestUser;
+		/**
+		 * @description Only available after passing by oauthJwtMiddleware
+		 */
+		googlePayload: RequestGooglePayload
 	}
 }

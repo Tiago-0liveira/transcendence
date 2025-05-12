@@ -54,7 +54,7 @@ export default async function oauthGoogleRoutes(fastify: FastifyInstance) {
 				return reply.code(500).send({ error: "Could not get user info payload!" })
 			}
 
-			const res = await Database.getInstance().userTable.existsGoogleId(payload.sub)
+			const res = await Database.getInstance().userTable.existsGoogleId(Number(payload.sub))
 			if (!res) {
 				return reply.code(400).send({ message: "User does not exist!" });
 			}
@@ -109,11 +109,10 @@ export default async function oauthGoogleRoutes(fastify: FastifyInstance) {
 				return reply.code(500).send({ error: "Could not get user info payload!" })
 			}
 
-			const user = {
-				googleId: payload.sub,
-				name: payload.name,
-				email: payload.email,
-				avatar: payload.picture,
+			const user: RequestGooglePayload = {
+				googleId: Number(payload.sub),
+				name: payload.name as string,
+				avatar: payload.picture as string,
 			};
 
 			if (await Database.getInstance().userTable.existsGoogleId(user.googleId)) {
@@ -133,18 +132,28 @@ export default async function oauthGoogleRoutes(fastify: FastifyInstance) {
 
 	fastify.post("/signup/complete", {
 		preHandler: [googleOauthMiddleware, oauthJwtMiddleware],
-	}, async (request, reply) => {
+		schema: {
+			body: {
+				type: "object",
+				required: ["username"],
+				properties: {
+					username: { type: "string" },
+					displayName: { type: "string", nullable: true },
+					avatarUrl: { type: "string", format: "uri", nullable: true }
+				},
+			},
+		}
+	}, async (request: FastifyRequest<{Body: GoogleSignUpCompletePayload}>, reply) => {
 
 		try {
-			const { user } = request.body;
 			const googlePayload = request.googlePayload;
 			const db = Database.getInstance()
 
 			// TODO: validate input (payload)
 			const newUserData: UserParams = {
-				username: user.username,
-				displayName: user.displayName || user.username,
-				avatarUrl: user.avatarUrl || googlePayload.avatar,
+				username: request.body.username,
+				displayName: request.body.displayName || request.body.username,
+				avatarUrl: request.body.avatarUrl || googlePayload.avatar,
 				authProvider: UserAuthMethod.GOOGLE,
 				authProviderId: googlePayload.googleId,
 				password: "",
@@ -155,8 +164,8 @@ export default async function oauthGoogleRoutes(fastify: FastifyInstance) {
 				return reply.status(400).send({ error: newDbUser.error })
 			}
 
-			const accessToken = jwt.sign({}, DEFAULTS.jwt.accessToken.options(String(newDbUser.result)))
-			const refreshToken = jwt.sign({}, DEFAULTS.jwt.refreshToken.options(String(newDbUser.result)), JWT_REFRESH_SECRET)
+			const accessToken = jwt.sign({}, DEFAULTS.jwt.accessToken.options(newDbUser.result))
+			const refreshToken = jwt.sign({}, DEFAULTS.jwt.refreshToken.options(newDbUser.result), JWT_REFRESH_SECRET)
 
 			reply
 				.code(200)

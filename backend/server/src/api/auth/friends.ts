@@ -20,7 +20,7 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 	}>("/possibleFriends", {
 		preHandler: authJwtMiddleware
 	}, async (request, reply) => {
-		const userId = Number(request.user.id as string);
+		const userId = request.user.id;
 		let { name, page = 1, limit = 50 } = request.query;
 		let offset = (page - 1) * limit;
 		name = name.trim();
@@ -48,7 +48,7 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 	}>("/me", { preHandler: authJwtMiddleware }, async (request, reply) => {
 		const { page = 1, limit = 50 } = request.query;
 		const offset = (page - 1) * limit;
-		const userId = Number(request.user.id as string);
+		const userId = request.user.id;
 
 		const friendsRes = await Database.getInstance().friendsTable.getFriendsWithInfo(userId, offset, limit);
 
@@ -79,11 +79,10 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 		}
 	}, async (request, reply) => {
 		const { userId: userIdStr } = request.body;
-		const loggedInId = request.user.id as string;
+		const senderId = request.user.id;
 
 		try {
 			const receiverId = Number(userIdStr);
-			const senderId = Number(loggedInId);
 
 			const user = await Database.getInstance().userTable.getById(receiverId);
 			if (user.error) {
@@ -114,11 +113,10 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 		schema: {}
 	}, async (request, reply) => {
 		const { userId: userIdStr } = request.body;
-		const loggedInId = request.user.id as string;
+		const userId = request.user.id;
 
 		try {
 			const friendId = Number(userIdStr);
-			const userId = Number(loggedInId);
 
 			const dbRes = await Database.getInstance().friendsTable.delete(userId, friendId);
 			if (dbRes.error) {
@@ -145,7 +143,7 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 	}>("/requests", { preHandler: authJwtMiddleware }, async (request, reply) => {
 		const { page = 1, limit = 50 } = request.query;
 		const offset = (page - 1) * limit;
-		const userId = Number(request.user.id as string);
+		const userId = request.user.id;
 
 		const friendsRes = await Database.getInstance().friendRequestsTable.getFriendRequestsWithInfo(userId, offset, limit)
 		if (friendsRes.error) {
@@ -167,11 +165,10 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 		schema: {}
 	}, async (request, reply) => {
 		const { userId: userIdStr } = request.body;
-		const loggedInId = request.user.id as string;
+		const userId = request.user.id;
 
 		try {
 			const friendId = Number(userIdStr);
-			const userId = Number(loggedInId);
 
 			const dbRes = await Database.getInstance().friendRequestsTable.delete(userId, friendId);
 			if (dbRes.error) {
@@ -204,11 +201,10 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 		}
 	}, async (request, reply) => {
 		const { userId: userIdStr } = request.body;
-		const loggedInId = request.user.id as string;
+		const senderId = request.user.id;
 
 		try {
 			const receiverId = Number(userIdStr);
-			const senderId = Number(loggedInId);
 
 			const dbRes = await Database.getInstance().friendRequestsTable.acceptRequest(senderId, receiverId);
 			if (dbRes.error) {
@@ -245,11 +241,10 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 		}
 	}, async (request, reply) => {
 		const { userId: userIdStr } = request.body;
-		const loggedInId = request.user.id as string;
+		const senderId = request.user.id;
 
 		try {
 			const receiverId = Number(userIdStr);
-			const senderId = Number(loggedInId);
 
 			const dbRes = await Database.getInstance().friendRequestsTable.rejectRequest(senderId, receiverId);
 			if (dbRes.error) {
