@@ -164,6 +164,14 @@ svg.svg-check {
 	fill: #34c400;
 }
 
+/* toasts css */
+div.toastify button.toast-close {
+	margin-left: 7px;
+}
+div.toastify img.toastify-avatar {
+	margin-right: 7px;
+}
+
 @keyframes spin {
 	0% {
 		transform: rotate(0deg);

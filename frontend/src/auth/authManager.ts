@@ -1,7 +1,9 @@
-import NavBar, { getNav } from "@/components/NavBar";
+import NavBar from "@/components/NavBar";
 import Router from "@/router/Router";
 import API from "@/utils/BackendApi";
 import { backendEndpoint } from "@/utils/path";
+import { toastHelper } from "@/utils/toastHelper";
+import {objectOutputType, ZodString, ZodType} from "zod";
 
 
 class AuthManager {
@@ -18,6 +20,7 @@ class AuthManager {
 		this.fetchUser().then((ok) => { 
 			if (ok) {
 				Router.getInstance().returnToOrPath("/")
+				toastHelper.info("Welcome Back!")
 			}
 		});
 	}
@@ -101,7 +104,7 @@ class AuthManager {
 			if (!res.ok) {
 				return {
 					success: false,
-					message: data?.message || "Registration failed"
+					message: data?.error
 				};
 			}
 
@@ -185,7 +188,10 @@ class AuthManager {
 		return data.error || null;
 	}
 
-	public async login(userParams: UserParams): Promise<boolean> {
+	public async login(userParams: objectOutputType<{
+		username: ZodString;
+		password: ZodString
+	}, ZodType<any, any, any>, "strip"> | undefined): Promise<boolean> {
 		const res = await fetch(backendEndpoint(API.auth.login), {
 			method: "POST",
 			headers: {
@@ -193,12 +199,22 @@ class AuthManager {
 			},
 			body: JSON.stringify(userParams),
 			credentials: "include"
-		})
-		if (!res.ok) return false;
+		});
+
+		if (!res.ok) {
+			const errorData = await res.json().catch(() => null);
+			const message = errorData?.error;
+			throw new Error(message);
+		}
+
 		const data = await res.json();
+		if (!data.accessToken) {
+			throw new Error("Access token not received");
+		}
+
 		this.accessToken = data.accessToken;
-		
-		await this.fetchUser()
+		await this.fetchUser();
+
 		return true;
 	}
 

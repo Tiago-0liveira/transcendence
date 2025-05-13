@@ -2,6 +2,7 @@ import AuthManager from './auth/authManager'
 import NavBar from './components/NavBar'
 import Router from './router/Router'
 import './style.css'
+import "toastify-js/src/toastify.css"
 
 import "@page/registry.ts"
 
