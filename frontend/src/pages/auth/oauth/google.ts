@@ -37,7 +37,6 @@ const component = async () => {
 
 	const formSubmitHandler = async (e) => {
 		e.preventDefault()
-		console.log("kjdmakmsd")
 		const data = new FormData(form as HTMLFormElement);
 		// TODO: change this login form (needs validation here and in the backend)
 		if (isValidGoogleOauthFormData(data)) {

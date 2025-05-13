@@ -166,7 +166,7 @@ class AuthManager {
 			headers: {
 				"Content-Type": "application/json"
 			},
-			body: JSON.stringify({ user: userParams }),
+			body: JSON.stringify(userParams),
 			credentials: "include"
 		})
 		const data = await res.json()

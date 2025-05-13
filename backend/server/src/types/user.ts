@@ -11,7 +11,7 @@ interface BaseUserParams {
 interface UserParams extends BaseUserParams {
 	password: string,
 	authProvider?: string,
-	authProviderId?: string,
+	authProviderId?: number,
 }
 
 interface User extends UserParams, UIDD {

@@ -40,8 +40,8 @@ export default async function jwtRoutes(fastify: FastifyInstance) {
 				return reply.code(404).send({ message: "The user does not exist anymore! " });
 			}
 
-			const accessToken = jwt.sign({}, DEFAULTS.jwt.accessToken.options(decoded?.payload.sub))
-			const refreshToken = jwt.sign({}, DEFAULTS.jwt.refreshToken.options(decoded?.payload.sub), JWT_REFRESH_SECRET)
+			const accessToken = jwt.sign({}, DEFAULTS.jwt.accessToken.options(decoded.payload.sub))
+			const refreshToken = jwt.sign({}, DEFAULTS.jwt.refreshToken.options(decoded.payload.sub), JWT_REFRESH_SECRET)
 
 			return reply
 				.code(200)

@@ -78,7 +78,7 @@ export default async function authenticationRoutes(fastify: FastifyInstance) {
 			const { username, password } = parsed;
 
 			const res = await Database.getInstance().userTable.login(username, password);
-			if ('error' in res) {
+			if (res.error) {
 				return reply.status(401).send({
 					error: res.error.message,
 					ok: false

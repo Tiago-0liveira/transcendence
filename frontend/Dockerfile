@@ -1,4 +1,4 @@
-#Build stage
+# Build stage
 FROM node:18 AS builder
 
 WORKDIR /app
@@ -7,30 +7,40 @@ COPY package*.json ./
 RUN npm install
 
 COPY . .
+RUN npm run build
 
-#Dev stage
+# Dev stage
+FROM node:18 AS dev
 
-FROM builder AS dev
+WORKDIR /app
+COPY --from=builder /app ./
 
 CMD ["npm", "run", "dev"]
 
-#Prod stage
-
+# Prod stage
 FROM nginx:alpine AS prod
 
-RUN npm run build
+# Install openssl for self-signed certificate
+RUN apk add --no-cache openssl bash curl nss
 
-RUN apk add openssl
+# Download and install mkcert as alpine does not have it in their default repositories
+RUN curl -L "https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-linux-amd64" -o /usr/local/bin/mkcert \
+    && chmod +x /usr/local/bin/mkcert
 
+# Set up SSL directory
+RUN mkdir -p /etc/nginx/ssl
+
+# Create the local CA and generate the certificate
+RUN mkcert -install \
+    && mkcert localhost \
+    && mv localhost.pem /etc/nginx/ssl/nginx-selfsigned.crt \
+    && mv localhost-key.pem /etc/nginx/ssl/nginx-selfsigned.key
+
+# NGINX config
 RUN rm /etc/nginx/conf.d/default.conf
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-RUN mkdir -p /etc/nginx/ssl
-
-RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-    -keyout /etc/nginx/ssl/nginx-selfsigned.key -out /etc/nginx/ssl/nginx-selfsigned.crt \
-    -subj "/C=PT/L=Lisbon/O=42/CN=transcendence"
-
+# Copy Vite build output
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 EXPOSE 80 443

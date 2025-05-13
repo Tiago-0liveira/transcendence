@@ -4,7 +4,7 @@
 		"strict": true,
 		"resolveJsonModule": true,
 		"noUnusedLocals": true,
-		"noUnusedParameters": true,
+		"noUnusedParameters": false,
 		"noFallthroughCasesInSwitch": true,
 		"target": "ESNext",
 		"moduleResolution": "Node",

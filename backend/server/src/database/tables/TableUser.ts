@@ -19,7 +19,7 @@ class UserTable extends BaseTable<User, UserParams> {
 		avatarUrl TEXT NOT NULL,
 		password TEXT,
 		authProvider TEXT NOT NULL DEFAULT \`${UserAuthMethod.LOCAL}\`,
-		authProviderId TEXT NOT NULL DEFAULT \`${UserAuthMethod.LOCAL}\`,
+		authProviderId INTEGER NOT NULL DEFAULT \`${UserAuthMethod.LOCAL}\`,
 		createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
 		updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
 	);`;
@@ -174,12 +174,12 @@ class UserTable extends BaseTable<User, UserParams> {
 	async existsUsernameAndDisplayName(username: string, displayName: string): Promise<boolean> {
 		return this.exists({ username, displayName }, "AND")
 	}
-	async existsGoogleId(googleId: string): Promise<{ id: string } | null> {
-		return new Promise((resolve) => {
+	async existsGoogleId(googleId: number): Promise<UIDD | null> {
+		return new Promise((resolve, reject) => {
 			const select = this.db.prepare(`SELECT id FROM ${this._tableName} WHERE authProvider = ? AND authProviderId = ?`)
 			const select1 = select.get(UserAuthMethod.GOOGLE, googleId)
 			console.log("existsGoogleId:", select1)
-			if (select1) resolve(select1 as { id: string })
+			if (select1) resolve(select1 as UIDD)
 			else resolve(null)
 		})
 	}
