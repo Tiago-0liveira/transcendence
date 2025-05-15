@@ -4,6 +4,7 @@ import API from "@/utils/BackendApi";
 import { backendEndpoint } from "@/utils/path";
 import { toastHelper } from "@/utils/toastHelper";
 import {objectOutputType, ZodString, ZodType} from "zod";
+import SocketHandler from "./socketHandler";
 
 
 class AuthManager {
@@ -19,6 +20,7 @@ class AuthManager {
 		/* Add loading spinner on notification that resolves when this.fetchUser resolves */
 		this.fetchUser().then((ok) => { 
 			if (ok) {
+				SocketHandler.getInstance()
 				Router.getInstance().returnToOrPath("/")
 				toastHelper.info("Welcome Back!")
 			}

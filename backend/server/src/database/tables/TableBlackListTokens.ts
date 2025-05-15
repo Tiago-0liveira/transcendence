@@ -41,7 +41,6 @@ class BlackListTokensTable extends BaseTable<BlackListToken, BlackListToken> {
 		return new Promise((resolve, reject) => {
 			const get = this.db.prepare(this._getStr)
 			const run = get.get(token)
-			console.log("run:", run)
 			if (run) {
 				resolve({ result: Boolean(run) })
 			} else {

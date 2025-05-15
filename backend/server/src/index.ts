@@ -1,6 +1,7 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors"
 import fastifyCookie from "@fastify/cookie"
+import fastifyWebsocket from "@fastify/websocket";
 import { PORT, FRONTEND_URL, JWT_SECRET, DEV_MODE } from "@config"
 import registerRoutes from "./routes";
 import Database from "@db/Database";
@@ -41,6 +42,7 @@ app.register(cors, {
 	credentials: true,
 	optionsSuccessStatus: 200
 })
+app.register(fastifyWebsocket)
 
 registerRoutes(app);
 
