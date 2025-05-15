@@ -37,8 +37,6 @@ class SocketHandler {
 		}
 	}
 	private reconnectHandler() {
-		if (!this.socket)
-			return;
 		if (this.tryToReconnect) {
 			this.cleanUpSocketListeners();
 			this.socket = this.createSocket();
