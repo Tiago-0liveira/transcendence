@@ -1,14 +1,15 @@
 import { toastHelper } from "@/utils/toastHelper";
+import AuthManager from "./authManager";
 
 class SocketHandler {
 	private static instance: SocketHandler;
-	private socket: WebSocket;
+	private socket: WebSocket | null = null;
 
 	private pingIntervalId: number;
+	private reconnectTimeoutId: number;
 	private lastPongTime!: number;
 	private lastPingTime!: number;
-	private reconnectTimeoutId: number;
-	private tryToReconnect: boolean;
+	private tryToReconnect!: boolean;
 
 	static PING_INTERVAL_TIMEOUT = 5000 as const;
 	static RECONNECT_BASE_TIMEOUT = 8000 as const;
@@ -21,6 +22,8 @@ class SocketHandler {
 	}
 
 	private pingIntervalHandler() {
+		if (!this.socket)
+			return;
 		const now = Date.now();
 		if (now - this.lastPongTime > SocketHandler.PING_INTERVAL_TIMEOUT * 2) {
 			console.warn("WebSocket is unresponsive. Attempting to reconnect...");
@@ -34,27 +37,35 @@ class SocketHandler {
 		}
 	}
 	private reconnectHandler() {
+		if (!this.socket)
+			return;
 		if (this.tryToReconnect) {
 			this.cleanUpSocketListeners();
 			this.socket = this.createSocket();
-			this.prepareSocket();
 		}
 	}
 
 	private constructor() {
-		this.tryToReconnect = false;
-
-		this.socket = this.createSocket();
-		this.prepareSocket();
-
 		this.pingIntervalId = setInterval(this.pingIntervalHandler.bind(this), SocketHandler.PING_INTERVAL_TIMEOUT);
 		this.reconnectTimeoutId = setInterval(this.reconnectHandler.bind(this), SocketHandler.RECONNECT_BASE_TIMEOUT);
 	}
 
+	public disconnect() {
+		if (this.socket && (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING)) {
+			this.socket.close();
+		}
+	}
+	public connect() {
+		this.socket = this.createSocket();
+	}
+
 	private createSocket(): WebSocket {
 		try {
-			const socket = new WebSocket(`ws://localhost:4000/ws`);
-			console.log("socket: ", socket);
+			const accessToken = AuthManager.getInstance().GetAccessToken();
+			if (!accessToken)
+				throw new Error("Invalid AccessToken")
+			const socket = new WebSocket(`ws://localhost:4000/ws?accessToken=${encodeURIComponent(accessToken)}`);
+			this.prepareSocket(socket);
 			return socket;
 		} catch (error) {
 			toastHelper.error(`Could not connect to WebSocket!\n`);
@@ -62,21 +73,26 @@ class SocketHandler {
 		}
 	}
 
-	private prepareSocket() {
+	private prepareSocket(socket: WebSocket) {
+		this.tryToReconnect = false;
 		this.lastPingTime = Date.now();
 		this.lastPongTime = Date.now();
 
-		this.socket.addEventListener("open", this.openHandler.bind(this));
-		this.socket.addEventListener("message", this.messageHandler.bind(this));
-		this.socket.addEventListener("error", this.errorHandler.bind(this));
-		this.socket.addEventListener("close", this.closeHandler.bind(this));
+		socket.addEventListener("open", this.openHandler.bind(this));
+		socket.addEventListener("message", this.messageHandler.bind(this));
+		socket.addEventListener("error", this.errorHandler.bind(this));
+		socket.addEventListener("close", this.closeHandler.bind(this));
 	}
 
 	private cleanUpSocketListeners() {
+		if (!this.socket)
+			return;
+
 		this.socket.removeEventListener("open", this.openHandler.bind(this));
 		this.socket.removeEventListener("message", this.messageHandler.bind(this));
 		this.socket.removeEventListener("error", this.errorHandler.bind(this));
 		this.socket.removeEventListener("close", this.closeHandler.bind(this));
+		this.socket = null;
 	}
 
 	private openHandler(ev: Event) {
@@ -100,9 +116,13 @@ class SocketHandler {
 
 	private closeHandler(ev: CloseEvent) {
 		console.warn("WebSocket connection closed. Reason:", ev.reason || "Unknown");
-		/*toastHelper.error("WebSocket disconnected!");*/
+		console.log(`closeHandler: ${ev.code}`);
 		this.cleanUpSocketListeners();
-		this.tryToReconnect = true;
+		/*
+			4001 - invalid or missing credentials
+			1005 - this.socket.close() - User probably logged out and this.socket.close was called
+		*/
+		this.tryToReconnect = ![4001, 1005].includes(ev.code);
 	}
 }
 

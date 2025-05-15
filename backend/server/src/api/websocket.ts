@@ -1,21 +1,33 @@
-import { authJwtMiddleware } from "@middleware/auth";
 import { processRawData } from "@utils/websocket";
 import type { FastifyInstance } from "fastify";
-import { v4 as uuidv4 } from "uuid"
+import type { WebSocket } from "@fastify/websocket"
+import jwt from "@utils/jwt";
 
+type ClientValue = { socket: WebSocket }
+type ClientMap = Map<number, ClientValue>
+
+const clients: ClientMap = new Map<number, ClientValue>()
 
 export const websocketHandler = async (fastifyInstance: FastifyInstance) => {
-	fastifyInstance.get('/ws' ,{ websocket: true }, (socket, req) => {
+	fastifyInstance.get<{ 
+		Querystring: {
+			accessToken?: string;
+		}
+	 }>('/ws' ,{ websocket: true }, (socket, req) => {
+		const accessToken = req.query.accessToken
+		if (!accessToken || !jwt.verify(accessToken)) {
+			socket.close(4001, "Invalid or missing credentials!")
+			return;
+		}
+		const userId = jwt.decode(accessToken)!.payload.sub;
 
-		const clientId = uuidv4();
-		fastifyInstance.log.info(`Client connected: ${clientId}`);
+		fastifyInstance.log.info(`Client connected: ${userId}`);
+		clients.set(userId, { socket })
 
 		socket.on('message', (rawMessage) => {
-			/*fastifyInstance.log.info(`Message from ${clientId}: ${rawMessage}`);*/
-			
 			try {
 				const message = processRawData(rawMessage);
-				console.log("message: ", message);
+				/*console.log("message: ", message);*/
 				if (message === "ping") {
 					socket.send("pong");
 				}
@@ -26,12 +38,12 @@ export const websocketHandler = async (fastifyInstance: FastifyInstance) => {
 
 		// Handle client disconnect
 		socket.on('close', () => {
-			fastifyInstance.log.info(`Client disconnected: ${clientId}`);
-			/*clients.delete(clientId);*/
+			fastifyInstance.log.info(`Client disconnected: ${userId}`);
+			/*clients.delete(userId);*/
 		});
 
 		socket.on('error', (error) => {
-			fastifyInstance.log.error(`WebSocket error with client ${clientId}:`, error);
+			fastifyInstance.log.error(`WebSocket error with client ${userId}:`, error);
 		});
 	});
 }

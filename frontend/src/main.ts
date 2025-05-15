@@ -5,6 +5,7 @@ import './style.css'
 import "toastify-js/src/toastify.css"
 
 import "@page/registry.ts"
+import SocketHandler from './auth/socketHandler'
 
 const b = document.getElementsByTagName("body").item(0)
 if (!b) {
@@ -12,5 +13,6 @@ if (!b) {
 }
 b.prepend(new NavBar())
 
-Router.getInstance().initializeRouter()
-AuthManager.getInstance()
+Router.getInstance().initializeRouter();
+AuthManager.getInstance();
+SocketHandler.getInstance();

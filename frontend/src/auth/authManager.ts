@@ -20,7 +20,6 @@ class AuthManager {
 		/* Add loading spinner on notification that resolves when this.fetchUser resolves */
 		this.fetchUser().then((ok) => { 
 			if (ok) {
-				SocketHandler.getInstance()
 				Router.getInstance().returnToOrPath("/")
 				toastHelper.info("Welcome Back!")
 			}
@@ -58,6 +57,7 @@ class AuthManager {
 
 		const body = await res.json();
 		this.user = body.user;
+		SocketHandler.getInstance().connect();
 		NavBar.updateNav()
 		return true;
 	}
@@ -240,6 +240,7 @@ class AuthManager {
 	public async logout(redirect = false) {
 		try {
 			const response = await this.authFetch(API.jwt.refresh.logout, { method: "GET", credentials: "include" });
+			SocketHandler.getInstance().disconnect();
 			this.accessToken = null;
 			this.user = null;
 			NavBar.updateNav()
