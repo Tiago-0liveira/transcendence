@@ -11,9 +11,12 @@ export const authJwtMiddleware = async (request: FastifyRequest, reply: FastifyR
 	if (!jwt.verify(accessToken)) {
 		return reply.code(401).send({ error: "Unauthorized" })
 	}
-	const decodedToken = jwt.decode(accessToken);
+	const decodedToken = jwt.decode<AccessTokenPayload>(accessToken);
 	if (decodedToken && decodedToken.payload && decodedToken.payload.sub) {
-		request.user = { id: decodedToken.payload.sub };
+		request.user = { 
+			id: decodedToken.payload.sub, 
+			deviceId: decodedToken.payload.deviceId
+		};
 	} else {
 		console.warn("authJwtMiddleware failed for token: ", accessToken);
 		return reply.code(401).send({ error: "Unauthorized" })

@@ -13,14 +13,14 @@ type JWTOptions = {
 	iat: number
 }
 
-type JWT<T = JWTOptions, U = object> = T & {
+type JWT<U = object, T extends JWTOptions = JWTOptions> = T & {
 	payload: U
 }
 
-type DecodedPayload<U extends object = {}, T extends JWTOptions & { payload: U } = JWTOptions & { payload: U }> = T
-
-
-interface DecodedJWT<T extends object = {}> {
+interface DecodedJWT<U extends JWTOptions = JWTOptions & {}, T extends object = {}> {
 	header: JWTHeader,
-	payload: DecodedPayload<T>
+	payload: U & { payload: T }
 }
+
+type AccessTokenPayload = JWTOptions & { deviceId: string }
+type RefreshTokenPayload = AccessTokenPayload

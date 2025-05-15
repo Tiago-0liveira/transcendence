@@ -7,6 +7,10 @@ import { UserAuthMethod } from "@enums/enums";
 import DEFAULTS from "@utils/defaults";
 import { googleOauthMiddleware, oauthJwtMiddleware } from "@middleware/google";
 import { CookieName } from "@enums/auth";
+import { connectedSocketClients } from "@api/websocket";
+import { generateTokens } from "@utils/auth";
+import { v4 } from "uuid";
+import { websocketRegisterNewLogin } from "@utils/websocket";
 
 export let googleClient: OAuth2Client | null = null;
 if (GOOGLE_HAS_CREDENTIALS) {
@@ -58,10 +62,15 @@ export default async function oauthGoogleRoutes(fastify: FastifyInstance) {
 			if (!res) {
 				return reply.code(400).send({ message: "User does not exist!" });
 			}
-
-			const accessToken = jwt.sign({}, DEFAULTS.jwt.accessToken.options(res.id))
-			const refreshToken = jwt.sign({}, DEFAULTS.jwt.refreshToken.options(res.id), JWT_REFRESH_SECRET)
-
+			if (connectedSocketClients.get(res.id)) {
+				return reply.status(403).send({
+					error: "User already connected in another device!",
+					ok: false
+				})
+			}
+			const deviceId = v4()
+			websocketRegisterNewLogin(res.id, deviceId);
+			const { accessToken, refreshToken } = generateTokens(res.id, deviceId)
 			reply
 				.code(200)
 				.setCookie(CookieName.REFRESH_TOKEN, refreshToken, DEFAULTS.cookies.refreshToken.options())
@@ -164,8 +173,9 @@ export default async function oauthGoogleRoutes(fastify: FastifyInstance) {
 				return reply.status(400).send({ error: newDbUser.error })
 			}
 
-			const accessToken = jwt.sign({}, DEFAULTS.jwt.accessToken.options(newDbUser.result))
-			const refreshToken = jwt.sign({}, DEFAULTS.jwt.refreshToken.options(newDbUser.result), JWT_REFRESH_SECRET)
+			const deviceId = v4()
+			websocketRegisterNewLogin(newDbUser.result, deviceId);
+			const { accessToken, refreshToken } = generateTokens(newDbUser.result, deviceId)
 
 			reply
 				.code(200)

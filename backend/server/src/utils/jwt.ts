@@ -15,7 +15,7 @@ function base64UrlDecode(str: string): string {
 	return Buffer.from(str, "base64").toString()
 }
 
-function createJWT(payload: object, options: Omit<JWTOptions, "iat">, secret: string = JWT_SECRET): string {
+function createJWT<T extends Omit<JWTOptions, "iat">>(payload: object, options: T, secret: string = JWT_SECRET): string {
 	const header: JWTHeader = { alg: "HS256", typ: "JWT" }
 	const now = Math.floor(Date.now() / 1000)
 
@@ -35,7 +35,7 @@ function createJWT(payload: object, options: Omit<JWTOptions, "iat">, secret: st
 	return `${encodedHeader}.${encodedPayload}.${signature}`
 }
 
-function decodeJWT<T extends object = {}>(token: string): DecodedJWT<T> | null {
+function decodeJWT<U extends JWTOptions = JWTOptions & {}, T extends object = {}>(token: string): DecodedJWT<U, T> | null {
 	try {
 		const [headerB64, payloadB64] = token.split(".")
 

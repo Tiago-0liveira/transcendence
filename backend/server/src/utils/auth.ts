@@ -5,9 +5,9 @@ import {JWT_REFRESH_SECRET} from "@config";
 import { CookieName } from "@enums/auth";
 
 // func for token generate
-export function generateTokens(userId: string) {
-    const accessToken = jwt.sign({}, DEFAULTS.jwt.accessToken.options(userId));
-    const refreshToken = jwt.sign({}, DEFAULTS.jwt.refreshToken.options(userId), JWT_REFRESH_SECRET);
+export function generateTokens(userId: number, deviceId: string) {
+    const accessToken = jwt.sign({ }, DEFAULTS.jwt.accessToken.options(userId, deviceId));
+    const refreshToken = jwt.sign({ }, DEFAULTS.jwt.refreshToken.options(userId, deviceId), JWT_REFRESH_SECRET);
     return { accessToken, refreshToken };
 }
 

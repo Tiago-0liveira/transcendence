@@ -10,10 +10,10 @@ const BaseHttpCookieOptions: Partial<CookieSerializeOptions> = {
 const DEFAULTS = {
 	jwt: {
 		accessToken: {
-			options: (sub: number) => ({ sub, exp: 60 * 15 }),
+			options: (sub: number, deviceId: string) => ({ deviceId, sub, exp: 60 * 15 }),
 		},
 		refreshToken: {
-			options: (sub: number) => ({ sub, exp: 60 * 60 * 24 * 7 }),
+			options: (sub: number, deviceId: string) => ({ deviceId, sub, exp: 60 * 60 * 24 * 7 }),
 		},
 		oauthToken: {
 			options: (sub: number) => ({ sub, exp: 60 * 15 })

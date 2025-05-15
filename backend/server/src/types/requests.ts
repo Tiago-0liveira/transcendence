@@ -1,5 +1,6 @@
 interface RequestUser {
-	id: number
+	id: number,
+	deviceId: string
 }
 
 interface RequestGooglePayload {

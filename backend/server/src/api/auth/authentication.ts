@@ -3,6 +3,9 @@ import { userLoginSchema, userSignupSchema } from "@utils/userSchemas";
 import { z } from "zod";
 import Database from "@db/Database";
 import { generateTokens, sendLoginResponse } from "@utils/auth";
+import { connectedSocketClients } from "@api/websocket";
+import { v4 } from "uuid";
+import { websocketRegisterNewLogin } from "@utils/websocket";
 
 /**
  * path: /auth/
@@ -27,9 +30,15 @@ export default async function authenticationRoutes(fastify: FastifyInstance) {
 				password: parsed.password,
 				authProvider: parsed.authProvider,
 			});
-
-			const userId = String(res.result);
-			const tokens = generateTokens(userId);
+			if (res.error) {
+				return reply.status(400).send({
+					error: "Unexpected server error",
+					ok: false
+				})
+			}
+			const deviceId = v4()
+			websocketRegisterNewLogin(res.result, deviceId);
+			const tokens = generateTokens(res.result, deviceId);
 			sendLoginResponse(reply, tokens);
 
 		} catch (error) {
@@ -84,9 +93,15 @@ export default async function authenticationRoutes(fastify: FastifyInstance) {
 					ok: false
 				});
 			}
-
-			const userId = String(res.result?.id);
-			const tokens = generateTokens(userId);
+			if (connectedSocketClients.get(res.result.id)) {
+				return reply.status(403).send({
+					error: "User already connected in another device!",
+					ok: false
+				})
+			}
+			const deviceId = v4()
+			websocketRegisterNewLogin(res.result.id, deviceId);
+			const tokens = generateTokens(res.result.id, deviceId);
 			sendLoginResponse(reply, tokens);
 
 		} catch (error) {

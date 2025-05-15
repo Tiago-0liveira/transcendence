@@ -1,12 +1,8 @@
-import { processRawData } from "@utils/websocket";
+import { processRawData, updateDisconnectedClient } from "@utils/websocket";
 import type { FastifyInstance } from "fastify";
-import type { WebSocket } from "@fastify/websocket"
 import jwt from "@utils/jwt";
 
-type ClientValue = { socket: WebSocket }
-type ClientMap = Map<number, ClientValue>
-
-const clients: ClientMap = new Map<number, ClientValue>()
+export const connectedSocketClients: ClientMap = new Map()
 
 export const websocketHandler = async (fastifyInstance: FastifyInstance) => {
 	fastifyInstance.get<{ 
@@ -19,10 +15,16 @@ export const websocketHandler = async (fastifyInstance: FastifyInstance) => {
 			socket.close(4001, "Invalid or missing credentials!")
 			return;
 		}
-		const userId = jwt.decode(accessToken)!.payload.sub;
+		const decodedUser = jwt.decode<AccessTokenPayload>(accessToken);
+		if (!decodedUser) {
+			socket.close(4001, "Invalid or missing credentials!")
+			return;
+		}
+		const userId = decodedUser.payload.sub;
+		const deviceId = decodedUser.payload.deviceId;
 
-		fastifyInstance.log.info(`Client connected: ${userId}`);
-		clients.set(userId, { socket })
+		fastifyInstance.log.info(`Client connected: ${userId}::${deviceId}`);
+		updateDisconnectedClient(userId, socket);
 
 		socket.on('message', (rawMessage) => {
 			try {
@@ -39,7 +41,7 @@ export const websocketHandler = async (fastifyInstance: FastifyInstance) => {
 		// Handle client disconnect
 		socket.on('close', () => {
 			fastifyInstance.log.info(`Client disconnected: ${userId}`);
-			/*clients.delete(userId);*/
+			connectedSocketClients.delete(userId);
 		});
 
 		socket.on('error', (error) => {

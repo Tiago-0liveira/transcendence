@@ -2,8 +2,10 @@ import { JWT_REFRESH_SECRET } from "@config";
 import Database from "@db/Database";
 import { CookieName } from "@enums/auth";
 import { authJwtMiddleware } from "@middleware/auth";
+import { generateTokens } from "@utils/auth";
 import DEFAULTS from "@utils/defaults";
 import jwt from "@utils/jwt";
+import { userCanLogIn } from "@utils/websocket";
 import type { FastifyInstance } from "fastify";
 
 /**
@@ -27,7 +29,7 @@ export default async function jwtRoutes(fastify: FastifyInstance) {
 				return reply.code(401).send({ message: new Error("Token already used") });
 			}
 
-			const decoded = jwt.decode(CookieRefreshToken);
+			const decoded = jwt.decode<RefreshTokenPayload>(CookieRefreshToken);
 			if (!decoded || !decoded.payload || !decoded.payload.sub) {
 				return reply.code(400).send({ message: "Invalid Token" });
 			}
@@ -39,9 +41,12 @@ export default async function jwtRoutes(fastify: FastifyInstance) {
 			if (!dbUser.result) {
 				return reply.code(404).send({ message: "The user does not exist anymore! " });
 			}
-
-			const accessToken = jwt.sign({}, DEFAULTS.jwt.accessToken.options(decoded.payload.sub))
-			const refreshToken = jwt.sign({}, DEFAULTS.jwt.refreshToken.options(decoded.payload.sub), JWT_REFRESH_SECRET)
+			if (!userCanLogIn(dbUser.result.id, decoded.payload.deviceId))
+			{
+				return reply.code(403).send({ message: "User already connected in another device!" });
+			}
+			const deviceId = decoded.payload.deviceId;
+			const { accessToken, refreshToken } = generateTokens(decoded.payload.sub, deviceId)
 
 			return reply
 				.code(200)
