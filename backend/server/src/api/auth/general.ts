@@ -11,15 +11,7 @@ export default async function AuthGeneralRoutes(fastify: FastifyInstance) {
 	 */
 	fastify.get("/me", { preHandler: authJwtMiddleware }, async (request, reply) => {
 		try {
-			const userId = request.user?.id;
-
-			if (!userId) {
-				fastify.log.warn({ msg: "/me accessed without user ID", user: request.user });
-				return reply.status(400).send({
-					message: "Invalid or missing user ID",
-					ok: false,
-				});
-			}
+			const userId = request.user.id;
 
 			const user = await Database.getInstance().userTable.getById(userId);
 
