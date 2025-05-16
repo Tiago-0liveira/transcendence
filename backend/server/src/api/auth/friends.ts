@@ -1,5 +1,6 @@
 import Database from "@db/Database";
 import { authJwtMiddleware } from "@middleware/auth";
+import { notify } from "@utils/websocket";
 import type { FastifyInstance } from "fastify"
 
 /**
@@ -95,6 +96,7 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 			if (friendRequest.error) {
 				return reply.code(422).send({ message: friendRequest.error.message })
 			}
+			await notify.friendRequest(senderId, receiverId);
 			return reply.code(201).send({})
 		} catch (e) {
 			return reply.code(400).send({ message: "Invalid userId" })
@@ -214,6 +216,7 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 			if (dbRes2.error) {
 				return reply.code(422).send(dbRes2);
 			}
+			await notify.friendAcceptedRequest(senderId, receiverId);
 			return reply.code(201).send({});
 
 		} catch (e) {

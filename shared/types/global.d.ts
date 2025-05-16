@@ -1,1 +1,7 @@
-type TestType = "type"
+type SocketMessageBase<T extends string, P extends object> = { type: T } & P;
+
+type SocketMessage = 
+	SocketMessageBase<"friend-online", { friendName: string, avatar: string }>
+	| SocketMessageBase<"friend-request", { friendName: string, avatar: string, friendId: number }>
+	| SocketMessageBase<"friend-request-accepted", { friendName: string, avatar: string }>
+

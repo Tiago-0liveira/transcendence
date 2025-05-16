@@ -1,15 +1,15 @@
-import { processRawData, updateDisconnectedClient } from "@utils/websocket";
+import { notify, processRawData, updateDisconnectedClient } from "@utils/websocket";
 import type { FastifyInstance } from "fastify";
 import jwt from "@utils/jwt";
 
 export const connectedSocketClients: ClientMap = new Map()
 
 export const websocketHandler = async (fastifyInstance: FastifyInstance) => {
-	fastifyInstance.get<{ 
+	fastifyInstance.get<{
 		Querystring: {
 			accessToken?: string;
 		}
-	 }>('/ws' ,{ websocket: true }, (socket, req) => {
+	}>('/ws', { websocket: true }, async (socket, req) => {
 		const accessToken = req.query.accessToken
 		if (!accessToken || !jwt.verify(accessToken)) {
 			socket.close(4001, "Invalid or missing credentials!")
@@ -25,6 +25,7 @@ export const websocketHandler = async (fastifyInstance: FastifyInstance) => {
 
 		fastifyInstance.log.info(`Client connected: ${userId}::${deviceId}`);
 		updateDisconnectedClient(userId, socket);
+		await notify.friendsOnline(userId);
 
 		socket.on('message', (rawMessage) => {
 			try {

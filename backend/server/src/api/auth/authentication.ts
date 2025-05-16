@@ -99,7 +99,7 @@ export default async function authenticationRoutes(fastify: FastifyInstance) {
 					ok: false
 				})
 			}
-			const deviceId = v4()
+			const deviceId = v4();
 			websocketRegisterNewLogin(res.result.id, deviceId);
 			const tokens = generateTokens(res.result.id, deviceId);
 			sendLoginResponse(reply, tokens);

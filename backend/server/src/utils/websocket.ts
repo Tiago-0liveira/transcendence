@@ -1,6 +1,7 @@
 import type { RawData } from "ws";
 import type { WebSocket } from "@fastify/websocket"
 import { connectedSocketClients } from "@api/websocket";
+import Database from "@db/Database";
 
 export const processRawData = (data: RawData): string => {
 	if (Buffer.isBuffer(data)) {
@@ -51,4 +52,81 @@ export const updateDisconnectedClient = (userId: number, socket: WebSocket) => {
 	clientValue.connceted = true;
 	clientValue.connectedAt = Date.now();
 	clientValue.socket = socket;
+}
+
+/**
+ * @description notifications via websocket. they just work if the user recieving the notification is already connected to the websocket
+ */
+export const notify = {
+	/**
+	 * @description dispatches notifications for every friend so they now the user is now online!
+	 */
+	friendsOnline: async (userId: number) => {
+		const friendsWithInfo = await Database.getInstance().friendsTable.getFriendsWithInfo(userId, 0, 5000);
+		if (friendsWithInfo.error) return;
+		friendsWithInfo.result.forEach((friend) => {
+			if (connectedSocketClients.has(friend.id)) {
+
+				const clientValue = connectedSocketClients.get(friend.id);
+				if (!clientValue) return;
+				clientValue.socket?.send(JSON.stringify({
+					type: "friend-online",
+					friendName: friend.displayName,
+					avatar: friend.avatarUrl
+				} satisfies SocketMessage))
+			}
+		})
+	},
+
+	/**
+	 * @description dispatches a notification for a specific friend so he nows the user is now online!
+	 */
+	friendOnline: async (userId: number, friendId: number) => {
+		const connectedFriend = connectedSocketClients.get(friendId);
+		if (connectedFriend && connectedFriend.connceted && connectedFriend.socket) {
+			const dbRes = await Database.getInstance().userTable.getById(userId);
+			if (dbRes.error) return;
+			const user = dbRes.result
+			connectedFriend.socket.send(JSON.stringify({
+				type: "friend-online",
+				friendName: user.displayName,
+				avatar: user.avatarUrl
+			} satisfies SocketMessage))
+		}
+	},
+
+	/**
+	 * @description dispatches a notification when a user has accepted the friend request
+	 */
+	friendAcceptedRequest: async (userId: number, friendId: number) => {
+		const connectedFriend = connectedSocketClients.get(friendId);
+		if (connectedFriend && connectedFriend.connceted && connectedFriend.socket) {
+			const dbRes = await Database.getInstance().userTable.getById(userId);
+			if (dbRes.error) return;
+			const user = dbRes.result
+			connectedFriend.socket.send(JSON.stringify({
+				type: "friend-request-accepted",
+				friendName: user.displayName,
+				avatar: user.avatarUrl
+			} satisfies SocketMessage))
+		}
+	},
+
+	/**
+	 * @description dispatches a notification when a user sends a friend request to another user
+	 */
+	friendRequest: async (userId: number, friendId: number) => {
+		const connectedFriend = connectedSocketClients.get(friendId);
+		if (connectedFriend && connectedFriend.connceted && connectedFriend.socket) {
+			const dbRes = await Database.getInstance().userTable.getById(userId);
+			if (dbRes.error) return;
+			const user = dbRes.result
+			connectedFriend.socket.send(JSON.stringify({
+				type: "friend-request",
+				friendName: user.displayName,
+				avatar: user.avatarUrl,
+				friendId: user.id,
+			} satisfies SocketMessage))
+		}
+	},
 }

@@ -5,7 +5,7 @@ import { authJwtMiddleware } from "@middleware/auth";
 import { generateTokens } from "@utils/auth";
 import DEFAULTS from "@utils/defaults";
 import jwt from "@utils/jwt";
-import { userCanLogIn } from "@utils/websocket";
+import { userCanLogIn, websocketRegisterNewLogin } from "@utils/websocket";
 import type { FastifyInstance } from "fastify";
 
 /**
@@ -47,6 +47,7 @@ export default async function jwtRoutes(fastify: FastifyInstance) {
 			}
 			const deviceId = decoded.payload.deviceId;
 			const { accessToken, refreshToken } = generateTokens(decoded.payload.sub, deviceId)
+			websocketRegisterNewLogin(decoded.payload.sub, deviceId);
 
 			return reply
 				.code(200)

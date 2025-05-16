@@ -103,12 +103,40 @@ class SocketHandler {
 		toastHelper.error("WebSocket error occurred!");
 	}
 
+	private static isSocketValidMessage(message: any): message is SocketMessage {
+		return typeof message === "object" && typeof message.type === "string"
+	}
+
 	private messageHandler(ev: MessageEvent<any>) {
 		if (ev.data === "pong") {
 			this.lastPongTime = Date.now();
 
 			const calculatedPing = this.lastPongTime - this.lastPingTime;
-			console.log("ping: ", calculatedPing, " ms")
+			console.log("ping: ", calculatedPing, " ms");
+			return;
+		}
+		try {
+			const parsedMessage = JSON.parse(ev.data);
+			if (SocketHandler.isSocketValidMessage(parsedMessage)) {
+				console.log("parsedMessage: ", parsedMessage);
+				switch (parsedMessage.type) {
+					case "friend-online":
+						toastHelper.friendOnline(parsedMessage.friendName, parsedMessage.avatar);
+						break;
+					case "friend-request":
+						toastHelper.friendRequest(parsedMessage.friendName, parsedMessage.avatar, parsedMessage.friendId);
+						break;
+					case "friend-request-accepted":
+						toastHelper.friendRequestAccepted(parsedMessage.friendName, parsedMessage.avatar);
+						break;
+					default:
+						console.error(`Unkonwn SocketMessageType: ${parsedMessage}`);
+						break;
+				}
+			}
+
+		} catch (error) {
+			console.warn("SOCKET MESSAGE WRONG FORMAT ERROR: ", error);
 		}
 	}
 
