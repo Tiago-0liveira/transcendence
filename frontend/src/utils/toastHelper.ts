@@ -154,7 +154,7 @@ export const toastHelper = {
 		rejectBtn.addEventListener("click", toastifyRequestReject(friendId));
 
 		deployToast(`${name} sent you a friend request!`, {
-			duration: 1200000,
+			duration: DURATION * 2,
 			avatar,
 			className: "friendRequest",
 			node: div
