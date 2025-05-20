@@ -1,4 +1,4 @@
-import { notify, processRawData, updateDisconnectedClient } from "@utils/websocket";
+import { isSocketValidMessage, notify, processRawData, updateDisconnectedClient } from "@utils/websocket";
 import type { FastifyInstance } from "fastify";
 import jwt from "@utils/jwt";
 
@@ -33,6 +33,17 @@ export const websocketHandler = async (fastifyInstance: FastifyInstance) => {
 				/*console.log("message: ", message);*/
 				if (message === "ping") {
 					socket.send("pong");
+					return;
+				}
+				const parsedMessage = JSON.parse(message);
+				console.log("parsedMessaged: ", parsedMessage);
+				if (isSocketValidMessage(parsedMessage)) {
+					switch (parsedMessage.type) {
+						default:
+							break;
+					}
+				} else {
+					console.error("INVALID SOCKET MESSAGE!!!")
 				}
 			} catch (error) {
 				console.error(error);

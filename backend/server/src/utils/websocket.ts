@@ -37,6 +37,10 @@ export const websocketRegisterNewLogin = (userId: number, deviceId: string) => {
 	connectedSocketClients.set(userId, newDisconnectedClient(deviceId))
 }
 
+export const isSocketValidMessage = (message: any): message is SocketMessage => {
+	return typeof message === "object" && typeof message.type === "string"
+}
+
 const newDisconnectedClient = (deviceId: string): ClientValue => {
 	return {
 		socket: null,

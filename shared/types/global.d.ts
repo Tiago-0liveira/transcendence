@@ -1,5 +1,7 @@
 type SocketMessageBase<T extends string, P extends object> = { type: T } & P;
 
+type SocketMessageType = SocketMessage["type"]
+
 type SocketMessage = 
 	SocketMessageBase<"friend-online", { friendName: string, avatar: string }>
 	| SocketMessageBase<"friend-request", { friendName: string, avatar: string, friendId: number }>

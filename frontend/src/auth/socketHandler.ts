@@ -1,6 +1,8 @@
 import { toastHelper } from "@/utils/toastHelper";
 import AuthManager from "./authManager";
 
+type SocketMessageHandler = (this: SocketHandler, response: SocketMessage) => void;
+
 class SocketHandler {
 	private static instance: SocketHandler;
 	private socket: WebSocket | null = null;
@@ -10,6 +12,11 @@ class SocketHandler {
 	private lastPongTime!: number;
 	private lastPingTime!: number;
 	private tryToReconnect!: boolean;
+	private messageSubscriptions: Map<SocketMessageType, SocketMessageHandler> = new Map();
+	/**
+	 * @description Automatically used by openHandler, so when we try to send messages and we are still not connected it will store the messages here and send them all after connecting
+	 */
+	private queuedMessages: SocketMessage[];
 
 	static PING_INTERVAL_TIMEOUT = 5000 as const;
 	static RECONNECT_BASE_TIMEOUT = 8000 as const;
@@ -46,6 +53,7 @@ class SocketHandler {
 	private constructor() {
 		this.pingIntervalId = setInterval(this.pingIntervalHandler.bind(this), SocketHandler.PING_INTERVAL_TIMEOUT);
 		this.reconnectTimeoutId = setInterval(this.reconnectHandler.bind(this), SocketHandler.RECONNECT_BASE_TIMEOUT);
+		this.queuedMessages = []
 	}
 
 	public disconnect() {
@@ -90,11 +98,33 @@ class SocketHandler {
 		this.socket.removeEventListener("message", this.messageHandler.bind(this));
 		this.socket.removeEventListener("error", this.errorHandler.bind(this));
 		this.socket.removeEventListener("close", this.closeHandler.bind(this));
+		this.messageSubscriptions.clear()
 		this.socket = null;
+	}
+
+	/**
+	 * @description Sends the param `msg` to the server or if the socket is not ready stores the message in a queue
+	 * @param msg SocketMessage
+	 */
+	public sendMessage(msg: SocketMessage) {
+		if (this.socket)
+		{
+			if (this.socket.readyState === WebSocket.OPEN) 
+			{
+				this.socket.send(JSON.stringify(msg))
+			} else {
+				this.queuedMessages.push(msg)
+			}
+		}
 	}
 
 	private openHandler(ev: Event) {
 		console.log("WebSocket connection opened.");
+		console.log("debug::openHandler: ", this.queuedMessages);
+		this.queuedMessages.forEach((message) => {
+			this.socket?.send(JSON.stringify(message))
+		})
+		this.queuedMessages = [];
 		this.tryToReconnect = false;
 	}
 
@@ -130,14 +160,26 @@ class SocketHandler {
 						toastHelper.friendRequestAccepted(parsedMessage.friendName, parsedMessage.avatar);
 						break;
 					default:
-						console.error(`Unkonwn SocketMessageType: ${parsedMessage}`);
 						break;
 				}
+				const messageHandler = this.messageSubscriptions.get(parsedMessage.type);
+				messageHandler && messageHandler.bind(this)(parsedMessage);
 			}
-
 		} catch (error) {
 			console.warn("SOCKET MESSAGE WRONG FORMAT ERROR: ", error);
 		}
+	}
+
+	public addMessageHandler(messageName: SocketMessageType, handler: SocketMessageHandler) {
+		const setHandler = this.messageSubscriptions.get(messageName);
+		if (setHandler) {
+			this.messageSubscriptions.delete(messageName);
+		}
+		this.messageSubscriptions.set(messageName, handler);
+	}
+
+	public removeMessageHandler(messageName: SocketMessageType) {
+		this.messageSubscriptions.delete(messageName);
 	}
 
 	private closeHandler(ev: CloseEvent) {
