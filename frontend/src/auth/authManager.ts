@@ -89,7 +89,7 @@ class AuthManager {
 		return response;
 	}
 
-	/* Default login */
+	/* Default sign up */
 	/* TODO: make this request get the jwt cookie from the backend so it logins right after sign up UX all the way */
 	public async register(userParams: UserParams): Promise<{ success: boolean; message?: string }> {
 		try {
