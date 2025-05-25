@@ -49,7 +49,6 @@ const component = async () => {
 
 		<div id="twofa-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
 			<div class="relative bg-white px-4 py-4 rounded-lg shadow-lg w-[320px] flex flex-col items-center">
-				<!-- Кнопка закрытия -->
 				<button id="twofa-close"
 					class="absolute top-1.5 right-1.5 text-gray-400 hover:text-gray-600 text-base font-semibold leading-none focus:outline-none"
 					title="Close"

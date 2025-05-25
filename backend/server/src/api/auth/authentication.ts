@@ -95,7 +95,7 @@ export default async function authenticationRoutes(fastify: FastifyInstance) {
 				});
 			}
 
-			// 🔐 Проверка включена ли 2FA
+			// if 2fa is enabled, check if the token is valid
 			const db = Database.getInstance();
 			const twofaEntry = await db.user2FATable.getByUserId(res.result.id);
 
@@ -123,7 +123,7 @@ export default async function authenticationRoutes(fastify: FastifyInstance) {
 				}
 			}
 
-			// 🔒 Проверка сессии
+			// check if user is already connected in another device
 			if (connectedSocketClients.get(res.result.id)) {
 				return reply.status(403).send({
 					error: "User already connected in another device!",
