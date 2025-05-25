@@ -6,6 +6,7 @@ import TableUser from "@db-table/TableUser";
 import TableBlackListTokens from "@db-table/TableBlackListTokens";
 import TableFriends from "@db-table/TableFriends";
 import TableFriendRequests from "@db-table/TableFriendRequests";
+import User2FATable from "@db-table/User2FATable";
 import fs from "fs"
 
 class Database {
@@ -16,6 +17,7 @@ class Database {
 	private _jwtBlackListTokensTable: TableBlackListTokens;
 	private _friendsTable: TableFriends;
 	private _friendRequestsTable: TableFriendRequests;
+	private _user2FATable: User2FATable;
 
 	public static getInstance(): Database {
 		if (!Database.s_instance) {
@@ -46,6 +48,7 @@ class Database {
 		this._jwtBlackListTokensTable = new TableBlackListTokens(this);
 		this._friendRequestsTable = new TableFriendRequests(this, this._userTable.tableName);
 		this._friendsTable = new TableFriends(this, this._userTable.tableName, this._friendRequestsTable.tableName);
+		this._user2FATable = new User2FATable(this);
 	}
 
 	public get database() { return this._database; }
@@ -55,6 +58,7 @@ class Database {
 	public get jwtBlackListTokensTable() { return this._jwtBlackListTokensTable; }
 	public get friendsTable() { return this._friendsTable; }
 	public get friendRequestsTable() { return this._friendRequestsTable; }
+	public get user2FATable() { return this._user2FATable; }
 }
 
 export default Database;

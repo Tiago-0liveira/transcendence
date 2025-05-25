@@ -20,8 +20,9 @@ export const userSignupSchema = z.object({
 });
 
 export const userLoginSchema = z.object({
-	username: z.string().trim(),
-	password: z.string().trim(),
+	username:   z.string().trim(),
+	password:   z.string().trim(),
+	token:      z.string().optional(),
 });
 
 export const isValidLoginFormData = (_data: FormData): boolean => {
