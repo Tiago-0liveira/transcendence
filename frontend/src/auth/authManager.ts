@@ -190,10 +190,11 @@ class AuthManager {
 		return data.error || null;
 	}
 
-	public async login(userParams: objectOutputType<{
-		username: ZodString;
-		password: ZodString
-	}, ZodType<any, any, any>, "strip"> | undefined): Promise<boolean> {
+	public async login(userParams: {
+		username: string;
+		password: string;
+		token?: string;
+	}): Promise<boolean> {
 		const res = await fetch(backendEndpoint(API.auth.login), {
 			method: "POST",
 			headers: {
@@ -219,6 +220,7 @@ class AuthManager {
 
 		return true;
 	}
+
 
 	public async refreshToken() {
 		try {
