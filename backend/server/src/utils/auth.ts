@@ -15,7 +15,7 @@ export function generateTokens(userId: number, deviceId: string) {
 export function sendLoginResponse(reply: FastifyReply, tokens: { accessToken: string; refreshToken: string }) {
     return reply
         .code(200)
-        .setCookie(CookieName.REFRESH_TOKEN, tokens.refreshToken, DEFAULTS.cookies.oauthToken.options())
+        .setCookie(CookieName.REFRESH_TOKEN, tokens.refreshToken, DEFAULTS.cookies.refreshToken.options())
         .header('Access-Control-Allow-Credentials', 'true')
         .send({ accessToken: tokens.accessToken, ok: true });
 }

@@ -6,7 +6,6 @@ import Database from "@db/Database";
 export default async function auth2faRoutes(fastify: FastifyInstance) {
     const db = Database.getInstance();
 
-    // ✅ Ручка включения/отключения 2FA
     const bodySchema = z.object({
         userId: z.number(),
         enabled: z.boolean(),
@@ -40,7 +39,7 @@ export default async function auth2faRoutes(fastify: FastifyInstance) {
 
             if (enabled) {
                 const secret = speakeasy.generateSecret({
-                    name: `Transcendence (${userId})`,
+                    name: `Transcendence (${userCheck.result.username})`,
                     length: 20,
                 });
 
@@ -69,7 +68,6 @@ export default async function auth2faRoutes(fastify: FastifyInstance) {
         }
     });
 
-    // ✅ Ручка проверки кода (2FA verify)
     const verifySchema = z.object({
         userId: z.number(),
         token: z.string().length(6),
