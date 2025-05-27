@@ -172,12 +172,17 @@ div.toastify img.toastify-avatar {
 	margin-right: 7px;
 }
 
+/* loading-spinner */
+div.loading-spinner img {
+	animation: spin linear infinite 1.1s;
+}
+
 @keyframes spin {
-	0% {
+	from {
 		transform: rotate(0deg);
 	}
 
-	100% {
+	to {
 		transform: rotate(360deg);
 	}
 }

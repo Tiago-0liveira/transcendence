@@ -6,20 +6,18 @@
 1 minor =  5p
 
 - Major:
-	[x] Backend in fastify
-	- [ ] Blockchain for storing the game states (maybe solidity idk)
-	- [ ] User Management
-	- [ ] Remote auth (Google sing-in) (and maybe 42-auth)
+	- [x] Backend in fastify
+	- [x] Remote auth (Google sing-in) (and maybe 42-auth)
 	  - [x] Google Oauth
-	  - [ ] 42 Oauth
-	- [ ] Remote Players 
-	- [ ] Live chat
-	- [ ] CyberSecurity (2FA and JWT)
+	- [x] Remote Players 
+	- [x] CyberSecurity (2FA and JWT)
 	  - [x] JWT
-	  - [ ] 2FA
+	  - [x] 2FA
+	- [ ] (WIP) User Management
+	- [ ] (WIP) Live chat
 
 - Minor:
-	- [ ] Frontend in Tailwindcss
-	- [ ] Database in sqlite3
+	- [x] Frontend in Tailwindcss
+	- [x] Database in sqlite3
+	- [ ] (Maybe) User and Game Dashboards
 	- [ ] (Maybe Game customization)
-	- [ ] User and Game Dashboards

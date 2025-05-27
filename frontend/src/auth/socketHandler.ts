@@ -1,7 +1,7 @@
 import { toastHelper } from "@/utils/toastHelper";
 import AuthManager from "./authManager";
+import Router from "@/router/Router";
 
-type SocketMessageHandler = (this: SocketHandler, response: SocketMessage) => void;
 
 class SocketHandler {
 	private static instance: SocketHandler;
@@ -159,6 +159,9 @@ class SocketHandler {
 					case "friend-request-accepted":
 						toastHelper.friendRequestAccepted(parsedMessage.friendName, parsedMessage.avatar);
 						break;
+					case "join-game-room":
+						Router.getInstance().navigate("/games/lobby-room", {}, { roomId: parsedMessage.roomId })
+						break;
 					default:
 						break;
 				}
@@ -170,12 +173,12 @@ class SocketHandler {
 		}
 	}
 
-	public addMessageHandler(messageName: SocketMessageType, handler: SocketMessageHandler) {
+	public addMessageHandler<T extends SocketMessageType>(messageName: T, handler: SocketMessageHandler<T>) {
 		const setHandler = this.messageSubscriptions.get(messageName);
 		if (setHandler) {
 			this.messageSubscriptions.delete(messageName);
 		}
-		this.messageSubscriptions.set(messageName, handler);
+		this.messageSubscriptions.set(messageName, handler as any);
 	}
 
 	public removeMessageHandler(messageName: SocketMessageType) {

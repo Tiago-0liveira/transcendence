@@ -16,3 +16,19 @@ type UserCardAttributes = {
 	"is-pending": "0" | "1";
 	"has-invited-me": "0" | "1";
 }
+
+type LoadingSpinnerAttributes = {
+	size: "sm" | "md" | "xl"
+}
+
+type RoomCardAttributes = {
+	"room-id": string;
+	name: string;
+	owner: string;
+	status: GameRoomStatus;
+	"required-players": string;
+	"connected-players-number": string;
+	/* if the user receiving this is friends with the owner */
+	"is-friend": "0" | "1";
+	"room-type": GameRoomType;
+}
