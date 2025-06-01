@@ -1,244 +1,226 @@
-import AuthManager from "@/auth/authManager";
-import SocketHandler from "@/auth/socketHandler";
-import { authGuard } from "@/router/guards";
-import Router from "@/router/Router";
-import { conditionalRender } from "@/utils/conditionalRender";
-import { toastHelper } from "@/utils/toastHelper";
+import AuthManager from '@/auth/authManager'
+import SocketHandler from '@/auth/socketHandler'
+import { authGuard } from '@/router/guards'
+import Router from '@/router/Router'
+import { conditionalRender } from '@/utils/conditionalRender'
+import { toastHelper } from '@/utils/toastHelper'
 
 const setError = (el: HTMLDivElement, error: string) => {
-	const spanError = el.querySelector("span#error-message");
+	const spanError = el.querySelector('span#error-message')
 	if (spanError) {
-		spanError.textContent = error;
-		el.style.display = "block";
+		spanError.textContent = error
+		el.style.display = 'block'
 	}
-};
+}
 
 const getUpdatedRoomTemplate = (room: LobbyRoom, userId: number): string => {
-	const playerReadyStatus = room.connectedPlayers.find((u) => u.id === userId)?.ready || false;
+	const playerReadyStatus =
+		room.connectedPlayers.find(u => u.id === userId)?.ready || false
 
 	return /* html */ `
-		<div class="Lobby-Header flex flex-col space-x-4">
-			<h1>${room.roomType}</h1>
-			<div class="flex items-center justify-center">
-				<span class="room-name">${room.name}:</span>
-					${conditionalRender(
-						room.settings.visibility === "public",
-						`<span class="text-green-500">Public</span>`,
-						`<span class="text-red-500">Private</span>`
-					)}
-				<button id="btn-copy-room-id" class="flex items-center">
-					<img class="w-7" src="/clipboard.svg" />
-				</button>
+		<div class="Lobby-Header flex flex-col items-center space-y-4 bg-gray-50 shadow-md rounded-lg p-6 w-full max-w-3xl">
+			<h1 class="text-2xl font-bold text-blue-700">${room.roomType}</h1>
+			<div class="flex items-center space-x-4">
+				<span class="room-name text-lg font-medium text-gray-600">${room.name}</span>
+				${conditionalRender(
+					room.settings.visibility === 'public',
+					`<span class="badge text-green-700 bg-green-100 px-2 py-1 rounded">Public</span>`,
+					`<span class="badge text-red-700 bg-red-100 px-2 py-1 rounded">Private</span>`
+				)}
 			</div>
 		</div>
-		<div class="Lobby-Content">
-			<div class="players">
-				<div class="players-header flex flex-col items-center space-y-2">
-					<span class="player-ready flex items-center space-x-2">
-						<span class="player-ready-status bg-gray-300 p-1 rounded-md ${conditionalRender(
-							playerReadyStatus,
-							"text-green-500",
-							"text-red-500"
-						)}">
-							${conditionalRender(playerReadyStatus, "Ready", "Not Ready")}
+		<div class="Lobby-Content mt-4 w-full max-w-3xl">
+			<div class="players bg-white shadow-md rounded-lg p-6">
+				<div class="players-header flex flex-col items-center space-y-4">
+					<span class="player-ready flex items-center space-x-4 justify-center">
+						<span class="player-ready-status p-2 rounded ${conditionalRender(playerReadyStatus, 'bg-green-100 text-green-700', 'bg-red-100 text-red-700')}">
+							${conditionalRender(playerReadyStatus, 'Ready', 'Not Ready')}
 						</span>
-							<button id="btn-set-ready" data-ready="${playerReadyStatus}" class="p-1 ${conditionalRender(
-								!playerReadyStatus,
-								"bg-green-500",
-								"bg-red-500"
-							)}">
-							${conditionalRender(playerReadyStatus, "Set Not Ready", "Set Ready")}
+						<button id="btn-set-ready" data-ready="${playerReadyStatus}" class="p-2 rounded ${conditionalRender(
+							!playerReadyStatus,
+							'bg-green-500 text-white hover:bg-green-600',
+							'bg-red-500 text-white hover:bg-red-600'
+						)}">
+							${conditionalRender(playerReadyStatus, 'Set Not Ready', 'Set Ready')}
 						</button>
 					</span>
-					<span>
-						<span>Players: </span>
-							<span class="${room.connectedPlayersNumber !== room.requiredPlayers ? "text-yellow-400" : "text-green-500"}">
+					<span class="text-gray-600 text-sm">
+						Players: 
+						<span class="${conditionalRender(room.connectedPlayersNumber !== room.requiredPlayers, 'text-yellow-500', 'text-green-500')}">
 							${room.connectedPlayersNumber} / ${room.requiredPlayers}
-							</span>
+						</span>
 						${renderOwnerStatus(room, userId)}
 					</span>
 				</div>
 			</div>
 		</div>
-		<div class="main-content">
+		<div class="main-content mt-4 w-full max-w-3xl">
 			${renderConnectedPlayers(room)}
 		</div>
-	`;
-};
+	`
+}
 
 const renderOwnerStatus = (room: LobbyRoom, userId: number): string => {
-	const owner = room.connectedPlayers.find((p) => p.id === room.owner);
+	const owner = room.connectedPlayers.find(p => p.id === room.owner)
 	if (!owner) {
 		return /* html */ `
-			<span class="ml-1 p-1 rounded-md bg-gray-300 mb-1 flex items-center space-x-1">
-				<span class="text-purple-700">Owner</span>
-				<span>is</span>
-				<span class="text-red-500">(missing)</span>
+			<span class="inline-flex items-center text-sm text-red-500">
+				Owner is missing
 			</span>
-		`;
+		`
 	}
 	if (room.owner === userId) {
 		const startGameButton = conditionalRender(
-			room.connectedPlayers.every((p) => p.ready),
-			`bg-green-500`,
-			`disabled cursor-not-allowed bg-gray-400`
-		);
+			room.connectedPlayers.every(p => p.ready),
+			'bg-green-500 text-white hover:bg-green-600',
+			'bg-gray-400 text-gray-600 cursor-not-allowed'
+		)
 		return /* html */ `
-			<span class="ml-1 p-1 rounded-md bg-gray-300 mb-1 flex items-center space-x-1">
+			<div class="mt-2 text-gray-600 text-sm">
 				You can start the game when everyone is ready!
-			</span>
-			<button id="btn-start-game" class="${startGameButton}">Start Game</button>
-		`;
+			</div>
+			<button id="btn-start-game" class="mt-2 px-4 py-2 rounded ${startGameButton}">Start Game</button>
+		`
 	}
-	return "";
-};
+	return ''
+}
 
 const renderConnectedPlayers = (room: LobbyRoom): string => {
-	if (room.status !== "waiting") return "";
-	return /* html */`
-		<div class="connected-players flex flex-col space-y-2 items-center">
-			${room.connectedPlayers.map((player) => /* html */ `
-				<span class="player p-3 rounded-md bg-gray-300 w-52 flex justify-between" data-player-id="${player.id}">
-					<span class="player-name text-lg flex items-center space-x-1">
-						<span>${player.name}</span>
+	if (room.status !== 'waiting') return ''
+	return /* html */ `
+		<div class="connected-players grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+		${room.connectedPlayers
+			.map(player => /* html */ `
+				<div class="player flex items-center justify-between space-x-2 bg-gray-50 shadow rounded p-4">
+					<span class="player-name text-lg flex items-center font-medium text-gray-700">
+						${player.name}
 						${conditionalRender(
 							player.id === room.owner,
-							`<span class="badge bg-purple-500">Owner</span>`
+							`<span class="badge text-purple-700 bg-purple-100 px-2 py-1 rounded ml-2">Owner</span>`
 						)}
 					</span>
-					<span class="w-7 h-7 rounded-full inline-block ${conditionalRender(
-						player.ready,
-						"bg-green-500",
-						"bg-red-500"
-					)}"></span>
-				</span>
-			`).join("")}
+					<span class="w-5 h-5 rounded-full ${conditionalRender(player.ready, 'bg-green-500', 'bg-red-500')}"></span>
+				</div>
+			`).join('')}
 		</div>
-	`;
-};
+	`
+}
 
 const component = async () => {
-	const user = AuthManager.getInstance().User!;
-	const sh = SocketHandler.getInstance();
-	const router = Router.getInstance();
-	let gameRoom: LobbyRoom | null = null;
+	const user = AuthManager.getInstance().User!
+	const sh = SocketHandler.getInstance()
+	const router = Router.getInstance()
+	let gameRoom: LobbyRoom | null = null
 
-	const queryParams = router.getCurrentRoute()?.query;
+	const queryParams = router.getCurrentRoute()?.query
 	if (!queryParams || !queryParams.roomId) {
-		throw new Error("Room not found!");
+		throw new Error('Room not found!')
 	}
 
 	const template = /* html */ `
-		<div class="lobby-room flex-1 flex flex-col justify-evenly items-center">
-			<div id="div-loading" class="flex space-x-8 items-center">
-				<span class="text-2xl">Loading Lobby Data...</span>
+		<div class="lobby-room w-full flex flex-col items-center p-6 space-y-6">
+			<div id="div-loading" class="flex items-center space-x-4">
+				<span class="text-xl text-gray-600">Loading Lobby Data...</span>
 				<loading-spinner size="sm"></loading-spinner>
 			</div>
-			<div id="lobby-error" class="hidden">
-				<div class="text-2xl">
-					<span>Error: </span>
-					<span id="error-message" class="text-red-500"></span>
-				</div>
-				<a href="/games/rooms" class="link">Return to game rooms</a>
+			<div id="lobby-error" class="hidden text-center text-red-600">
+				<p>Error: <span id="error-message"></span></p>
+				<a href="/games/rooms" class="text-blue-500 hover:underline">Return to game rooms</a>
 			</div>
-			<div id="room-content" class="w-full h-full"></div>
+			<div id="room-content" class="w-full flex flex-col items-center "></div>
 		</div>
-	`;
-	document.querySelector("#app")!.innerHTML = template;
+	`
+	document.querySelector('#app')!.innerHTML = template
 
-	const divLoading = document.querySelector<HTMLDivElement>("#div-loading")!;
-	const divContent = document.querySelector<HTMLDivElement>("#room-content")!;
-	const divError = document.querySelector<HTMLDivElement>("#lobby-error")!;
+	const divLoading = document.querySelector<HTMLDivElement>('#div-loading')!
+	const divContent = document.querySelector<HTMLDivElement>('#room-content')!
+	const divError = document.querySelector<HTMLDivElement>('#lobby-error')!
 
 	const handleSocketMessages = () => {
-		sh.addMessageHandler("lobby-room-error", (res) => {
-			divLoading.style.display = "none";
-			divContent.style.display = "none";
-			setError(divError, res.error);
-		});
+		sh.addMessageHandler('lobby-room-error', res => {
+			divLoading.style.display = 'none'
+			divContent.style.display = 'none'
+			setError(divError, res.error)
+		})
 
-		sh.addMessageHandler("lobby-room-data-update", (res) => {
-			divError.style.display = "none";
-			divLoading.style.display = "none";
-			divContent.innerHTML = getUpdatedRoomTemplate(res, user.id);
-			gameRoom = res;
-		});
+		sh.addMessageHandler('lobby-room-data-update', res => {
+			divError.style.display = 'none'
+			divLoading.style.display = 'none'
+			divContent.innerHTML = getUpdatedRoomTemplate(res, user.id)
+			gameRoom = res
+		})
 
-		sh.addMessageHandler("lobby-room-leave", (res) => {
-			if (res.reason) toastHelper.warning(res.reason);
-			router.navigate("/games/rooms");
-		});
-	};
+		sh.addMessageHandler('lobby-room-leave', res => {
+			if (res.reason) toastHelper.warning(res.reason)
+			router.navigate('/games/rooms')
+		})
+	}
 
 	const initialize = () => {
 		sh.sendMessage({
-			type: "lobby-room-join-request",
-			roomId: queryParams.roomId,
-		});
+			type: 'lobby-room-join-request',
+			roomId: queryParams.roomId
+		})
 
-		document.addEventListener("click", handleUserActions);
-		handleSocketMessages();
-	};
+		document.addEventListener('click', handleUserActions)
+		handleSocketMessages()
+	}
 
 	const handleUserActions = (ev: MouseEvent) => {
-		if (!ev.target || !(ev.target instanceof Element)) return;
+		if (!ev.target || !(ev.target instanceof Element)) return
 
-		const targetButton = ev.target.closest("button");
-		if (!targetButton) return;
+		const targetButton = ev.target.closest('button')
+		if (!targetButton) return
 
 		switch (targetButton.id) {
-			case "btn-copy-room-id":
-				if (gameRoom) toastHelper.copyToClipboard("LobbyId", gameRoom.id);
-				break;
+			case 'btn-set-ready':
+				handleSetReady(targetButton as HTMLButtonElement)
+				break
 
-			case "btn-set-ready":
-				handleSetReady(targetButton as HTMLButtonElement);
-				break;
-
-			case "btn-start-game":
-				if (gameRoom && gameRoom.connectedPlayers.every((p) => p.ready)) {
+			case 'btn-start-game':
+				if (gameRoom && gameRoom.connectedPlayers.every(p => p.ready)) {
 					sh.sendMessage({
-						type: "lobby-room-start-game",
-						roomId: gameRoom.id,
-					});
+						type: 'lobby-room-start-game',
+						roomId: gameRoom.id
+					})
 				}
-				break;
+				break
 		}
-	};
+	}
 
 	const handleSetReady = (btn: HTMLButtonElement) => {
-		if (!gameRoom || !gameRoom.connectedPlayers.some((p) => p.id === user.id)) {
-			return toastHelper.error("You are not connected to this room!");
+		if (!gameRoom || !gameRoom.connectedPlayers.some(p => p.id === user.id)) {
+			return toastHelper.error('You are not connected to this room!')
 		}
 
-		const readyStatus = btn.dataset.ready;
-		if (!["true", "false"].includes(readyStatus || "")) {
-			return toastHelper.error("Invalid ready status!");
+		const readyStatus = btn.dataset.ready
+		if (!['true', 'false'].includes(readyStatus || '')) {
+			return toastHelper.error('Invalid ready status!')
 		}
 
 		sh.sendMessage({
-			type: "lobby-room-player-set-ready",
+			type: 'lobby-room-player-set-ready',
 			roomId: gameRoom.id,
-			ready: readyStatus !== "true",
-		});
-	};
+			ready: readyStatus !== 'true'
+		})
+	}
 
 	initialize()
 	return () => {
 		if (gameRoom) {
 			sh.sendMessage({
-				type: "lobby-room-leave",
-				roomId: gameRoom.id,
-			});
+				type: 'lobby-room-leave',
+				roomId: gameRoom.id
+			})
 		}
-		sh.removeMessageHandler("lobby-room-error");
-		sh.removeMessageHandler("lobby-room-data-update");
-		document.removeEventListener("click", handleUserActions);
-	};
-};
+		sh.removeMessageHandler('lobby-room-error')
+		sh.removeMessageHandler('lobby-room-data-update')
+		document.removeEventListener('click', handleUserActions)
+	}
+}
 
 Router.getInstance().register({
-	path: "/games/lobby-room",
+	path: '/games/lobby-room',
 	component,
-	guards: [authGuard],
-});
+	guards: [authGuard]
+})
