@@ -25,10 +25,10 @@ type RoomCardAttributes = {
 	"room-id": string;
 	name: string;
 	owner: string;
-	status: GameRoomStatus;
+	status: LobbyStatus;
 	"required-players": string;
 	"connected-players-number": string;
 	/* if the user receiving this is friends with the owner */
 	"is-friend": "0" | "1";
-	"room-type": GameRoomType;
+	"room-type": LobbyType;
 }

@@ -1,14 +1,13 @@
 import AuthManager from "@/auth/authManager";
 import SocketHandler from "@/auth/socketHandler";
 import Router from "@/router/Router";
-import API from "@/utils/BackendApi";
 import { conditionalRender } from "@/utils/conditionalRender";
 import BaseAttributeValidationElement from "@component/BaseAttributeValidationElement";
 
 type ButtonClassId = "delete-room" | "enter-room"
 
 
-const getColorFromRoomStatus = (status: GameRoomStatus): string => {
+const getColorFromRoomStatus = (status: LobbyStatus): string => {
 	switch (status) {
 		case "active":
 			return "bg-yellow-500";
@@ -42,11 +41,11 @@ class RoomCard extends BaseAttributeValidationElement<RoomCardAttributes> {
 
 	render() {
 		const userId = AuthManager.getInstance().User!.id
-		const room: BasicPublicRoom & { public: boolean }= {
+		const room: BasicPublicLobby & { public: boolean } = {
 			id: this.getAttribute("room-id")!,
 			name: this.getAttribute("name")!,
 			owner: Number(this.getAttribute("owner")!),
-			roomType: this.getAttribute("room-type")!,
+			lobbyType: this.getAttribute("room-type")!,
 			status: this.getAttribute("status")!,
 			requiredPlayers: Number(this.getAttribute("required-players")!),
 			connectedPlayersNumber: Number(this.getAttribute("connected-players-number")!),
@@ -61,7 +60,7 @@ class RoomCard extends BaseAttributeValidationElement<RoomCardAttributes> {
 						<span class="text-1xl self-start flex space-x-2">
 							<span>${room.name}</span>
 							<span class="badge bg-purple-500">
-								${room.roomType}
+								${room.lobbyType}
 							</span>
 							<span class="badge bg-gray-500">
 								${room.connectedPlayersNumber} / ${room.requiredPlayers}
@@ -69,12 +68,12 @@ class RoomCard extends BaseAttributeValidationElement<RoomCardAttributes> {
 						</span>
 						<span class="ml-2 badge 
 							${conditionalRender(room.owner === userId, "bg-purple-700",
-								conditionalRender(room.isFriend, "bg-blue-500", "bg-green-500"))
-							}
+			conditionalRender(room.isFriend, "bg-blue-500", "bg-green-500"))
+			}
 						">
 							${conditionalRender(room.owner === userId, "Owner",
-								conditionalRender(room.isFriend, "Friend", "Public")
-							)}
+				conditionalRender(room.isFriend, "Friend", "Public")
+			)}
 						</span>
 					</div>
 					<div class="flex w-full justify-between">
@@ -99,7 +98,7 @@ class RoomCard extends BaseAttributeValidationElement<RoomCardAttributes> {
 const getButtonAndHandleClick = (e: MouseEvent, classId: ButtonClassId, cb: (userId: string) => void) => {
 	if (!e.target) return;
 	if (!(e.target instanceof Element)) return;
-	
+
 	const button = e.target.closest(`#${classId}-button`)
 	if (button && button instanceof HTMLButtonElement) {
 		console.log("oplasd")
@@ -114,8 +113,8 @@ document.addEventListener("click", (e) => {
 	getButtonAndHandleClick(e, "delete-room", (roomId) => {
 		console.log("delete roomId: ", roomId)
 		SocketHandler.getInstance().sendMessage({
-			type: "delete-game-room", roomId: roomId
-		} satisfies SelectSocketMessage<"delete-game-room">)
+			type: "lobby-room-delete", roomId: roomId
+		} satisfies SelectSocketMessage<"lobby-room-delete">)
 	})
 	getButtonAndHandleClick(e, "enter-room", (roomId) => {
 		console.log("enter-room roomId: ", roomId)

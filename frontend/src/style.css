@@ -13,7 +13,7 @@
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 
-	--nav-bar-h: 3.5rem;
+	--nav-bar-h: 3.2rem;
 }
 
 a.default {
@@ -62,12 +62,11 @@ div#app {
 	position: relative;
 	height: calc(100% - var(--nav-bar-h));
 	display: flex;
-	padding: 1rem;
 	text-align: center;
 }
 
 
-nav-bar {
+nav#nav-bar {
 	height: var(--nav-bar-h);
 }
 

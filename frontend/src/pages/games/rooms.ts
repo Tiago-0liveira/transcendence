@@ -2,11 +2,8 @@ import AuthManager from "@/auth/authManager";
 import SocketHandler from "@/auth/socketHandler";
 import { authGuard } from "@/router/guards";
 import Router from "@/router/Router";
-import { conditionalRender } from "@/utils/conditionalRender";
-import { toastHelper } from "@/utils/toastHelper";
 
-
-const getRoomTemplate = (room: BasicPublicRoom): string => {
+const getRoomTemplate = (room: BasicPublicLobby): string => {
 	return /* html */`
 		<room-card
 			room-id="${room.id}"
@@ -16,7 +13,7 @@ const getRoomTemplate = (room: BasicPublicRoom): string => {
 			required-players="${room.requiredPlayers}"
 			connected-players-number="${room.connectedPlayersNumber}"
 			is-friend="${room.isFriend}"
-			room-type="${room.roomType}"
+			room-type="${room.lobbyType}"
 		>
 		</room-card>
 	`
@@ -42,14 +39,12 @@ const component = async () => {
 	document.querySelector('#app')!.innerHTML = template;
 	const divLoading = document.querySelector<HTMLDivElement>("div#div-loading")
 	const divRooms = document.querySelector<HTMLDivElement>("div#rooms")
-	
+
 	if (!divLoading) throw new Error("Could not find div#div-loading!")
 	if (!divRooms) throw new Error("Could not find div#rooms!")
 
 
 	sh.addMessageHandler("rooms-update", function (res) {
-		console.log("open rooms: ", res);
-		
 		divLoading.style.display = "none";
 		divRooms.innerHTML = "";
 		if (res.rooms.length === 0) {
@@ -66,8 +61,8 @@ const component = async () => {
 		}
 	})
 
-	sh.sendMessage({ type: "join-rooms"	} satisfies SelectSocketMessage<"join-rooms">)
-	
+	sh.sendMessage({ type: "rooms-join" } satisfies SelectSocketMessage<"rooms-join">)
+
 	return () => {
 		sh.removeMessageHandler("rooms-update")
 	}

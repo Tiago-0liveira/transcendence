@@ -2,10 +2,13 @@ import { isSocketValidMessage, notify, processRawData, updateDisconnectedClient 
 import type { FastifyInstance } from "fastify";
 import jwt from "@utils/jwt";
 import { handleDeleteGameRoom, handleGameRoomGetData, handleNewGameConfig } from "@game/game-config";
-import { handleJoinRooms, updateRooms } from "@game/game-room";
+import { handleJoinRooms, lobbyFuncs, sendPlayerUpdatedRooms } from "@game/lobby";
+import { handleGamePlayerInput, handleGameRoomJoin, handleGameRoomPlayerSetReady } from "@game/game"
 
 export const connectedSocketClients: ClientMap = new Map()
 export const activeGameRooms: GameRooms = new Map()
+
+//TODO: when a user disconnects, we should update the rooms they were in
 
 export const websocketHandler = async (fastifyInstance: FastifyInstance) => {
 	fastifyInstance.get<{
@@ -40,36 +43,69 @@ export const websocketHandler = async (fastifyInstance: FastifyInstance) => {
 					return;
 				}
 				const parsedMessage = JSON.parse(message);
-				console.log("parsedMessaged: ", parsedMessage);
+				// TODO: look into this and see where do we need to only update the clients in specific rooms
 				if (isSocketValidMessage(parsedMessage)) {
 					switch (parsedMessage.type) {
 						case "new-game-config":
 							await handleNewGameConfig(clientContext, parsedMessage);
 							await handleJoinRooms();
 							break;
-						case "game-room-join-request":
+						case "lobby-room-join-request":
 							await handleGameRoomGetData(clientContext, parsedMessage);
 							await handleJoinRooms();
 							break;
-						case "join-rooms":
-							await updateRooms(clientContext.socket, clientContext.userId)
+						case "rooms-join":
+							await sendPlayerUpdatedRooms(clientContext.socket, clientContext.userId)
 							break;
-						case "leave-game-lobby":
+						case "lobby-room-leave":
 							const room = activeGameRooms.get(parsedMessage.roomId)
 							if (room) {
 
-								room.playerLeft(clientContext.userId)
+								lobbyFuncs.playerLeft.bind(room)(clientContext.userId);
 								await handleJoinRooms();
 							}
 							break;
-						case "delete-game-room":
+						case "lobby-room-delete":
 							if (await handleDeleteGameRoom(clientContext, parsedMessage)) {
 								fastifyInstance.log.info(`Game room deleted: ${parsedMessage.roomId}`);
 								await handleJoinRooms();
 							}
 							break;
+						case "lobby-room-player-set-ready":
+							const gameRoom = activeGameRooms.get(parsedMessage.roomId);
+							if (gameRoom) {
+								if (lobbyFuncs.lobbySetPlayerReady.bind(gameRoom)(clientContext.userId, parsedMessage.ready))
+									await handleJoinRooms();
+							} else {
+								fastifyInstance.log.error(`Game room not found: ${parsedMessage.roomId}`);
+							}
+							break;
+						case "lobby-room-start-game":
+							const startGameRoom = activeGameRooms.get(parsedMessage.roomId);
+							if (startGameRoom) {
+								if (lobbyFuncs.startGame.bind(startGameRoom)(clientContext.userId)) {
+									fastifyInstance.log.info(`Game started in room: ${parsedMessage.roomId}`);
+									await handleJoinRooms();
+								}
+							}
+							break;
+						case "game-room-join":
+							if (await handleGameRoomJoin(clientContext, parsedMessage)) {
+								fastifyInstance.log.info(`Game room join request: ${parsedMessage.roomId}`);
+								await handleJoinRooms();
+							}
+							break;
+						case "game-room-player-set-ready":
+							await handleGameRoomPlayerSetReady(clientContext, parsedMessage)
+							break;
+						case "game-room-player-input":
+							await handleGamePlayerInput(clientContext, parsedMessage);
+							break;
+						case "game-room-leave":
+							/* TODO: handle stopping the game */
+							break;
 						default:
-							console.log("unkown message")
+							console.log("unkown message: ", message)
 							break;
 					}
 				} else {
@@ -85,7 +121,7 @@ export const websocketHandler = async (fastifyInstance: FastifyInstance) => {
 			fastifyInstance.log.info(`Client disconnected: ${userId}`);
 			connectedSocketClients.delete(userId);
 			for (const [id, room] of activeGameRooms) {
-				room.playerLeft(clientContext.userId)
+				lobbyFuncs.playerLeft.bind(room)(clientContext.userId)
 			}
 			handleJoinRooms();
 		});

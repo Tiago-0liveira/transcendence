@@ -21,7 +21,7 @@ const DEFAULTS = {
 	},
 	cookies: {
 		accessToken: {
-			options: (): CookieSerializeOptions => ({ 
+			options: (): CookieSerializeOptions => ({
 				...BaseHttpCookieOptions,
 				expires: new Date(Date.now() + 60 * 60 * 24 * 7 * 1000) // 1 Week
 			})
@@ -50,6 +50,22 @@ const DEFAULTS = {
 				path: "/oauth/google/signup/complete"
 			})
 		}
+	},
+	game: {
+		playerActive: (player: GamePlayer, side: GameSide): PlayerActiveGameData => ({
+			...player,
+			ready: false,/* set player ready to false because it comes from room as true */
+			side,
+			input: { up: false, down: false },
+			paddlePositionY: 0,
+			connected: false,
+			score: 0
+		}),
+		ballPosition: () => ({
+			position: { x: 0, y: 0 },
+			velocity: { vx: 0, vy: 0 },
+			angle: 0,
+		} satisfies GameBallData)
 	}
 }
 

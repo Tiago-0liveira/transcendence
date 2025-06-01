@@ -19,7 +19,7 @@ class SocketHandler {
 	private queuedMessages: SocketMessage[];
 
 	static PING_INTERVAL_TIMEOUT = 5000 as const;
-	static RECONNECT_BASE_TIMEOUT = 8000 as const;
+	static RECONNECT_BASE_TIMEOUT = 16000 as const;
 
 	public static getInstance() {
 		if (!SocketHandler.instance) {
@@ -107,10 +107,8 @@ class SocketHandler {
 	 * @param msg SocketMessage
 	 */
 	public sendMessage(msg: SocketMessage) {
-		if (this.socket)
-		{
-			if (this.socket.readyState === WebSocket.OPEN) 
-			{
+		if (this.socket) {
+			if (this.socket.readyState === WebSocket.OPEN) {
 				this.socket.send(JSON.stringify(msg))
 			} else {
 				this.queuedMessages.push(msg)
@@ -148,7 +146,7 @@ class SocketHandler {
 		try {
 			const parsedMessage = JSON.parse(ev.data);
 			if (SocketHandler.isSocketValidMessage(parsedMessage)) {
-				console.log("parsedMessage: ", parsedMessage);
+				/*console.log("parsedMessage: ", parsedMessage);*/
 				switch (parsedMessage.type) {
 					case "friend-online":
 						toastHelper.friendOnline(parsedMessage.friendName, parsedMessage.avatar);
@@ -159,8 +157,11 @@ class SocketHandler {
 					case "friend-request-accepted":
 						toastHelper.friendRequestAccepted(parsedMessage.friendName, parsedMessage.avatar);
 						break;
-					case "join-game-room":
+					case "lobby-room-join":
 						Router.getInstance().navigate("/games/lobby-room", {}, { roomId: parsedMessage.roomId })
+						break;
+					case "game-room-join":
+						Router.getInstance().navigate("/games/game-room", {}, { roomId: parsedMessage.roomId, gameId: parsedMessage.gameId })
 						break;
 					default:
 						break;
@@ -169,6 +170,7 @@ class SocketHandler {
 				messageHandler && messageHandler.bind(this)(parsedMessage);
 			}
 		} catch (error) {
+			
 			console.warn("SOCKET MESSAGE WRONG FORMAT ERROR: ", error);
 		}
 	}

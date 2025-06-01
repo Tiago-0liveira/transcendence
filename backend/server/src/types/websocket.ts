@@ -7,7 +7,7 @@ type ClientValue = {
 
 type ClientMap = Map<number, ClientValue>
 
-type GameRooms = Map<string, BackendGameRoom>
+type GameRooms = Map<string, LobbyRoom>
 
 type ClientThis = {
 	userId: number,
