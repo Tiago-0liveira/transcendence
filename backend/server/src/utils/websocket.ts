@@ -68,16 +68,21 @@ export const notify = {
 	friendsOnline: async (userId: number) => {
 		const friendsWithInfo = await Database.getInstance().friendsTable.getFriendsWithInfo(userId, 0, 5000);
 		if (friendsWithInfo.error) return;
+		
+		const userInfo = await Database.getInstance().userTable.getById(userId);
+		if (userInfo.error) return;
+
+		const sockMessage = JSON.stringify({
+			type: "friend-online",
+			friendName: userInfo.result.displayName,
+			avatar: userInfo.result.avatarUrl
+		} satisfies SocketMessage)
+		
 		friendsWithInfo.result.forEach((friend) => {
 			if (connectedSocketClients.has(friend.id)) {
-
 				const clientValue = connectedSocketClients.get(friend.id);
 				if (!clientValue) return;
-				clientValue.socket?.send(JSON.stringify({
-					type: "friend-online",
-					friendName: friend.displayName,
-					avatar: friend.avatarUrl
-				} satisfies SocketMessage))
+				clientValue.socket?.send(sockMessage)
 			}
 		})
 	},
