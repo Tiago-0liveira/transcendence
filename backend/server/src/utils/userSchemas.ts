@@ -27,3 +27,13 @@ export const userLoginSchema = z.object({
     token:      z.string().optional(),
 });
 
+export const googleSignupCompleteSchema = z.object({
+    username:       z.string().trim().toLowerCase().min(3, 'Username must be at least 3 characters long'),
+    displayName:    z.string().trim().min(3, 'Display name must be at least 3 characters').optional(),
+    avatarUrl:      z.string().trim().url('Invalid avatar URL').optional(),
+});
+
+export const googleRequestSchema = z.object({
+    code:   z.string().min(1, "Google authorization code is required"),
+    token:  z.string().optional()
+});

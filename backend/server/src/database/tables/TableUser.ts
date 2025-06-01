@@ -78,14 +78,18 @@ class UserTable extends BaseTable<User, UserParams> {
 		}
 	}
 	async delete(id: number): Promise<DatabaseResult<boolean>> {
-		return new Promise((resolve, reject) => {
-			const del = this.database.database.prepare(this._deleteStr)
-			const run1 = del.run(id);
-			if (run1.changes === 0) {
-				reject({ error: new Error(`could not delete ${id}`) })
+		try {
+			const stmt = this.database.database.prepare(this._deleteStr);
+			const result = stmt.run(id);
+
+			if (result.changes === 0) {
+				return { error: new Error(`User with ID ${id} not found or already deleted.`) };
 			}
-			resolve({ result: true })
-		})
+
+			return { result: true };
+		} catch (err) {
+			return { error: err instanceof Error ? err : new Error("Unknown database error") };
+		}
 	}
 	async update(id: number, params: UserParamsNoPass): Promise<DatabaseResult<number>> {
 		return new Promise((resolve, reject) => {
@@ -177,14 +181,20 @@ class UserTable extends BaseTable<User, UserParams> {
 	async existsUsernameAndDisplayName(username: string, displayName: string): Promise<boolean> {
 		return this.exists({ username, displayName }, "AND")
 	}
-	async existsGoogleId(googleId: number): Promise<UIDD | null> {
-		return new Promise((resolve, reject) => {
-			const select = this.db.prepare(`SELECT id FROM ${this._tableName} WHERE authProvider = ? AND authProviderId = ?`)
-			const select1 = select.get(UserAuthMethod.GOOGLE, googleId)
-			console.log("existsGoogleId:", select1)
-			if (select1) resolve(select1 as UIDD)
-			else resolve(null)
-		})
+	async existsGoogleId(googleId: number): Promise<DatabaseResult<UIDD | null>> {
+		try {
+			const stmt = this.db.prepare(
+				`SELECT id FROM ${this._tableName} WHERE authProvider = ? AND authProviderId = ?`
+			);
+
+			const row = stmt.get(UserAuthMethod.GOOGLE, googleId);
+			console.log("existsGoogleId:", row);
+
+			return { result: row ? (row as UIDD) : null };
+
+		} catch (err) {
+			return { error: err instanceof Error ? err : new Error("Unknown error in existsGoogleId") };
+		}
 	}
 
 	bulkInsertTransaction = this.db.transaction((count: number) => {

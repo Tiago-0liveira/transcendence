@@ -7,6 +7,7 @@ import AuthGeneralRoutes from "@api/auth/general";
 import oauthGoogleRoutes from "@api/oauth/google";
 import { websocketHandler } from "./api/websocket";
 import auth2faRoutes from "@api/2fa";
+import UserSettingsRoutes from "@api/settings";
 
 /**
  * @description Registers all endpoints necessary for the server (in a organized way)
@@ -41,4 +42,12 @@ export default function registerRoutes(app: FastifyInstance) {
 		{ prefix: "/oauth" }
 	)
 	app.register(jwtRoutes, { prefix: "/jwt" })
+	// path: /user/settings
+	app.register(
+		(fastifyInstance, _, done) => {
+			fastifyInstance.register(UserSettingsRoutes)
+			done()
+		},
+		{ prefix: "/user/settings" }
+	)
 }

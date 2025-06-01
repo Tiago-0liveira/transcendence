@@ -9,9 +9,10 @@ const component = async () => {
 		<div class="flex-1 flex items-center justify-center bg-white">
 			<div class="w-full max-w-sm bg-white border border-gray-200 rounded-lg shadow-sm">
 				<form id="loginForm" class="p-6 space-y-6" action="#">
-					<h5 class="text-xl text-center font-medium mb-4 text-gray-900">Login</h5>
-
-					<p id="login-error" class="text-center text-sm text-red-600 hidden"></p>
+					<div class="relative mb-8">
+						<h5 class="text-xl text-center font-medium text-gray-900">Login</h5>
+						<p id="login-error" class="text-sm text-red-600 absolute w-full text-center left-0 -bottom-5 hidden"></p>
+					</div>
 
 					<div>
 						<label for="username" class="block mb-2 text-sm font-medium text-left text-gray-900">Your Username</label>
@@ -86,6 +87,7 @@ const component = async () => {
 	const googleOauth = document.getElementById("google-oauth");
 
 	let savedLoginData: { username: string; password: string } | null = null;
+	let savedGoogleCode: string | null = null;
 
 	const showTwoFAModal = () => {
 		const errorBox = document.getElementById("twofa-error")!;
@@ -102,24 +104,36 @@ const component = async () => {
 	};
 
 	const googleOauthLoginHandler = () => {
-		google.accounts.oauth2.initCodeClient({
+		const codeClient = google.accounts.oauth2.initCodeClient({
 			client_id: GOOGLE_CLIENT_ID,
 			scope: "profile email",
 			ux_mode: "popup",
-			callback: (response) => {
+			callback: async (response: { code?: string; error?: string }) => {
 				if (response.error) {
-					console.error("google callback error:", response.error);
+					console.error("Google login callback error:", response.error);
+					toastHelper.error("Google authorization failed or was cancelled.");
 					return;
 				}
 
-				AuthManager.getInstance().oauthGoogleLogin(response.code).then(err => {
-					if (!err)
-						Router.getInstance().returnToOrPath("/user");
-					else
-						console.error("oauthGoogleLogin err: ", err);
-				});
+				try {
+					const err = await AuthManager.getInstance().oauthGoogleLogin(response.code);
+
+					if (!err) {
+						await Router.getInstance().returnToOrPath("/user");
+						toastHelper.success("Login successful!");
+					} else {
+						const message = err || "Unknown error during login";
+						console.error("oauthGoogleLogin error:", err);
+						toastHelper.error(message);
+					}
+				} catch (e) {
+					console.error("Unexpected error in oauthGoogleLogin:", e);
+					toastHelper.error("Unexpected server error. Please try again later.");
+				}
 			},
-		}).requestCode();
+		});
+
+		codeClient.requestCode();
 	};
 
 	const formSubmitHandler = async (e: Event) => {
@@ -176,12 +190,20 @@ const component = async () => {
 		errorBox.textContent = "";
 		errorBox.style.opacity = "0";
 
-		if (code.length === 6 && savedLoginData) {
+		if (code.length === 6) {
 			try {
-				await AuthManager.getInstance().login({
-					...savedLoginData,
-					token: code
-				});
+				if (savedLoginData) {
+					await AuthManager.getInstance().login({
+						...savedLoginData,
+						token: code
+					});
+				} else if (savedGoogleCode) {
+					const err = await AuthManager.getInstance().verifyTwoFAGoogleLogin(code);
+					if (err) throw new Error(err);
+				} else {
+					throw new Error("No login data available for 2FA");
+				}
+
 				hideTwoFAModal();
 				await Router.getInstance().returnToOrPath("/user");
 				toastHelper.success("Login Successful");
@@ -192,7 +214,6 @@ const component = async () => {
 			}
 		}
 	});
-
 
 	document.getElementById("twofa-close")?.addEventListener("click", () => {
 		hideTwoFAModal();
