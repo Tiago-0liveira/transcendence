@@ -92,7 +92,8 @@ export const lobbyFuncs = {
 						left: DEFAULTS.game.playerActive(this.connectedPlayers[0], "left"),
 						right: DEFAULTS.game.playerActive(this.connectedPlayers[1], "right")
 					},
-					ballData: DEFAULTS.game.ballPosition()
+					ballData: DEFAULTS.game.ballPosition(),
+					timer: DEFAULTS.game.timer(),
 				}
 			})
 			const message = JSON.stringify({

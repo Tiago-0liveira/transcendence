@@ -3,7 +3,8 @@ import SocketHandler from "@/auth/socketHandler";
 import { authGuard } from "@/router/guards";
 import Router from "@/router/Router";
 import { conditionalRender } from "@/utils/conditionalRender";
-import { BALL_RADIUS, CANVAS, PADDLE, REFRESH_RATE_MS, updatePaddle } from "@/utils/game";
+import { BALL_RADIUS, CANVAS, MAX_PLAYER_DISCONNECT_ACCUMULATED_TIME, PADDLE, REFRESH_RATE_MS, updatePaddle } from "@/utils/game";
+import { timeToText } from "@/utils/general";
 import { toastHelper } from "@/utils/toastHelper";
 
 const setError = (el: HTMLDivElement, error: string) => {
@@ -62,10 +63,17 @@ const component = async () => {
 		throw new Error("Room not found!")
 	}
 	const dataUpdateIntervalId = setInterval(() => {
-		if (!gameRoom || gameRoom.state !== "active") return
-		/* predict movement on clientSide */
+		if (!gameRoom || !["active", "stopped"].includes(gameRoom.state)) return
+
 		const thisPlayer = gameRoom.players.left.id === user.id ? gameRoom.players.left : gameRoom.players.right;
-		updatePaddle(thisPlayer, inputState.up, inputState.down)
+		
+		if (gameRoom.timer.startAt !== 0) {
+
+			
+		} else {
+			/* predict movement on clientSide */
+			updatePaddle(thisPlayer, inputState.up, inputState.down)
+		}
 		
 		const canvas = document.getElementById("gameCanvas")
 		if (!canvas) throw new Error("Could not find canvas")
@@ -73,13 +81,16 @@ const component = async () => {
 		if (!ctx) throw new Error("Could not get canvas context 2d!")
 
 		updateCanvas(gameRoom, ctx)
+		
 		/* send actual data to server to get the real one */
-		sh.sendMessage({
-			type: "game-room-player-input",
-			gameId: gameRoom.id,
-			roomId: gameRoom.lobbyId,
-			...inputState
-		} satisfies SelectSocketMessage<"game-room-player-input">)
+		if (gameRoom.timer.startAt === 0) {
+			sh.sendMessage({
+				type: "game-room-player-input",
+				gameId: gameRoom.id,
+				roomId: gameRoom.lobbyId,
+				...inputState
+			} satisfies SelectSocketMessage<"game-room-player-input">)
+		}
 	}, REFRESH_RATE_MS);
 
 	// TODO: add auto redirect to /games/rooms if the room does not exist
@@ -99,6 +110,10 @@ const component = async () => {
 						<span>Redirecting to Lobby in <span id="redirect-number"></span>...</span>
 						<a href="/" id="a-go-to-lobby" class="link">Go to Lobby now!</a>
 					</span>
+				</div>
+				<div id="timer-div" class="absolute rounded-full p-4 hidden bg-gray-50 items-center justify-center top-1/2 left-1/2  transform -translate-x-1/2 -translate-y-1/2">
+					<span id="timer-left" class="hidden"></span>
+					<span id="player-disconnected-time-left" class="hidden"></span>
 				</div>
 				<button id="btn-set-ready" class="absolute top-[15%] left-1/2  transform -translate-x-1/2 -translate-y-[-15%] text-white"></button>
 				<div id="div-loading" class="bg-gray-300 absolute rounded-md p-4 w-80 flex space-x-8 items-center top-1/2 left-1/2  transform -translate-x-1/2 -translate-y-1/2">
@@ -143,6 +158,7 @@ const component = async () => {
 			ready: readyStatus !== "true"
 		} satisfies SelectSocketMessage<"game-room-player-set-ready">)
 	}
+	divLoading.style.display = "none";
 
 	sh.addMessageHandler("game-room-error", function (res) {
 		// TODO: redirect user to /games/rooms with timer
@@ -152,10 +168,11 @@ const component = async () => {
 	})
 	sh.addMessageHandler("game-room-data-update", function (res) {
 		divError.style.display = "none";
-		divLoading.style.display = "none";
 
 		gameRoom = res
 		const playerNamesDiv = document.querySelector<HTMLDivElement>("div#player-names");
+		if (!playerNamesDiv) throw new Error("Could not find div#player-names")
+
 		const leftP = gameRoom.players.left;
 		const rightP = gameRoom.players.right;
 		const thisPlayer = leftP.id === user.id ? leftP : rightP;
@@ -182,19 +199,56 @@ const component = async () => {
 				readyButton.classList.add("hidden")
 			lNameText = leftP.name;
 			rNameText = rightP.name;
+			if (gameRoom.state === "active" || gameRoom.state === "stopped") {
+				const timerDiv = document.querySelector("div#timer-div")
+				const startTimerSpan = document.querySelector("span#timer-left")
+				const disconnectedPlayerTimeLeftSpan = document.querySelector("span#player-disconnected-time-left")
+
+				if (!timerDiv) throw new Error("Could not find div#timer-div")
+				if (!startTimerSpan) throw new Error("Could not find span#timer-left")
+				if (!disconnectedPlayerTimeLeftSpan) throw new Error("Could not find span#player-disconnected-time-left")
+				
+				if (gameRoom.timer.startAt !== 0) {
+					if (timerDiv.classList.contains("hidden")) {
+						timerDiv.classList.remove("hidden")
+					}
+					if (gameRoom.state === "stopped") {
+						if (disconnectedPlayerTimeLeftSpan.classList.contains("hidden")) {
+							disconnectedPlayerTimeLeftSpan.classList.remove("hidden")
+						}
+						const disconnectedPlayer = !gameRoom.players.left.connected ? gameRoom.players.left : gameRoom.players.right
+						
+						const timeLeft = MAX_PLAYER_DISCONNECT_ACCUMULATED_TIME - (Date.now() - disconnectedPlayer.disconnectedAt) - disconnectedPlayer.disconnectedTime
+						
+						disconnectedPlayerTimeLeftSpan.textContent = `${disconnectedPlayer.name} has ${timeToText(timeLeft)} to connect!`
+
+						if (!startTimerSpan.classList.contains("hidden")) {
+							startTimerSpan.classList.add("hidden")
+						}
+					} else if (gameRoom.state === "active") {
+						if (startTimerSpan.classList.contains("hidden")) {
+							startTimerSpan.classList.remove("hidden")
+						}
+						startTimerSpan.textContent = String((gameRoom.timer.elapsed / 1000).toFixed(0))
+						if (!disconnectedPlayerTimeLeftSpan.classList.contains("hidden")) {
+							disconnectedPlayerTimeLeftSpan.classList.add("hidden")
+						}
+					}
+				} else {
+					if (!timerDiv.classList.contains("hidden")) {
+						timerDiv.classList.add("hidden")
+					}
+				}
+			}
 		}
-		if (playerNamesDiv) {
-			const middleText = conditionalRender(gameRoom.state === "waiting", "vs", 
-				leftP.score + " : " + rightP.score
-			)
-			playerNamesDiv.innerHTML = /* html */`
-				<span class="text-2xl w-96">${lNameText}</span>
-				<span class="text-2xl">${middleText}</span>
-				<span class="text-2xl w-96">${rNameText}</span>
-			`;
-		}
+		const middleText = conditionalRender(gameRoom.state === "waiting", "vs", leftP.score + " : " + rightP.score)
+		playerNamesDiv.innerHTML = /* html */`
+			<span class="text-2xl w-96">${lNameText}</span>
+			<span class="text-2xl">${middleText}</span>
+			<span class="text-2xl w-96">${rNameText}</span>
+		`;
 		
-		if (gameRoom.state !== "waiting") {
+		if (gameRoom.state === "active") {
 			const canvas = document.getElementById("gameCanvas")
 			if (!canvas) throw new Error("Could not find canvas")
 			const ctx = (canvas as HTMLCanvasElement).getContext("2d")
@@ -225,6 +279,7 @@ const component = async () => {
 						returnToLobbyTimer--
 						redirectTimeLeftSpan.textContent = String(returnToLobbyTimer)
 					}
+
 					if (returnToLobbyTimer === 0) {
 						if (gameRoom) {
 							router.navigate("/games/lobby-room", {}, { roomId: gameRoom.lobbyId })

@@ -3,7 +3,7 @@ import type { FastifyInstance } from "fastify";
 import jwt from "@utils/jwt";
 import { handleDeleteGameRoom, handleGameRoomGetData, handleNewGameConfig } from "@game/game-config";
 import { handleJoinRooms, lobbyFuncs, sendPlayerUpdatedRooms } from "@game/lobby";
-import { handleGamePlayerInput, handleGameRoomJoin, handleGameRoomPlayerSetReady } from "@game/game"
+import { handleGamePlayerInput, handleGamePlayerLeave, handleGameRoomJoin, handleGameRoomPlayerSetReady } from "@game/game"
 
 export const connectedSocketClients: ClientMap = new Map()
 export const activeGameRooms: GameRooms = new Map()
@@ -102,7 +102,7 @@ export const websocketHandler = async (fastifyInstance: FastifyInstance) => {
 							await handleGamePlayerInput(clientContext, parsedMessage);
 							break;
 						case "game-room-leave":
-							/* TODO: handle stopping the game */
+							await handleGamePlayerLeave(clientContext, parsedMessage);
 							break;
 						default:
 							console.log("unkown message: ", message)
@@ -120,8 +120,17 @@ export const websocketHandler = async (fastifyInstance: FastifyInstance) => {
 		socket.on('close', () => {
 			fastifyInstance.log.info(`Client disconnected: ${userId}`);
 			connectedSocketClients.delete(userId);
-			for (const [id, room] of activeGameRooms) {
+			for (const [roomId, room] of activeGameRooms) {
 				lobbyFuncs.playerLeft.bind(room)(clientContext.userId)
+				room.brackets.forEach(async bracket => {
+					if (bracket.game && (bracket.lPlayer === userId || bracket.rPlayer === userId)) {
+						await handleGamePlayerLeave(clientContext, {
+							type: "game-room-leave",
+							gameId: bracket.game.id,
+							roomId
+						})
+					}
+				})
 			}
 			handleJoinRooms();
 		});

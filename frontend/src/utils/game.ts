@@ -14,6 +14,7 @@ export const PADDLE_H = CANVAS.h * 0.15;
 export const PADDLE_OFFSET = CANVAS.w * 0.03
 const BALL_BASE_VELOCITY = CANVAS.h * 0.02
 const BALL_VELOCITY_INCREMENT = BALL_BASE_VELOCITY * 0.023
+export const MAX_PLAYER_DISCONNECT_ACCUMULATED_TIME = 3 * 60 * 1000; /* 3 Minutes in miliseconds */
 
 export const PADDLE = {
 	w: PADDLE_W, h: PADDLE_H,

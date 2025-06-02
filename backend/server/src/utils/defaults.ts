@@ -7,6 +7,12 @@ const BaseHttpCookieOptions: Partial<CookieSerializeOptions> = {
 	secure: false, // TODO: after enabling https make secure: use DEV_MOVE to set secure so it depends on NODE_ENV
 }
 
+export const MAX_PLAYER_DISCONNECT_ACCUMULATED_TIME = 3 * 60 * 1000; /* 3 Minutes in miliseconds */
+/**
+ * @description When the game starts or gets resumed 4 seconds before it actually start so the players are ready
+ */
+export const GAME_START_TIMER = 4 * 1000; /* 4 seconds in miliseconds */
+
 const DEFAULTS = {
 	jwt: {
 		accessToken: {
@@ -59,13 +65,19 @@ const DEFAULTS = {
 			input: { up: false, down: false },
 			paddlePositionY: 0,
 			connected: false,
-			score: 0
+			score: 0,
+			disconnectedTime: 0,
+			disconnectedAt: 0,
 		}),
-		ballPosition: () => ({
+		ballPosition: (): GameBallData => ({
 			position: { x: 0, y: 0 },
 			velocity: { vx: 0, vy: 0 },
 			angle: 0,
-		} satisfies GameBallData)
+		}),
+		timer: (): GameTimer => ({
+			startAt: 0,
+			elapsed: 0,
+		})
 	}
 }
 

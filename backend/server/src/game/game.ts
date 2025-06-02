@@ -1,4 +1,5 @@
 import { activeGameRooms, connectedSocketClients } from "@api/websocket";
+import { GAME_START_TIMER, MAX_PLAYER_DISCONNECT_ACCUMULATED_TIME } from "@utils/defaults";
 
 /**
  * This has to be same as in the frontend!
@@ -39,20 +40,44 @@ const GAME_MAX_SCORE = 7/* TODO: we can change this later */
  * @description Game Loop
  */
 setInterval(() => {
-	for (const [key, lobby] of activeGameRooms) {
+	for (const [, lobby] of activeGameRooms) {
 		if (lobby.status !== "active") return
 		lobby.brackets.forEach(bracket => {
-			if (!bracket.game || bracket.game.state !== "active") return
+			if (!bracket.game) return
 
 			const game = bracket.game
-			updatePlayerWithInput(game.players.left)
-			updatePlayerWithInput(game.players.right)
-			const scorer = updateBall(game.ballData, game.players.left.paddlePositionY, game.players.right.paddlePositionY)
-			if (scorer === "left" || scorer === "right") {
-				handleGoal(game, scorer)
+			const leftP = bracket.game.players.left
+			const rightP = bracket.game.players.right
+			const now = Date.now()
+
+			if (game.timer.startAt !== 0) {
+				if (game.state === "active") {
+					game.timer.elapsed = game.timer.startAt - now
+				}
 			}
-			if (game.players.left.score === GAME_MAX_SCORE || game.players.right.score === GAME_MAX_SCORE) {
-				handleFinnishGame(game)
+			if (game.state === "active" && game.timer.startAt !== 0) {/* handle timer when starting or resuming the game */
+				if (now >= game.timer.startAt) {
+					game.timer.startAt = 0;
+				}
+			} else if (game.state === "stopped") {
+				Object.values(game.players).forEach((player) => {
+					if (!player.connected && player.disconnectedAt !== 0) {
+						if (now - player.disconnectedAt + player.disconnectedTime >= MAX_PLAYER_DISCONNECT_ACCUMULATED_TIME) {
+							handleFinnishGameByDisconnectTime(bracket, player);
+						}
+					}
+				})
+			}
+			if (game.state === "active" && game.timer.startAt === 0) {
+				updatePlayerWithInput(leftP)
+				updatePlayerWithInput(rightP)
+				const scorer = updateBall(game.ballData, leftP.paddlePositionY, rightP.paddlePositionY)
+				if (scorer === "left" || scorer === "right") {
+					handleGoal(game, scorer)
+				}
+				if (leftP.score === GAME_MAX_SCORE || rightP.score === GAME_MAX_SCORE) {
+					handleFinnishGame(game)
+				}
 			}
 
 			const socketMessage = JSON.stringify({
@@ -96,10 +121,31 @@ export const handleGameRoomJoin = async function (clientContext: ClientThis, mes
 		} satisfies SelectSocketMessage<"game-room-error">));
 		return false;
 	}
-	clientContext.socket.send(JSON.stringify({
+	let updateSecondPlayer = false;
+	player.connected = true;
+	if (game.state === "stopped") {/* handling game resume and disconnect timer */
+		player.disconnectedTime += Date.now() - player.disconnectedAt/* store the amount of time the user has been disconnected for */
+		player.disconnectedAt = 0;
+
+		Object.values(game.players).forEach(player => console.log(player.connected))
+		if (Object.values(game.players).every(player => player.connected)) {
+			handleGameResume(game)
+			updateSecondPlayer = true;
+		}
+	}
+	const socketMessage = JSON.stringify({
 		type: "game-room-data-update",
 		...game,
-	} satisfies SelectSocketMessage<"game-room-data-update">));
+	} satisfies SelectSocketMessage<"game-room-data-update">);
+
+	if (updateSecondPlayer) {/* update both player if one of them reconnected and both players are now ready in the lobby */
+		Object.values(game.players).forEach(player => {
+			connectedSocketClients.get(player.id)?.socket?.send(socketMessage);
+		})
+	} else {
+		clientContext.socket.send(socketMessage);
+	}
+	
 	return true;
 }
 
@@ -137,13 +183,15 @@ export const handleGameRoomPlayerSetReady = async function (clientContext: Clien
 	player.ready = message.ready;
 	if (game.players.left.ready && game.players.right.ready) {
 		// GAME STARTS HERE
-		// TODO: maybe add a timer of 4 seconds so the users get ready to play 
-		//   (can be used later if someone leaves and the games has to restart, things like this)
 		game.state = "active"
 		game.ballData = {
 			position: { x: CANVAS.w / 2, y: CANVAS.h / 2 },
 			velocity: { vx: BALL_BASE_VELOCITY, vy: BALL_BASE_VELOCITY },
 			angle: Math.random() > 0.5 ? Math.PI : 0 + Math.random() * 0.5
+		}
+		game.timer = {
+			startAt: Date.now() + GAME_START_TIMER,
+			elapsed: 0,
 		}
 		game.players.left.paddlePositionY = PADDLE.initialY
 		game.players.right.paddlePositionY = PADDLE.initialY
@@ -258,4 +306,36 @@ function handleGoal(game: Game, scorer: GameSide) {
 
 function handleFinnishGame(game: Game) {
 	game.state = "completed";
+}
+
+export const handleGamePlayerLeave = async function (clientContext: ClientThis, message: SelectSocketMessage<"game-room-leave">) {
+	const room = activeGameRooms.get(message.roomId);
+	if (!room) return;
+	const game = room.brackets.find(bracket => bracket.game?.id === message.gameId);
+	if (!game || !game.game) return;
+
+	const player = game.lPlayer === clientContext.userId ? game.game.players.left : game.game.players.right
+	if (game.game.state === "active") {
+		player.connected = false;
+		player.disconnectedAt = Date.now()
+		game.game.state = "stopped"
+		game.game.timer.startAt = Date.now()
+	}
+}
+
+function handleFinnishGameByDisconnectTime(bracket: GameBracket, player: PlayerActiveGameData) {
+	if (!bracket.game) {
+		console.warn("handleFinnishGameByDisconnectTime was called with bracket.game null This can't happen!!!")
+		return;
+	}
+	bracket.game.state = "completed"
+	bracket.winner = bracket.game.players.left.id === player.id ? bracket.game.players.right.side : bracket.game.players.left.side
+}
+
+function handleGameResume(game: Game) {
+	game.state = "active"
+	game.timer = {
+		startAt: Date.now() + GAME_START_TIMER,
+		elapsed: 0
+	}
 }

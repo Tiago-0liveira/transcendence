@@ -17,6 +17,10 @@ type GamePlayer = {
 	ready: boolean;
 }
 type BracketPlayer = null | GamePlayer;
+type GameTimer = {
+	startAt: number,
+	elapsed: number,
+}
 
 type GameBracket = {
 	/**
@@ -36,7 +40,9 @@ interface PlayerActiveGameData extends GamePlayer {
 	input: { up: boolean, down: boolean },
 	side: GameSide;
 	connected: boolean; // true if the player is connected to the game room,
-	score: number
+	score: number,
+	disconnectedTime: number,
+	disconnectedAt: number,
 }
 
 type GameBallData = {
@@ -45,7 +51,8 @@ type GameBallData = {
 	angle: number
 }
 
-
+/* Type Game might need a number of "phases" of the tournament so we can organize the brackets */
+/* Type GameBracket  could have a property called dependencyIdRoom that would indicate what matches need to conclude after starting this one */
 type Game = {
 	lobbyId: string;
 	id: string;
@@ -54,7 +61,8 @@ type Game = {
 		left: PlayerActiveGameData;
 		right: PlayerActiveGameData;
 	}
-	ballData: GameBallData
+	ballData: GameBallData,
+	timer: GameTimer
 }
 
 type LobbyRoom = {

@@ -56,6 +56,7 @@ const getUpdatedRoomTemplate = (room: LobbyRoom, userId: number): string => {
 		</div>
 		<div class="main-content mt-4 w-full max-w-3xl">
 			${renderConnectedPlayers(room)}
+			${renderBrackets(room)}
 		</div>
 	`
 }
@@ -100,6 +101,26 @@ const renderConnectedPlayers = (room: LobbyRoom): string => {
 						)}
 					</span>
 					<span class="w-5 h-5 rounded-full ${conditionalRender(player.ready, 'bg-green-500', 'bg-red-500')}"></span>
+				</div>
+			`).join('')}
+		</div>
+	`
+}
+
+const renderBrackets = (room: LobbyRoom): string => {
+	if (room.status !== 'waiting') return ''
+	return /* html */ `
+		<div class="brackets grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+			${room.brackets.map(bracket => /* html */`
+				<div class="bracket flex items-center space-x-2 bg-gray-50 shadow rounded p-4">
+					${conditionalRender(bracket.game !== null, /* html */`
+						<span class="left-player">
+							<span>${bracket.game?.players.left.name}</span>
+							<span>${bracket.game?.players.left.score}</span>
+						</span>
+					`, /* html */`
+					`)}
+					
 				</div>
 			`).join('')}
 		</div>
