@@ -1,9 +1,8 @@
 import { userLoginSchema } from "@/auth/validation";
 import { toastHelper } from "@/utils/toastHelper";
 import Router from "@/router/Router";
-import AuthManager from "@/auth/authManager"
+import AuthManager from "@/auth/authManager";
 import { GOOGLE_CLIENT_ID } from "@/utils/config";
-
 
 const component = async () => {
 	const template = /* html */`
@@ -15,11 +14,11 @@ const component = async () => {
 					<p id="login-error" class="text-center text-sm text-red-600 hidden"></p>
 
 					<div>
-						<label for="username" class="block mb-2 text-sm font-medium text-left text-gray-900 ">Your Username</label>
+						<label for="username" class="block mb-2 text-sm font-medium text-left text-gray-900">Your Username</label>
 						<input type="text" name="username" id="username" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2.5" placeholder="username" required>
 					</div>
 					<div>
-						<label for="password" class="block mb-2 text-sm font-medium text-left text-gray-900 ">Your Рassword</label>
+						<label for="password" class="block mb-2 text-sm font-medium text-left text-gray-900">Your Password</label>
 						<input type="password" name="password" id="password" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2.5" placeholder="***********" required>
 					</div>
 					<div class="flex items-start">
@@ -31,7 +30,7 @@ const component = async () => {
 						</div>
 						<a href="#" class="ms-auto text-sm text-blue-700 hover:underline">Lost password</a>
 					</div>
-					<button type="submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-1 text-center" >Sign In</button>
+					<button type="submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-1 text-center">Sign In</button>
 					<div class="flex justify-center flex-row space-x-6">
 						<div id="google-oauth" class="border rounded-lg p-1 hover:cursor-pointer border-yellow-300">
 							<span class="text-lg text-yellow-600 flex items-center">Login w/ <img class="w-7 h-7 rounded-full mx-1" src="/google-logo.svg" alt=""></span>
@@ -47,16 +46,60 @@ const component = async () => {
 				</form>
 			</div>
 		</div>
+
+		<div id="twofa-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+			<div class="relative bg-white px-4 py-4 rounded-lg shadow-lg w-[320px] flex flex-col items-center">
+				<button id="twofa-close"
+					class="absolute top-1.5 right-1.5 text-gray-400 hover:text-gray-600 text-base font-semibold leading-none focus:outline-none"
+					title="Close"
+					aria-label="Close"
+				>
+					&times;
+				</button>
+
+				<label for="twofa-code" class="text-sm font-medium text-gray-700 mb-2 text-center">Enter 6-digit code</label>
+				<input
+					type="text"
+					id="twofa-code"
+					maxlength="6"
+					inputmode="numeric"
+					pattern="[0-9]*"
+					class="w-40 h-11 text-center text-xl border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+					placeholder="хххххх"
+					autocomplete="one-time-code"
+					autofocus
+				>
+				<p id="twofa-error"
+					class="text-sm text-red-600 text-center mt-2 transition-opacity duration-200"
+					style="min-height: 1.25rem; opacity: 0;">
+				</p>
+			</div>
+		</div>
 	`;
+
 	document.querySelector('#app')!.innerHTML = template;
 
-	const form = document.getElementById("loginForm")
+	const form = document.getElementById("loginForm");
 	if (!form) return;
 
 	const errorElement = document.getElementById("login-error")!;
-
 	const googleOauth = document.getElementById("google-oauth");
-	const fortyTwoOauth = document.getElementById("42-oauth");
+
+	let savedLoginData: { username: string; password: string } | null = null;
+
+	const showTwoFAModal = () => {
+		const errorBox = document.getElementById("twofa-error")!;
+		const codeInput = document.getElementById("twofa-code") as HTMLInputElement;
+		errorBox.textContent = "";
+		errorBox.style.opacity = "0";
+		codeInput.value = "";
+		codeInput.focus();
+		document.getElementById("twofa-modal")!.classList.remove("hidden");
+	};
+
+	const hideTwoFAModal = () => {
+		document.getElementById("twofa-modal")!.classList.add("hidden");
+	};
 
 	const googleOauthLoginHandler = () => {
 		google.accounts.oauth2.initCodeClient({
@@ -65,20 +108,19 @@ const component = async () => {
 			ux_mode: "popup",
 			callback: (response) => {
 				if (response.error) {
-					console.error("google callback error:", response.error)
+					console.error("google callback error:", response.error);
 					return;
 				}
 
 				AuthManager.getInstance().oauthGoogleLogin(response.code).then(err => {
 					if (!err)
-						Router.getInstance().returnToOrPath("/user")
+						Router.getInstance().returnToOrPath("/profile");
 					else
-						console.error("oauthGoogleLogin err: ", err)
-				})
-
+						console.error("oauthGoogleLogin err: ", err);
+				});
 			},
 		}).requestCode();
-	}
+	};
 
 	const formSubmitHandler = async (e: Event) => {
 		e.preventDefault();
@@ -91,34 +133,83 @@ const component = async () => {
 		const password = data.get("password")?.toString() ?? "";
 
 		const result = userLoginSchema.safeParse({ username, password });
+		if (!result.success) {
+			errorElement.textContent = "Invalid input data";
+			errorElement.classList.remove("hidden");
+			return;
+		}
 
 		try {
 			await AuthManager.getInstance().login(result.data);
-			await Router.getInstance().returnToOrPath("/user");
+			await Router.getInstance().returnToOrPath("/profile");
 			toastHelper.success("Login Successful");
-
 		} catch (err: any) {
 			console.error("Login error:", err);
-			errorElement.textContent = err?.message;
-			errorElement.classList.remove("hidden");
+			if (err.message === "2FA_REQUIRED") {
+				savedLoginData = result.data;
+				showTwoFAModal();
+			} else {
+				errorElement.textContent = err?.message ?? "Login failed";
+				errorElement.classList.remove("hidden");
+			}
 		}
 	};
 
+	form.addEventListener("submit", formSubmitHandler);
+
+	const codeInput = document.getElementById("twofa-code") as HTMLInputElement;
+
+	codeInput.addEventListener("input", () => {
+		codeInput.value = codeInput.value.replace(/[^0-9]/g, "");
+	});
+
+	codeInput.addEventListener("paste", (e) => {
+		e.preventDefault();
+		const pasted = (e.clipboardData || (window as any).clipboardData).getData("text");
+		const numbersOnly = pasted.replace(/[^0-9]/g, "").slice(0, 6);
+		document.execCommand("insertText", false, numbersOnly);
+	});
+
+	codeInput.addEventListener("input", async () => {
+		const code = codeInput.value;
+		const errorBox = document.getElementById("twofa-error")!;
+		errorBox.textContent = "";
+		errorBox.style.opacity = "0";
+
+		if (code.length === 6 && savedLoginData) {
+			try {
+				await AuthManager.getInstance().login({
+					...savedLoginData,
+					token: code
+				});
+				hideTwoFAModal();
+				await Router.getInstance().returnToOrPath("/user");
+				toastHelper.success("Login Successful");
+			} catch (err: any) {
+				console.error("2FA error:", err?.message);
+				errorBox.textContent = err?.message ?? "Invalid 2FA code";
+				errorBox.style.opacity = "1";
+			}
+		}
+	});
+
+
+	document.getElementById("twofa-close")?.addEventListener("click", () => {
+		hideTwoFAModal();
+	});
+
 	if (googleOauth && google?.accounts?.oauth2?.initCodeClient) {
-		googleOauth.addEventListener("click", googleOauthLoginHandler)
+		googleOauth.addEventListener("click", googleOauthLoginHandler);
 	} else {
-		console.log("here");
 		googleOauth?.setAttribute("disabled", "true");
-		/* disable button so user knows google auth is disabled */
 	}
 
-	form.addEventListener("submit", formSubmitHandler)
 	return () => {
 		if (googleOauth && google?.accounts?.oauth2?.initCodeClient) {
-			googleOauth.removeEventListener("click", googleOauthLoginHandler)
+			googleOauth.removeEventListener("click", googleOauthLoginHandler);
 		}
-		form.removeEventListener("submit", formSubmitHandler)
-	}
-}
+		form.removeEventListener("submit", formSubmitHandler);
+	};
+};
 
 Router.getInstance().register({ path: '/auth/login', component });

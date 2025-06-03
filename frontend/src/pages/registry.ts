@@ -4,6 +4,8 @@ import "@page/index"
 import "@page/players"
 import "@page/user"
 import "@page/404"
+import "@page/settings"
+import "@page/profile"
 
 import "@page/auth/signup"
 import "@page/auth/logout"
