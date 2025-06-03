@@ -160,11 +160,11 @@ export const notify = {
 		}
 	},
 
-	newPrivateMessage: async (
-		userId: number,
-		friendId: number,
-		message: string,
-	) => {
+	//ircChannelMessage
+	// TODO: add ChannelTable and call it to get all the users inside the channel
+	// and the send the notification
+
+	newPrivateMessage: async (userId: number, friendId: number) => {
 		const connectedFriend = connectedSocketClients.get(friendId);
 		if (
 			connectedFriend &&
@@ -176,10 +176,9 @@ export const notify = {
 			const user = dbRes.result;
 			connectedFriend.socket.send(
 				JSON.stringify({
-					type: "private-message",
-					friendName: user.displayName,
-					friendId: user.id,
-					payload: message,
+					type: "new-irc-notification",
+					source: userId,
+					target: friendId,
 				} satisfies SocketMessage),
 			);
 		}
