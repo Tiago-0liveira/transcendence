@@ -13,7 +13,22 @@ type SocketMessage =
 			{ friendName: string; avatar: string }
 	  >
 	| SocketMessageBase<
-			"private-message",
-			{ friendName: string; friendId: number; payload: string }
+			"new-irc-notification",
+			{
+				// command: string;
+				// params: string[];
+				source?: number;
+				target: number;
+				// content: string;
+			}
+	  >
+	| SocketMessageBase<
+			"new-irc-message",
+			{
+				command: string;
+				params: string[];
+				source?: number;
+				target: number;
+				content: string;
+			}
 	  >;
-// | SocketMessageBase<"room-message", { roomName: string; payload: string }>;
