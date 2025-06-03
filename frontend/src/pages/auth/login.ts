@@ -114,7 +114,7 @@ const component = async () => {
 
 				AuthManager.getInstance().oauthGoogleLogin(response.code).then(err => {
 					if (!err)
-						Router.getInstance().returnToOrPath("/profile");
+						Router.getInstance().returnToOrPath("/user");
 					else
 						console.error("oauthGoogleLogin err: ", err);
 				});
@@ -141,7 +141,7 @@ const component = async () => {
 
 		try {
 			await AuthManager.getInstance().login(result.data);
-			await Router.getInstance().returnToOrPath("/profile");
+			await Router.getInstance().returnToOrPath("/user");
 			toastHelper.success("Login Successful");
 		} catch (err: any) {
 			console.error("Login error:", err);

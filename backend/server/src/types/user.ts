@@ -57,3 +57,16 @@ interface PossibleFriendUser extends FriendUser {
 	hasInvitedMe: boolean;
 	isPending: boolean
 }
+
+type User2FA = {
+	userId: number;
+	enabled: boolean;
+	secret: string;
+	updatedAt: string;
+};
+
+type User2FAParams = {
+	userId: number;
+	enabled: boolean;
+	secret: string;
+};

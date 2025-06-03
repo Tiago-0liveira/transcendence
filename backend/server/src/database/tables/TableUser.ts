@@ -6,9 +6,7 @@ import bcrypt from 'bcrypt'
 
 const SALT_ROUNDS = 10
 
-// TODO: display name can be null so it is defaulted to username
 // TODO: avatarUrl can be defaulted to available avatars (add to public folder some avatars)
-// TODO: password must be hashed before inserting in the db
 class UserTable extends BaseTable<User, UserParams> {
 	protected _tableName: string = "users";
 
@@ -67,6 +65,11 @@ class UserTable extends BaseTable<User, UserParams> {
 				params.authProvider ?? UserAuthMethod.LOCAL,
 				params.authProviderId ?? UserAuthMethod.LOCAL
 			);
+			await this.database.user2FATable.new({
+				userId: result.lastInsertRowid as number,
+				enabled: false,
+				secret: ""
+			});
 
 			return { result: result.lastInsertRowid as number };
 

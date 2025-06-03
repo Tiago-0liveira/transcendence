@@ -6,6 +6,7 @@ import friendsRoutes from "@api/auth/friends";
 import AuthGeneralRoutes from "@api/auth/general";
 import oauthGoogleRoutes from "@api/oauth/google";
 import { websocketHandler } from "./api/websocket";
+import auth2faRoutes from "@api/2fa";
 
 /**
  * @description Registers all endpoints necessary for the server (in a organized way)
@@ -26,6 +27,7 @@ export default function registerRoutes(app: FastifyInstance) {
 			fastifyInstance.register(AuthGeneralRoutes)
 			fastifyInstance.register(authenticationRoutes)
 			fastifyInstance.register(friendsRoutes, { prefix : "/friends" })
+			fastifyInstance.register(auth2faRoutes)
 			done()
 		},
 		{ prefix: "/auth" }
