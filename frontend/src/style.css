@@ -3,11 +3,14 @@
 @tailwind utilities;
 
 :root {
-	font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+	cursor: default;
+	caret-color: transparent;
+	font-family: "Press Start 2P", system-ui;
 	line-height: 1.5;
 	font-weight: 400;
 	box-sizing: border-box;
-
+	margin: 0;
+	padding: 0;
 	font-synthesis: none;
 	text-rendering: optimizeLegibility;
 	-webkit-font-smoothing: antialiased;
@@ -16,155 +19,227 @@
 	--nav-bar-h: 3.5rem;
 }
 
-a.default {
-	font-weight: 500;
-	color: #ffffff;
-	text-decoration: inherit;
-	border-radius: 8px;
-	border: 1px solid transparent;
-	padding: 0.3em .6em;
-	font-size: 1em;
-	font-weight: 500;
-	font-family: inherit;
-	cursor: pointer;
-	transition: border-color 0.25s;
-}
-
-a.link {
-	color: #646cff;
-	padding: 0;
-	border-radius: 0;
-	background-color: transparent;
-}
-
-a.link:hover {
-	border-color: transparent;
-	text-decoration: underline;
-}
-
 body {
 	margin: 0;
 	display: flex;
-	position: relative;
 	flex-direction: column;
 	width: 100vw;
 	height: 100vh;
+	background-color: #171A21;
+	color: #c7d5e0;
 }
 
-h1 {
-	font-size: 2em;
-	line-height: 1.1;
+/* ───── NAVBAR ───── */
+.nav-bar {
+	height: var(--nav-bar-h);
+	background-color: #121C25;
+	border-bottom: 1px solid #2a475e;
+	box-shadow: inset 0 0 0 rgba(0, 0, 0, 0.6);
 }
 
-
+/* ───── APP CONTAINER ───── */
 div#app {
-	background-color: white;
-	position: relative;
+	background-color: #1b2838;
 	height: calc(100% - var(--nav-bar-h));
 	display: flex;
-	padding: 1rem;
 	text-align: center;
+	box-shadow: inset 0 0 300px rgba(0, 0, 5, 1);
 }
 
-
-nav-bar {
-	height: var(--nav-bar-h);
+/* ───── PROFILE CARD ───── */
+.profile-card {
+	padding-top: 1rem;
+	padding-left:  1rem;
+	padding-right:  1rem;
+	background-color: #1B1B1B;
+	border-left: 1px solid #000;
+	border-right: 1px solid #000;
+	border-radius: 1px;
+	/*padding: 0rem;*/
+	color: #c7d5e0;
+	max-width: 1000px;
+	width: 95%;
+	margin: 0 auto;
+	height: 100%;
+	box-shadow: 1px 50px 500px rgba(255, 222, 173, 0.5);
 }
-
-.logo {
-	height: 6em;
-	padding: 1.5em;
-	will-change: filter;
-	transition: filter 300ms;
-}
-
-.logo:hover {
-	filter: drop-shadow(0 0 2em #646cffaa);
-}
-
-.logo.vanilla:hover {
-	filter: drop-shadow(0 0 2em #3178c6aa);
-}
-
-.card {
-	padding: 2em;
-}
-
-.read-the-docs {
-	color: #888;
-}
-
-.badge {
-	position: relative;
+.profile-card.centered {
 	display: flex;
+	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	
-	padding: 0.125rem 0.25rem;
-	font-size: 0.75rem;
-	font-weight: 600;
-	border-radius: 1.5rem;
 }
 
-.error-message {
-	color: #dd0000;
-	background-color: #444;
-	font-size: 0.875em;
-	margin-top: 1em;
-	border-radius: 8px;
-	padding: 0.6em 1.2em;
+/* ───── SETTINGS FORM ───── */
+.settings-form {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 100%;
 }
 
-button,
-input {
-	border-radius: 8px;
-	border: 1px solid transparent;
-	padding: 0.6em 1.2em;
-	font-size: 1em;
+.form-input-group {
+	width: 100%;
+	max-width: 400px;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	margin-bottom: 2.25rem;
+}
+
+.form-input-label {
+	display: block;
+	font-size: 0.875rem;
 	font-weight: 500;
-	font-family: inherit;
-	cursor: pointer;
-	transition: border-color 0.25s;
+	text-align: left;
+	color: #93c5fd;
 }
 
-button:hover,
-input:hover {
-	border-color: #646cff;
+.form-input {
+	background-color: #374151;
+	border: 1px solid #6b7280;
+	color: white;
+	font-size: 0.875rem;
+	border-radius: 0.5rem;
+	padding: 0.625rem;
+	width: 100%;
+	display: block;
+	transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+.form-input:focus {
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+	border-color: #3b82f6;
 }
 
-button:focus,
-button:focus-visible,
-input:focus,
-input:focus-visible {
-	outline: 4px auto -webkit-focus-ring-color;
+/* ───── STEAM AVATAR / INFO ───── */
+.steam-avatar {
+	/*position: absolute;*/
+	width: 250px;
+	height: 250px;
+	/*display: flex;*/
+	align-items: center;
+	border-radius: 3px;
+	border: 2px solid navajowhite;
+	margin: 0px 60px;
+	transition: box-shadow 1s ease-in-out;
+	object-fit: cover;
+	display: block;
+	/*width: 250px;*/
+	/*height: 250px;*/
+	/*border: 2px solid navajowhite;*/
+	/*border-radius: 3px;*/
+
+}
+.steam-avatar:hover {
+	box-shadow: 0 0 50px navajowhite;
 }
 
-input.form-input {
-	@apply bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2.5
+.steam-name {
+	position: absolute;
+	font-size: 45px;
+	color: navajowhite;
+	font-weight: 400;
+	margin: 50px 450px;
 }
 
-label.form-input-label {
-	@apply block mb-2 text-sm font-medium text-left text-gray-900
+.steam-info {
+	position: relative;
+	font-size: 18px;
+	text-align: left;
+	display: flex;
+	flex-direction: column;
+	left: 450px;
+	top: 145px;
+	gap: 5px;
 }
 
+/* ───── BUTTONS ───── */
+.btn-steam {
+	background-color: #1b2838;
+	color: #dce1e4;
+	border: 2px solid #2c4454;
+	padding: 0.4em 3em;
+	font-size: 0.9rem;
+	border-radius: 8px;
+	transition: 0.2s ease;
+	font-weight: 600;
+}
+.btn-steam:hover {
+	background-color: white;
+	padding: 0.6em 7em;
+	color: black;
+}
+
+.btn-logout {
+	background-color: #db3939;
+	color: white;
+	border: 2px solid #74829a;
+	padding: 0.4em 1em;
+	font-size: 0.9rem;
+	border-radius: 8px;
+	transition: 0.2s ease;
+	font-weight: 600;
+}
+.btn-logout:hover {
+	background-color: white;
+	padding: 0.6em 4em;
+	border: 1px solid #db3939;
+	color: #db3939;
+}
+
+.btn-manual {
+	background-color: #29a347;
+	color: white;
+	border: 2px solid #687d6e;
+	padding: 0.4em 4em;
+	font-size: 0.9rem;
+	border-radius: 8px;
+	transition: 0.2s ease;
+	font-weight: 600;
+}
+.btn-manual:hover {
+	background-color: white;
+	color: #29a347;
+}
+
+.btn-login-out {
+	background-color: white;
+	color: black;
+	border: 2px solid #2c4454;
+	padding: 0.6em 5em;
+	font-size: 0.9rem;
+	border-radius: 8px;
+	transition: 0.2s ease;
+	font-weight: 600;
+}
+.btn-login-out:hover {
+	background-color: #ffc800;
+	color: black;
+}
+
+/* ───── SVG SPINNERS ───── */
 svg.svg-loading {
 	animation: spin 1s linear infinite;
 	width: 2em;
 	height: 2em;
 	margin: 0 auto;
 	display: block;
-	fill: #747bff;
+	fill: #66c0f4;
 }
-
 svg.svg-check {
 	width: 2em;
 	height: 2em;
 	margin: 0 auto;
 	display: block;
-	fill: #34c400;
+	fill: #5cbd5c;
+}
+@keyframes spin {
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
 }
 
-/* toasts css */
+/* ───── TOASTIFY ───── */
 div.toastify button.toast-close {
 	margin-left: 7px;
 }
@@ -172,12 +247,205 @@ div.toastify img.toastify-avatar {
 	margin-right: 7px;
 }
 
-@keyframes spin {
-	0% {
-		transform: rotate(0deg);
-	}
+/* ───── SETTINGS ENHANCEMENTS ───── */
 
-	100% {
-		transform: rotate(360deg);
-	}
+.form-section-title {
+	font-size: 1rem;
+	font-weight: 600;
+	text-align: center;
+	margin-top: 2rem;
+	margin-bottom: 1rem;
+	color: #facc15; /* yellow-400 */
+}
+
+.form-section-divider {
+	width: 100%;
+	max-width: 400px;
+	height: 1px;
+	background-color: #4b5563; /* gray-600 */
+	margin: 1.5rem 0;
+	border: none;
+}
+
+.form-message-error {
+	color: #ef4444; /* red-500 */
+	font-size: 0.875rem;
+	text-align: center;
+	margin-top: -1rem;
+	margin-bottom: 1rem;
+}
+
+.form-message-success {
+	color: #22c55e; /* green-500 */
+	font-size: 0.875rem;
+	text-align: center;
+	margin-top: -1rem;
+	margin-bottom: 1rem;
+}
+
+/* ───── HEADERS ───── */
+.settings-header {
+	font-size: 1.5rem;
+	color: #93c5fd;
+	margin-bottom: 1.5rem;
+	font-weight: 600;
+	text-align: center;
+	letter-spacing: 0.05em;
+}
+
+/* ───── TOGGLE SWITCH (2FA) ───── */
+.twofa-toggle-group {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin: 1.5rem 0;
+	gap: 0.75rem;
+}
+
+.toggle-bg {
+	width: 44px;
+	height: 24px;
+	background-color: #374151; /* Gray background */
+	border-radius: 9999px;
+	position: relative;
+	transition: background-color 0.3s ease;
+}
+
+.toggle-bg::after {
+	content: "";
+	position: absolute;
+	top: 2px;
+	left: 2px;
+	width: 20px;
+	height: 20px;
+	background-color: white;
+	border-radius: 9999px;
+	transition: transform 0.3s ease;
+}
+
+/* when checked - shift knob right */
+input[type="checkbox"]:checked + .toggle-bg::after {
+	transform: translateX(20px);
+}
+
+input[type="checkbox"]:checked + .toggle-bg {
+	background-color: #10b981; /* Green for enabled */
+}
+
+.toggle-label {
+	margin-left: 0.5rem;
+	color: #c7d5e0;
+	font-size: 0.875rem;
+	font-weight: 600;
+}
+
+.btn-steam-fixed {
+	background-color: #1b2838;
+	color: #dce1e4;
+	border: 2px solid #2c4454;
+	padding: 0.4em 3em;
+	font-size: 0.9rem;
+	border-radius: 8px;
+	transition: background-color 0.2s ease, color 0.2s ease;
+	font-weight: 600;
+}
+
+.btn-steam-fixed:hover {
+	background-color: white;
+	color: black;
+}
+
+.password-section {
+	margin-top: 2rem;
+}
+
+.profile-wrapper {
+	display: flex;
+	align-items: flex-start;
+	gap: 2rem;
+	padding: 1rem;
+	flex-wrap: wrap;
+}
+
+.profile-info {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	justify-content: flex-start;
+	flex: 1;
+}
+
+.profile-name {
+	font-size: 1.25rem;
+	color: navajowhite;
+	margin-bottom: 1rem;
+	font-weight: bold;
+}
+
+.profile-stats p {
+	margin: 0.25rem 0;
+	color: #c7d5e0;
+}
+
+.profile-wrapper-row {
+	display: flex;
+	flex-direction: row;
+	align-items: flex-start;
+	gap: 6rem;
+	padding: 2rem;
+}
+
+.profile-text {
+	display: flex;
+	/*height: 250px; !* фиксируем высоту как у .steam-avatar *!*/
+	flex-direction: column;
+	justify-content: space-between;
+	/*align-self: stretch; !* растягивает блок по высоте аватара *!*/
+	text-align: left;
+	line-height: 1.6;
+}
+
+.profile-name-large {
+	font-size: 2.5rem;
+	font-weight: 900;
+	color: navajowhite;
+	line-height: 1.2;
+	margin: 0;
+	margin-bottom: 1rem; /* чуть сдвинуть вниз, чтобы был воздух */
+}
+
+
+.profile-stats-compact {
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	flex-grow: 1;
+	font-size: 3rem;
+	letter-spacing: 0.02em;
+}
+
+.profile-stats-compact p {
+	font-size: 1.3rem;
+	margin: 0.2rem 0;
+}
+
+.profile-info-block {
+	background-color: rgba(255, 255, 255, 0.05);
+	border: 1px solid rgba(255, 222, 173, 0.8);
+	border-radius: 3px;
+	padding: 1.5rem 2rem;
+	box-shadow: 0 0 60px rgba(0, 0, 0, 0.6);
+	width: 100%;
+	max-width: 500px; /* увеличь ширину под размер текста ????*/
+	transform: translateX(-2rem); /* сдвигаем немного левее */
+
+	width: 100%;
+	max-width: 400px;
+
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+
+	height: 250px; /* ровно как .steam-avatar */
+	box-sizing: border-box;
 }
