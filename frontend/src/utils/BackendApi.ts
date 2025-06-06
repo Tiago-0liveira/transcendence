@@ -32,6 +32,15 @@ const routeTree = {
 			logout: "logout",
 		},
 	},
+	settings: {
+		update: "update",
+		account: "account",
+		twofa: {
+			toggle: "2fa/toggle",
+			verify: "2fa/verify",
+			status: "2fa/status",
+		},
+	},
 } as const;
 
 const API = buildPaths(routeTree);

@@ -67,9 +67,9 @@ const component = async () => {
 	if (!form) return;
 
 	const googleOauth = document.getElementById("google-oauth");
-	const fortyTwoOauth = document.getElementById("42-oauth");
+	// const fortyTwoOauth = document.getElementById("42-oauth");
 
-	const authMethodInput = document.getElementById("input-authMethod")
+	// const authMethodInput = document.getElementById("input-authMethod")
 
 	// Get references to error display elements
 	const errorFields = {
@@ -87,27 +87,38 @@ const component = async () => {
 	};
 
 	const googleSignUpWithGoogleHandler = () => {
-		google.accounts.oauth2.initCodeClient({
+		const codeClient = google.accounts.oauth2.initCodeClient({
 			client_id: GOOGLE_CLIENT_ID,
 			scope: "profile email",
 			ux_mode: "popup",
-			callback: (response) => {
+			callback: async (response: { code?: string; error?: string }) => {
 				if (response.error) {
-					/* did not accept the required permissions ti */
 					console.warn(response.error);
+					toastHelper.error("Google authorization was cancelled or failed.");
 					return;
 				}
+
 				console.log("User google authenticated:", response);
-				AuthManager.getInstance().oauthGoogleSignUp(response.code).then((err) => {
+
+				try {
+					const err = await AuthManager.getInstance().oauthGoogleSignUp(response.code);
+
 					if (!err) {
-						Router.getInstance().navigate("/oauth/google/complete")
+						await Router.getInstance().navigate("/oauth/google/complete");
 					} else {
-						// TODO: deactivate google button and message (notification of the error)
+						const message = err || "Unknown error during registration";
+						console.error("Google signup backend error:", err);
+						toastHelper.error(message);
 					}
-				})
+				} catch (e) {
+					console.error("Unexpected error in oauthGoogleSignUp:", e);
+					toastHelper.error("Unexpected server error. Please try again later.");
+				}
 			},
-		}).requestCode();
-	}
+		});
+
+		codeClient.requestCode();
+	};
 
 	const formSubmitHandler = async (e: Event) => {
 		e.preventDefault();

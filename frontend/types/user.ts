@@ -3,10 +3,11 @@ type UIDD = {
 }
 
 type UserParams = {
-	username: string,
-	displayName?: string,
-	avatarUrl?: string,
-	password: string
+	username: 		string,
+	displayName?: 	string,
+	avatarUrl?: 	string,
+	password: 		string,
+	authProvider: 	string
 }
 
 interface User extends UserParams, UIDD {
