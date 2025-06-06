@@ -4,6 +4,7 @@ import API from "@/utils/BackendApi";
 import { backendEndpoint } from "@/utils/path";
 import { toastHelper } from "@/utils/toastHelper";
 import SocketHandler from "./socketHandler";
+import {objectOutputType, ZodOptional, ZodString, ZodType} from "zod";
 
 
 class AuthManager {
@@ -164,7 +165,11 @@ class AuthManager {
 		return data.error || null;
 	}
 
-	public async oauthGoogleCompleteSignUp(userParams: UserParamsNoPass): Promise<string | null> {
+	public async oauthGoogleCompleteSignUp(userParams: objectOutputType<{
+		username: ZodString;
+		displayName: ZodOptional<ZodString>;
+		avatarUrl: ZodOptional<ZodString>
+	}, ZodType<any, any, any>, "strip">): Promise<string | null> {
 		const res = await fetch(backendEndpoint(API.oauth.google.signup.complete), {
 			method: "POST",
 			headers: {

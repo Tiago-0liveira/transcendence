@@ -2,8 +2,8 @@ import { z } from "zod";
 import { UserAuthMethod } from "@enums/enums";
 
 export const userSignupSchema = z.object({
-    username: z.string().trim().toLowerCase().min(3, 'Username must be at least 3 characters long'),
-    displayName: z.string().trim().min(3, 'Display name must be at least 3 characters').optional(),
+    username: z.string().trim().toLowerCase().min(3, 'Username must be at least 3 characters long').max(30),
+    displayName: z.string().trim().min(3, 'Display name must be at least 3 characters').max(30).optional(),
     avatarUrl: z.string().trim().url('Invalid avatar URL').optional(),
     password: z
         .string()
@@ -28,12 +28,18 @@ export const userLoginSchema = z.object({
 });
 
 export const googleSignupCompleteSchema = z.object({
-    username:       z.string().trim().toLowerCase().min(3, 'Username must be at least 3 characters long'),
-    displayName:    z.string().trim().min(3, 'Display name must be at least 3 characters').optional(),
+    username:       z.string().trim().toLowerCase().min(3, 'Username must be at least 3 characters long').max(30),
+    displayName:    z.string().trim().min(3, 'Display name must be at least 3 characters').max(30).optional(),
     avatarUrl:      z.string().trim().url('Invalid avatar URL').optional(),
 });
 
 export const googleRequestSchema = z.object({
     code:   z.string().min(1, "Google authorization code is required"),
     token:  z.string().optional()
+});
+
+export const updateSchema = z.object({
+    username:       z.string().trim().toLowerCase().min(3, 'Username must be at least 3 characters long').max(30),
+    displayName:    z.string().trim().min(3, 'Display name must be at least 3 characters').max(30),
+    avatarUrl:      z.string().trim().url('Invalid avatar URL'),
 });

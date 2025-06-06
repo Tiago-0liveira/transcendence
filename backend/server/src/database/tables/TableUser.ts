@@ -175,6 +175,36 @@ class UserTable extends BaseTable<User, UserParams> {
 	async existsUsername(username: string): Promise<boolean> {
 		return this.exists({ username })
 	}
+
+	async findByUsername(username: string): Promise<{
+		id: number;
+		username: string;
+		displayName: string;
+		avatarUrl: string | null;
+		password: string;
+		authProvider: string;
+	} | undefined> {
+		const stmt = this.database.database.prepare(`
+			SELECT id, username, displayName, avatarUrl, password, authProvider
+			FROM ${this._tableName}
+			WHERE username = ?
+		`);
+		const row = stmt.get(username);
+
+		if (!row) {
+			return undefined;
+		}
+
+		return row as {
+			id: number;
+			username: string;
+			displayName: string;
+			avatarUrl: string | null;
+			password: string;
+			authProvider: string;
+		};
+	}
+
 	async existsUsernameOrDisplayName(username: string, displayName: string): Promise<boolean> {
 		return this.exists({ username, displayName })
 	}
@@ -212,6 +242,44 @@ class UserTable extends BaseTable<User, UserParams> {
 		} catch (error) {
 			console.log("Something went wrong when bulk inserting")
 			console.error(error)
+		}
+	}
+	async updateDisplayNameAndAvatarById(
+		userId: number,
+		displayName: string | null,
+		avatarUrl: string | null
+	): Promise<DatabaseResult<true>> {
+		try {
+			const fields: string[] = [];
+			const values: any[] = [];
+
+			if (displayName !== null) {
+				fields.push("displayName = ?");
+				values.push(displayName);
+			}
+			if (avatarUrl !== null) {
+				fields.push("avatarUrl = ?");
+				values.push(avatarUrl);
+			}
+
+			// Нечего обновлять — защита на всякий случай
+			if (fields.length === 0) {
+				return { result: true };
+			}
+
+			const sql = `UPDATE users SET ${fields.join(", ")} WHERE id = ?`;
+			values.push(userId);
+
+			const stmt = this.database.database.prepare(sql);
+			const res = stmt.run(...values);
+
+			if (res.changes === 0) {
+				throw new Error("No rows updated");
+			}
+
+			return { result: true };
+		} catch (err: any) {
+			throw new Error(`Database error: ${err.message}`);
 		}
 	}
 }

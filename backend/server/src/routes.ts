@@ -28,7 +28,6 @@ export default function registerRoutes(app: FastifyInstance) {
 			fastifyInstance.register(AuthGeneralRoutes)
 			fastifyInstance.register(authenticationRoutes)
 			fastifyInstance.register(friendsRoutes, { prefix : "/friends" })
-			fastifyInstance.register(auth2faRoutes)
 			done()
 		},
 		{ prefix: "/auth" }
@@ -46,8 +45,9 @@ export default function registerRoutes(app: FastifyInstance) {
 	app.register(
 		(fastifyInstance, _, done) => {
 			fastifyInstance.register(UserSettingsRoutes)
+			fastifyInstance.register(auth2faRoutes)
 			done()
 		},
-		{ prefix: "/user/settings" }
+		{ prefix: "/settings" }
 	)
 }

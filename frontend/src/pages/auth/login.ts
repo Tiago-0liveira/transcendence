@@ -87,7 +87,6 @@ const component = async () => {
 	const googleOauth = document.getElementById("google-oauth");
 
 	let savedLoginData: { username: string; password: string } | null = null;
-	let savedGoogleCode: string | null = null;
 
 	const showTwoFAModal = () => {
 		const errorBox = document.getElementById("twofa-error")!;
@@ -197,9 +196,6 @@ const component = async () => {
 						...savedLoginData,
 						token: code
 					});
-				} else if (savedGoogleCode) {
-					const err = await AuthManager.getInstance().verifyTwoFAGoogleLogin(code);
-					if (err) throw new Error(err);
 				} else {
 					throw new Error("No login data available for 2FA");
 				}
