@@ -3,7 +3,7 @@ import type { FastifyInstance } from "fastify";
 import jwt from "@utils/jwt";
 import { handleDeleteGameRoom, handleGameRoomGetData, handleNewGameConfig } from "@game/game-config";
 import { handleJoinRooms, lobbyFuncs, sendPlayerUpdatedRooms } from "@game/lobby";
-import { handleGamePlayerInput, handleGamePlayerLeave, handleGameRoomJoin, handleGameRoomPlayerSetReady } from "@game/game"
+import { handleGamePlayerInput, handleGamePlayerLeave, handleGameRoomJoin, handleGameRoomPlayerSetReady, sendGameRoomUpdate } from "@game/game"
 
 export const connectedSocketClients: ClientMap = new Map()
 export const activeGameRooms: GameRooms = new Map()
@@ -102,6 +102,10 @@ export const websocketHandler = async (fastifyInstance: FastifyInstance) => {
 							await handleGamePlayerInput(clientContext, parsedMessage);
 							break;
 						case "game-room-leave":
+							const roomLeave = activeGameRooms.get(parsedMessage.roomId);
+							if (roomLeave) {
+								lobbyFuncs.playerLeft.bind(roomLeave)(clientContext.userId)
+							}
 							await handleGamePlayerLeave(clientContext, parsedMessage);
 							break;
 						default:

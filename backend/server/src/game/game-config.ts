@@ -61,12 +61,19 @@ export const handleNewGameConfig = async function (clientContext: ClientThis, me
 
 export const handleGameRoomGetData = async function (clientContext: ClientThis, message: SelectSocketMessage<"lobby-room-join-request">) {
 	const room = activeGameRooms.get(message.roomId)
+	const connectedUser = connectedSocketClients.get(clientContext.userId);
+
 	if (!room) {
 		return clientContext.socket.send(JSON.stringify({
 			type: "lobby-room-error",
 			error: "Room does not exist!"
 		} satisfies SelectSocketMessage<"lobby-room-error">))
-	} else if (room.connectedPlayersNumber === room.requiredPlayers) {
+	} else if (connectedUser !== undefined && connectedUser.connectedToLobby !== null) {
+		return clientContext.socket.send(JSON.stringify({
+			type: "lobby-room-error",
+			error: "You are already connected to another Room!"
+		} satisfies SelectSocketMessage<"lobby-room-error">))
+	} else if (room.connectedPlayersNumber === room.requiredPlayers && room.status === "waiting") {
 		return clientContext.socket.send(JSON.stringify({
 			type: "lobby-room-error",
 			error: "Room is already full!"
@@ -75,6 +82,11 @@ export const handleGameRoomGetData = async function (clientContext: ClientThis, 
 		return clientContext.socket.send(JSON.stringify({
 			type: "lobby-room-error",
 			error: "There's only space for the owner to join the room!"
+		} satisfies SelectSocketMessage<"lobby-room-error">))
+	} else if (room.status === "active" && room.connectedPlayers.every(p => p.id !== clientContext.userId)) {
+		return clientContext.socket.send(JSON.stringify({
+			type: "lobby-room-error",
+			error: "You can't join this active game room!"
 		} satisfies SelectSocketMessage<"lobby-room-error">))
 	}
 	const dbUser = await Database.getInstance().userTable.getById(clientContext.userId)

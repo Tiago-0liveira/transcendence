@@ -340,7 +340,7 @@ const component = async () => {
 		sh.removeMessageHandler("game-room-data-update");
 		clearInterval(dataUpdateIntervalId);
 		if (goToLobbyIntervalId !== null) clearInterval(goToLobbyIntervalId)
-		if (gameRoom) sh.sendMessage({ type: "game-room-leave", roomId: queryParams.lobbyId, gameId: gameRoom.id } satisfies SelectSocketMessage<"game-room-leave">)
+		if (gameRoom) sh.sendMessage({ type: "game-room-leave", roomId: gameRoom.lobbyId, gameId: gameRoom.id } satisfies SelectSocketMessage<"game-room-leave">)
 	}
 }
 

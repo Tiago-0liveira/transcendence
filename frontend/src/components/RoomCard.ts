@@ -17,7 +17,6 @@ const getColorFromRoomStatus = (status: LobbyStatus): string => {
 			return "bg-green-500";
 		default:
 			throw new Error(`invalid status: ${status}`)
-			break;
 	}
 }
 
@@ -36,12 +35,13 @@ class RoomCard extends BaseAttributeValidationElement<RoomCardAttributes> {
 			"required-players": {},
 			"connected-players-number": {},
 			"is-friend": {},
+			"can-join": {},
 		});
 	}
 
 	render() {
 		const userId = AuthManager.getInstance().User!.id
-		const room: BasicPublicLobby & { public: boolean } = {
+		const room: BasicPublicLobby & { public: boolean, canJoin: boolean } = {
 			id: this.getAttribute("room-id")!,
 			name: this.getAttribute("name")!,
 			owner: Number(this.getAttribute("owner")!),
@@ -49,8 +49,9 @@ class RoomCard extends BaseAttributeValidationElement<RoomCardAttributes> {
 			status: this.getAttribute("status")!,
 			requiredPlayers: Number(this.getAttribute("required-players")!),
 			connectedPlayersNumber: Number(this.getAttribute("connected-players-number")!),
-			isFriend: this.getAttribute("is-friend") === '1',
+			isFriend: this.getAttribute("is-friend") === 'true',
 			public: Number(this.getAttribute("owner")!) !== userId,
+			canJoin: this.getAttribute("can-join") === 'true',
 		}
 
 		this.innerHTML = /* html */`
@@ -84,7 +85,7 @@ class RoomCard extends BaseAttributeValidationElement<RoomCardAttributes> {
 							${conditionalRender(room.owner === userId, /* html */`
 								<button data-room-id="${room.id}" id="delete-room-button" class="badge bg-red-500">Delete</button>	
 							`)}
-							${conditionalRender(room.connectedPlayersNumber !== room.requiredPlayers, /* html */`
+							${conditionalRender(room.canJoin, /* html */`
 								<button data-room-id="${room.id}" id="enter-room-button" class="badge bg-blue-500">Enter</button>
 							`)}
 						</div>
@@ -101,7 +102,6 @@ const getButtonAndHandleClick = (e: MouseEvent, classId: ButtonClassId, cb: (use
 
 	const button = e.target.closest(`#${classId}-button`)
 	if (button && button instanceof HTMLButtonElement) {
-		console.log("oplasd")
 		const roomId = button.dataset.roomId
 		if (roomId) {
 			cb(roomId)

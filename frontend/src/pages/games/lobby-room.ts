@@ -29,31 +29,33 @@ const getUpdatedRoomTemplate = (room: LobbyRoom, userId: number): string => {
 				)}
 			</div>
 		</div>
-		<div class="Lobby-Content mt-4 w-full max-w-3xl">
-			<div class="players bg-white shadow-md rounded-lg p-6">
-				<div class="players-header flex flex-col items-center space-y-4">
-					<span class="player-ready flex items-center space-x-4 justify-center">
-						<span class="player-ready-status p-2 rounded ${conditionalRender(playerReadyStatus, 'bg-green-100 text-green-700', 'bg-red-100 text-red-700')}">
-							${conditionalRender(playerReadyStatus, 'Ready', 'Not Ready')}
+		${conditionalRender(room.status === "waiting", /* html */ `
+			<div class="Lobby-Content mt-4 w-full max-w-3xl">
+				<div class="players bg-white shadow-md rounded-lg p-6">
+					<div class="players-header flex flex-col items-center space-y-4">
+						<span class="player-ready flex items-center space-x-4 justify-center">
+							<span class="player-ready-status p-2 rounded ${conditionalRender(playerReadyStatus, 'bg-green-100 text-green-700', 'bg-red-100 text-red-700')}">
+								${conditionalRender(playerReadyStatus, 'Ready', 'Not Ready')}
+							</span>
+							<button id="btn-set-ready" data-ready="${playerReadyStatus}" class="p-2 rounded ${conditionalRender(
+								!playerReadyStatus,
+								'bg-green-500 text-white hover:bg-green-600',
+								'bg-red-500 text-white hover:bg-red-600'
+							)}">
+								${conditionalRender(playerReadyStatus, 'Set Not Ready', 'Set Ready')}
+							</button>
 						</span>
-						<button id="btn-set-ready" data-ready="${playerReadyStatus}" class="p-2 rounded ${conditionalRender(
-							!playerReadyStatus,
-							'bg-green-500 text-white hover:bg-green-600',
-							'bg-red-500 text-white hover:bg-red-600'
-						)}">
-							${conditionalRender(playerReadyStatus, 'Set Not Ready', 'Set Ready')}
-						</button>
-					</span>
-					<span class="text-gray-600 text-sm">
-						Players: 
-						<span class="${conditionalRender(room.connectedPlayersNumber !== room.requiredPlayers, 'text-yellow-500', 'text-green-500')}">
-							${room.connectedPlayersNumber} / ${room.requiredPlayers}
+						<span class="text-gray-600 text-sm">
+							Players: 
+							<span class="${conditionalRender(room.connectedPlayersNumber !== room.requiredPlayers, 'text-yellow-500', 'text-green-500')}">
+								${room.connectedPlayersNumber} / ${room.requiredPlayers}
+							</span>
+							${renderOwnerStatus(room, userId)}
 						</span>
-						${renderOwnerStatus(room, userId)}
-					</span>
+					</div>
 				</div>
 			</div>
-		</div>
+		`)}
 		<div class="main-content mt-4 w-full max-w-3xl">
 			${renderConnectedPlayers(room)}
 			${renderBrackets(room)}
@@ -90,8 +92,7 @@ const renderConnectedPlayers = (room: LobbyRoom): string => {
 	if (room.status !== 'waiting') return ''
 	return /* html */ `
 		<div class="connected-players grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-		${room.connectedPlayers
-			.map(player => /* html */ `
+			${room.connectedPlayers.map(player => /* html */ `
 				<div class="player flex items-center justify-between space-x-2 bg-gray-50 shadow rounded p-4">
 					<span class="player-name text-lg flex items-center font-medium text-gray-700">
 						${player.name}
@@ -108,20 +109,26 @@ const renderConnectedPlayers = (room: LobbyRoom): string => {
 }
 
 const renderBrackets = (room: LobbyRoom): string => {
-	if (room.status !== 'waiting') return ''
+	if (room.status === 'waiting') return ''
 	return /* html */ `
 		<div class="brackets grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-			${room.brackets.map(bracket => /* html */`
-				<div class="bracket flex items-center space-x-2 bg-gray-50 shadow rounded p-4">
-					${conditionalRender(bracket.game !== null, /* html */`
-						<span class="left-player">
-							<span>${bracket.game?.players.left.name}</span>
-							<span>${bracket.game?.players.left.score}</span>
-						</span>
-					`, /* html */`
-					`)}
+			${room.brackets.map(bracket => bracket.game === null ? "" : /* html */`
+				<bracket-card
+					lobby-id="${bracket.game.lobbyId}"
+					game-id="${bracket.game.id}"
+					state="${bracket.game.state}"
+					${conditionalRender(bracket.winner !== null, `winner="${bracket.winner}"`)}
 					
-				</div>
+					lPlayer="${bracket.game.players.left.id}"
+					lname="${bracket.game.players.left.name}"
+					lconnected="${bracket.game.players.left.connected}"
+					lscore="${bracket.game.players.left.score}"
+
+					rPlayer="${bracket.game.players.right.id}"
+					rname="${bracket.game.players.right.name}"
+					rconnected="${bracket.game.players.right.connected}"
+					rscore="${bracket.game.players.right.score}"
+				></bracket-card>
 			`).join('')}
 		</div>
 	`
@@ -178,13 +185,12 @@ const component = async () => {
 	}
 
 	const initialize = () => {
+		document.addEventListener('click', handleUserActions)
+		handleSocketMessages()
 		sh.sendMessage({
 			type: 'lobby-room-join-request',
 			roomId: queryParams.roomId
 		})
-
-		document.addEventListener('click', handleUserActions)
-		handleSocketMessages()
 	}
 
 	const handleUserActions = (ev: MouseEvent) => {

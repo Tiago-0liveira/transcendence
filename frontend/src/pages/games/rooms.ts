@@ -14,6 +14,7 @@ const getRoomTemplate = (room: BasicPublicLobby): string => {
 			connected-players-number="${room.connectedPlayersNumber}"
 			is-friend="${room.isFriend}"
 			room-type="${room.lobbyType}"
+			can-join="${room.canJoin}"
 		>
 		</room-card>
 	`

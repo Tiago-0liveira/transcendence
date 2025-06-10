@@ -20,6 +20,7 @@ declare global {
 		"nav-bar": NavBar;
 		"loading-spinner": LoadingSpinner;
 		"room-card": RoomCard;
+		"bracket-card": BracketCard;
 	}
 
 	type StringsObject = Record<string, string>;

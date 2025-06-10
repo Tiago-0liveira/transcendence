@@ -2,6 +2,7 @@ type ClientValue = {
 	socket: import("ws").WebSocket | null,
 	connected: boolean,
 	connectedAt: number,
+	connectedToLobby: null | LobbyRoom,
 	deviceId: string
 };
 

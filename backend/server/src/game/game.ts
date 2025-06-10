@@ -76,19 +76,28 @@ setInterval(() => {
 					handleGoal(game, scorer)
 				}
 				if (leftP.score === GAME_MAX_SCORE || rightP.score === GAME_MAX_SCORE) {
-					handleFinnishGame(game)
+					handleFinnishGame(bracket, leftP.score === GAME_MAX_SCORE ? leftP.id : rightP.id)
 				}
+			}/* check if game.state === "completed" and timer.completedAt has elapsed maybe 5min ? idk */
+			if (game.state !== "completed") {
+				sendGameRoomUpdate(game)
 			}
-
-			const socketMessage = JSON.stringify({
-				type: "game-room-data-update",
-				...game
-			} satisfies SelectSocketMessage<"game-room-data-update">)
-			connectedSocketClients.get(game.players.left.id)?.socket?.send(socketMessage)
-			connectedSocketClients.get(game.players.right.id)?.socket?.send(socketMessage)
 		})
 	}
 }, REFRESH_RATE_MS);
+
+export const sendGameRoomUpdate = (game: Game) => {
+	const socketMessage = JSON.stringify({
+		type: "game-room-data-update",
+		...game
+	} satisfies SelectSocketMessage<"game-room-data-update">)
+	const pl = connectedSocketClients.get(game.players.left.id)
+	const pr = connectedSocketClients.get(game.players.right.id)
+
+	/* Send only if connected to the game room */
+	if (pl?.socket && game.players.left.connected) pl.socket.send(socketMessage)
+	if (pr?.socket && game.players.right.connected) pr.socket.send(socketMessage)
+}
 
 export const handleGameRoomJoin = async function (clientContext: ClientThis, message: SelectSocketMessage<"game-room-join">): Promise<boolean> {
 	const room = activeGameRooms.get(message.roomId);
@@ -145,7 +154,7 @@ export const handleGameRoomJoin = async function (clientContext: ClientThis, mes
 	} else {
 		clientContext.socket.send(socketMessage);
 	}
-	
+
 	return true;
 }
 
@@ -200,8 +209,8 @@ export const handleGameRoomPlayerSetReady = async function (clientContext: Clien
 		type: "game-room-data-update",
 		...game
 	} satisfies SelectSocketMessage<"game-room-data-update">)
-	pl.socket.send(socketMessage)
-	pr.socket.send(socketMessage)
+	if (pl.connected) pl.socket.send(socketMessage)
+	if (pr.connected) pr.socket.send(socketMessage)
 }
 
 export const handleGamePlayerInput = async function (clientContext: ClientThis, message: SelectSocketMessage<"game-room-player-input">) {
@@ -304,8 +313,11 @@ function handleGoal(game: Game, scorer: GameSide) {
 	game.players.right.input = { up: false, down: false }
 }
 
-function handleFinnishGame(game: Game) {
-	game.state = "completed";
+function handleFinnishGame(bracket: GameBracket, winnerId: number) {
+	if (!bracket.game) throw new Error("bracket.game cannot be null!!")
+	bracket.game.state = "completed";
+	bracket.winner = bracket.lPlayer === winnerId ? "left" : "right";
+	sendGameRoomUpdate(bracket.game)
 }
 
 export const handleGamePlayerLeave = async function (clientContext: ClientThis, message: SelectSocketMessage<"game-room-leave">) {
@@ -315,11 +327,13 @@ export const handleGamePlayerLeave = async function (clientContext: ClientThis, 
 	if (!game || !game.game) return;
 
 	const player = game.lPlayer === clientContext.userId ? game.game.players.left : game.game.players.right
-	if (game.game.state === "active") {
+	if (["active", "stopped"].includes(game.game.state)) {
 		player.connected = false;
 		player.disconnectedAt = Date.now()
-		game.game.state = "stopped"
-		game.game.timer.startAt = Date.now()
+		if (game.game.state !== "stopped") {
+			game.game.state = "stopped"
+			game.game.timer.startAt = Date.now()
+		}
 	}
 }
 
@@ -328,8 +342,9 @@ function handleFinnishGameByDisconnectTime(bracket: GameBracket, player: PlayerA
 		console.warn("handleFinnishGameByDisconnectTime was called with bracket.game null This can't happen!!!")
 		return;
 	}
-	bracket.game.state = "completed"
-	bracket.winner = bracket.game.players.left.id === player.id ? bracket.game.players.right.side : bracket.game.players.left.side
+	const pl = bracket.game.players.left;
+	const pr = bracket.game.players.right;
+	handleFinnishGame(bracket, pl.id === player.id ? pr.id : pl.id)
 }
 
 function handleGameResume(game: Game) {

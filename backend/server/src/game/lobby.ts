@@ -10,24 +10,39 @@ export const lobbyFuncs = {
 	 * @description what the websocket does when a player joins
 	 */
 	playerJoined: function (playerId: number, name: string) {
-		if (this.connectedPlayersNumber === this.requiredPlayers) {
-			/* send error: cannot join, room is full */
-			return;
+		const connectedClient = connectedSocketClients.get(playerId)
+		if (!connectedClient) return; /* Should never reach */
+		connectedClient.connectedToLobby = this /* assign connected room to player */
+
+		if (this.status === "waiting") {
+			this.connectedPlayersNumber++;
+			this.connectedPlayers.push({ id: playerId, name, ready: false, connected: true })	
+		} else if (this.status === "active") {
+			const p = this.connectedPlayers.find(player => player.id === playerId)
+			if (p) {
+				p.connected = true;
+			}
 		}
-		this.connectedPlayersNumber++;
-		this.connectedPlayers.push({ id: playerId, name, ready: false })
 		this.lastUpdate = Date.now()
 	},
 	/**
 	 * @description what the websocket does when a player leaves
 	 */
 	playerLeft: function (playerId: number) {
-		const foundIndex = this.connectedPlayers.findIndex(user => user.id === playerId)
-		if (foundIndex !== -1) {
-			this.connectedPlayers.splice(foundIndex, 1)
-			this.connectedPlayersNumber--;
+		const player = this.connectedPlayers.find(user => user.id === playerId)
+		if (player !== undefined) {
+			if (this.status === "active") {
+				player.connected = false;
+			} else {
+				const foundIndex = this.connectedPlayers.indexOf(player)
+				this.connectedPlayers.splice(foundIndex, 1)
+				this.connectedPlayersNumber--;
+			}
 			this.lastUpdate = Date.now()
 		}
+		const connectedClient = connectedSocketClients.get(playerId)
+		if (!connectedClient) return; /* Should never reach */
+		connectedClient.connectedToLobby = null;
 	},
 	/**
 	 * @description what the websocket does when a player gets ready or not ready
@@ -122,7 +137,9 @@ export const lobbyFuncs = {
  * @param isFriend isFriend should be calculated and sent as parameter to this function
  * @returns BasicRoom that is needed for showing which rooms are public in the frontend
  */
-export const getBasicLobby = function (room: LobbyRoom, isFriend: boolean = false): BasicPublicLobby {
+export const getBasicLobby = function (room: LobbyRoom, userId: number, isFriend: boolean = false): BasicPublicLobby {
+	const canJoin = (room.connectedPlayersNumber < room.requiredPlayers && room.status === "waiting")
+		|| (room.status === "active" && room.connectedPlayers.some(player => player.id === userId));
 	return {
 		id: room.id,
 		name: room.name,
@@ -132,6 +149,7 @@ export const getBasicLobby = function (room: LobbyRoom, isFriend: boolean = fals
 		requiredPlayers: room.requiredPlayers,
 		connectedPlayersNumber: room.connectedPlayersNumber,
 		isFriend,
+		canJoin: canJoin
 	}
 }
 
@@ -155,7 +173,7 @@ export const sendPlayerUpdatedRooms = async function (socket: WebSocket, userId:
 	let isInsideLobby = false;
 	for (const [_id, room] of activeGameRooms) {
 		const found = room.connectedPlayers.find(player => player.id === userId)
-		if (found) {
+		if (found && found.connected) {
 			isInsideLobby = true
 			socket.send(JSON.stringify({
 				type: "lobby-room-data-update",
@@ -164,16 +182,16 @@ export const sendPlayerUpdatedRooms = async function (socket: WebSocket, userId:
 			break;
 		}
 		if (room.owner === userId) {
-			rooms.push(getBasicLobby(room))
+			rooms.push(getBasicLobby(room, userId))
 			continue;
 		}
 		if (room.settings.locality === "online") {
 			if (room.settings.visibility === "public") {
-				rooms.push(getBasicLobby(room))
+				rooms.push(getBasicLobby(room, userId))
 				continue;
 			}
 			const friend = dbRes.result.find((friend) => friend.id === room.owner)
-			if (friend) rooms.push(getBasicLobby(room, true))
+			if (friend) rooms.push(getBasicLobby(room, userId, true))
 		}
 	}
 	if (!isInsideLobby) {
