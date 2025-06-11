@@ -1,5 +1,6 @@
 import { activeGameRooms, connectedSocketClients } from "@api/websocket";
 import { GAME_START_TIMER, MAX_PLAYER_DISCONNECT_ACCUMULATED_TIME } from "@utils/defaults";
+import { createGame } from "./lobby";
 
 /**
  * This has to be same as in the frontend!
@@ -40,6 +41,7 @@ const GAME_MAX_SCORE = 7/* TODO: we can change this later */
  * @description Game Loop
  */
 setInterval(() => {
+	const timeTaken = Date.now()
 	for (const [, lobby] of activeGameRooms) {
 		if (lobby.status !== "active") return
 		lobby.brackets.forEach(bracket => {
@@ -49,6 +51,7 @@ setInterval(() => {
 			const leftP = bracket.game.players.left
 			const rightP = bracket.game.players.right
 			const now = Date.now()
+			let sendUpdateToLobby = false;
 
 			if (game.timer.startAt !== 0) {
 				if (game.state === "active") {
@@ -63,7 +66,9 @@ setInterval(() => {
 				Object.values(game.players).forEach((player) => {
 					if (!player.connected && player.disconnectedAt !== 0) {
 						if (now - player.disconnectedAt + player.disconnectedTime >= MAX_PLAYER_DISCONNECT_ACCUMULATED_TIME) {
-							handleFinnishGameByDisconnectTime(bracket, player);
+							const winner = handleFinnishGameByDisconnectTime(bracket, player);
+							updateBracketsAfterGameFinnish(lobby, game.id, bracket.phase, winner === "left" ? bracket.lPlayer : bracket.rPlayer)
+							sendUpdateToLobby = true
 						}
 					}
 				})
@@ -74,17 +79,55 @@ setInterval(() => {
 				const scorer = updateBall(game.ballData, leftP.paddlePositionY, rightP.paddlePositionY)
 				if (scorer === "left" || scorer === "right") {
 					handleGoal(game, scorer)
+					sendUpdateToLobby = true
 				}
 				if (leftP.score === GAME_MAX_SCORE || rightP.score === GAME_MAX_SCORE) {
-					handleFinnishGame(bracket, leftP.score === GAME_MAX_SCORE ? leftP.id : rightP.id)
+					const winner = handleFinnishGame(bracket, leftP.score === GAME_MAX_SCORE ? leftP.id : rightP.id)
+					updateBracketsAfterGameFinnish(lobby, game.id, bracket.phase, winner === "left" ? bracket.lPlayer : bracket.rPlayer)
+					sendUpdateToLobby = true
 				}
 			}/* check if game.state === "completed" and timer.completedAt has elapsed maybe 5min ? idk */
 			if (game.state !== "completed") {
 				sendGameRoomUpdate(game)
 			}
+			if (sendUpdateToLobby) {
+				const socketMessage = JSON.stringify({ type: "lobby-room-data-update", ...lobby } satisfies SelectSocketMessage<"lobby-room-data-update">)
+
+				lobby.connectedPlayers.forEach(player => {
+					const client = connectedSocketClients.get(player.id)
+					if (client) {
+						client.socket?.send(socketMessage)
+					}
+				})
+			}
 		})
 	}
+	const timeTakenMs = Date.now() - timeTaken;
+	if (timeTakenMs > REFRESH_RATE_MS) {
+		console.warn(`Warning: Game loop took ${timeTakenMs}ms, which is more than ${REFRESH_RATE_MS}ms. Consider optimizing your game logic.`);
+	}
 }, REFRESH_RATE_MS);
+
+
+export const updateBracketsAfterGameFinnish = (lobby: LobbyRoom, gameId: string, phase: number, winnerId: number) => {
+	lobby.brackets.forEach(bracket => {
+		if (bracket.dependencyIds.includes(gameId) && bracket.phase === phase + 1) {
+			console.log("before: ", bracket)
+			if (bracket.lPlayer === 0) {
+				bracket.lPlayer = winnerId;
+			} else if (bracket.rPlayer === 0) {
+				bracket.rPlayer = winnerId;
+			} else {
+				throw new Error("This should never be reached!!!!")
+			}
+			if (bracket.lPlayer !== 0 && bracket.rPlayer !== 0) {
+				bracket.ready = true;
+				bracket.game = createGame(lobby, bracket.lPlayer, bracket.rPlayer);
+			}
+			console.log("after: ", bracket)
+		}
+	});
+}
 
 export const sendGameRoomUpdate = (game: Game) => {
 	const socketMessage = JSON.stringify({
@@ -313,11 +356,12 @@ function handleGoal(game: Game, scorer: GameSide) {
 	game.players.right.input = { up: false, down: false }
 }
 
-function handleFinnishGame(bracket: GameBracket, winnerId: number) {
+function handleFinnishGame(bracket: GameBracket, winnerId: number): BracketWinner {
 	if (!bracket.game) throw new Error("bracket.game cannot be null!!")
 	bracket.game.state = "completed";
 	bracket.winner = bracket.lPlayer === winnerId ? "left" : "right";
 	sendGameRoomUpdate(bracket.game)
+	return bracket.winner;
 }
 
 export const handleGamePlayerLeave = async function (clientContext: ClientThis, message: SelectSocketMessage<"game-room-leave">) {
@@ -337,14 +381,14 @@ export const handleGamePlayerLeave = async function (clientContext: ClientThis, 
 	}
 }
 
-function handleFinnishGameByDisconnectTime(bracket: GameBracket, player: PlayerActiveGameData) {
+function handleFinnishGameByDisconnectTime(bracket: GameBracket, player: PlayerActiveGameData): BracketWinner {
 	if (!bracket.game) {
-		console.warn("handleFinnishGameByDisconnectTime was called with bracket.game null This can't happen!!!")
-		return;
+		throw new Error("handleFinnishGameByDisconnectTime was called with bracket.game null This can't happen!!!")
 	}
 	const pl = bracket.game.players.left;
 	const pr = bracket.game.players.right;
 	handleFinnishGame(bracket, pl.id === player.id ? pr.id : pl.id)
+	return pl.id === player.id ? "right" : "left"
 }
 
 function handleGameResume(game: Game) {

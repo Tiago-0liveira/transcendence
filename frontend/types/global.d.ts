@@ -21,6 +21,7 @@ declare global {
 		"loading-spinner": LoadingSpinner;
 		"room-card": RoomCard;
 		"bracket-card": BracketCard;
+		"uncompleted-bracket-card": UncompletedBracketCard;
 	}
 
 	type StringsObject = Record<string, string>;

@@ -67,7 +67,7 @@ export const notify = {
 	 * @description dispatches notifications for every friend so they now the user is now online!
 	 */
 	friendsOnline: async (userId: number) => {
-		const friendsWithInfo = await Database.getInstance().friendsTable.getFriendsWithInfo(userId, 0, 5000);
+		const friendsWithInfo = await Database.getInstance().friendsTable.getFriendsWithInfo(userId, 0, 50);
 		if (friendsWithInfo.error) return;
 		
 		const userInfo = await Database.getInstance().userTable.getById(userId);

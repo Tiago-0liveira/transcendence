@@ -16,7 +16,7 @@ export const lobbyFuncs = {
 
 		if (this.status === "waiting") {
 			this.connectedPlayersNumber++;
-			this.connectedPlayers.push({ id: playerId, name, ready: false, connected: true })	
+			this.connectedPlayers.push({ id: playerId, name, ready: false, connected: true })
 		} else if (this.status === "active") {
 			const p = this.connectedPlayers.find(player => player.id === playerId)
 			if (p) {
@@ -93,24 +93,9 @@ export const lobbyFuncs = {
 		if (this.connectedPlayersNumber < this.requiredPlayers) return false; // Not enough players to start the game
 		if (this.connectedPlayers.some(player => !player.ready)) return false; // All players must be ready to start the game
 		this.status = "active";
-		// TODO: gen brackets and maybe rethink brackets structure
+
 		if (this.roomType === "1v1") {
-			this.brackets.push({
-				lPlayer: this.connectedPlayers[0].id,
-				rPlayer: this.connectedPlayers[1].id,
-				winner: null,
-				game: {
-					lobbyId: this.id,
-					id: v4(),
-					state: "waiting",
-					players: {
-						left: DEFAULTS.game.playerActive(this.connectedPlayers[0], "left"),
-						right: DEFAULTS.game.playerActive(this.connectedPlayers[1], "right")
-					},
-					ballData: DEFAULTS.game.ballPosition(),
-					timer: DEFAULTS.game.timer(),
-				}
-			})
+			this.brackets.push(createBracket(this, this.connectedPlayers[0].id, this.connectedPlayers[1].id, 1, [], true));
 			const message = JSON.stringify({
 				type: "game-room-join",
 				roomId: this.id,
@@ -125,7 +110,33 @@ export const lobbyFuncs = {
 			})
 			return true
 		} else if (this.roomType === "tournament") {
+			this.brackets = [];
+			for (let i = 0; i < this.connectedPlayersNumber; i += 2) {
+				this.brackets.push(createBracket(this, this.connectedPlayers[i].id, this.connectedPlayers[i + 1].id));
+			}
 
+			/* 2 phase */
+			let bracketsPhase2: GameBracket[] = [];
+			for (let i = 0; i < this.brackets.length; i += 2) {
+				const l = this.brackets[i], r = this.brackets[i + 1];
+				console.log("phase 2 bracket", l.game!.id, r.game!.id);
+				bracketsPhase2.push(createBracket(this, 0, 0, 2, [l.game!.id, r.game!.id]));
+			}
+			this.brackets.push(...bracketsPhase2)
+
+			/* 3 phase */
+			if (bracketsPhase2.length > 1) {
+				let bracketsPhase3: GameBracket[] = [];
+				for (let i = 0; i < bracketsPhase2.length; i += 2) {
+					const l = bracketsPhase2[i], r = bracketsPhase2[i + 1];
+					bracketsPhase3.push(createBracket(this, 0, 0, 3, [l.game!.id, r.game!.id]));
+				}
+				this.brackets.push(...bracketsPhase3)
+			}
+
+
+			console.log(this.brackets);
+			return true;
 		}
 		return false; // Room type not supported yet
 	},
@@ -157,15 +168,18 @@ export const getBasicLobby = function (room: LobbyRoom, userId: number, isFriend
 // TODO: overall make this more efficient
 
 export const handleJoinRooms = async function () {
+	const timeStart = Date.now();
 	for (const [id, client] of connectedSocketClients) {
 		if (client.connected && client.socket) {
 			await sendPlayerUpdatedRooms(client.socket, id);
 		}
 	}
+	const timeElapsed = Date.now() - timeStart;
+	console.log(`Updating rooms for ${connectedSocketClients.size} clients took ${timeElapsed}ms`);
 }
 
 export const sendPlayerUpdatedRooms = async function (socket: WebSocket, userId: number) {
-	const dbRes = await Database.getInstance().friendsTable.getFriendsWithInfo(userId, 0, 5000);
+	const dbRes = await Database.getInstance().friendsTable.getFriendsWithInfo(userId, 0, 50);
 	if (dbRes.error) return;
 
 	const rooms: BasicPublicLobby[] = []
@@ -200,4 +214,39 @@ export const sendPlayerUpdatedRooms = async function (socket: WebSocket, userId:
 			rooms: rooms
 		} satisfies SelectSocketMessage<"rooms-update">))
 	}
+}
+
+export const createBracket = function (lobby: LobbyRoom, leftId: number = 0, rightId: number = 0, phase: number = 1, dependencyIds: string[] = [], ready: boolean = false): GameBracket {
+	if (phase <= 0) throw new Error("Invalid phase number")
+
+	const leftPlayer = lobby.connectedPlayers.find(player => player.id === leftId)
+	const rightPlayer = lobby.connectedPlayers.find(player => player.id === rightId)
+
+	return {
+		lPlayer: leftPlayer ? leftPlayer.id : 0,
+		rPlayer: rightPlayer ? rightPlayer.id : 0,
+		game: leftPlayer && rightPlayer ? createGame(lobby, leftPlayer.id, rightPlayer.id) : null,
+		winner: null,
+		
+		ready, dependencyIds, phase
+	}
+}
+
+
+export const createGame = function (lobby: LobbyRoom, lPlayerId: number, rPlayerId: number): Game {
+	const lPlayer = lobby.connectedPlayers.find(p => p.id === lPlayerId)
+	const rPlayer = lobby.connectedPlayers.find(p => p.id === rPlayerId)
+	if (!lPlayer || !rPlayer) throw new Error("Invalid player ids")
+
+	return {
+		lobbyId: lobby.id,
+		id: v4(),
+		state: "waiting",
+		players: {
+			left: DEFAULTS.game.playerActive(lPlayer, "left"),
+			right: DEFAULTS.game.playerActive(rPlayer, "right"),
+		},
+		ballData: DEFAULTS.game.ballPosition(),
+		timer: DEFAULTS.game.timer(),
+	};
 }

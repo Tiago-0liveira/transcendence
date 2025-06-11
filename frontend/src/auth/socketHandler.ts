@@ -168,6 +168,7 @@ class SocketHandler {
 				}
 				const messageHandler = this.messageSubscriptions.get(parsedMessage.type);
 				messageHandler && messageHandler.bind(this)(parsedMessage);
+				console.log("type: ", parsedMessage.type, " ,handler: ", messageHandler ? "exists" : "does not exist");
 			}
 		} catch (error) {
 			

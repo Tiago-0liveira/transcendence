@@ -56,7 +56,7 @@ const getUpdatedRoomTemplate = (room: LobbyRoom, userId: number): string => {
 				</div>
 			</div>
 		`)}
-		<div class="main-content mt-4 w-full max-w-3xl">
+		<div class="main-content mt-4 w-full max-w-6xl">
 			${renderConnectedPlayers(room)}
 			${renderBrackets(room)}
 		</div>
@@ -110,26 +110,62 @@ const renderConnectedPlayers = (room: LobbyRoom): string => {
 
 const renderBrackets = (room: LobbyRoom): string => {
 	if (room.status === 'waiting') return ''
-	return /* html */ `
-		<div class="brackets grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-			${room.brackets.map(bracket => bracket.game === null ? "" : /* html */`
-				<bracket-card
-					lobby-id="${bracket.game.lobbyId}"
-					game-id="${bracket.game.id}"
-					state="${bracket.game.state}"
-					${conditionalRender(bracket.winner !== null, `winner="${bracket.winner}"`)}
-					
-					lPlayer="${bracket.game.players.left.id}"
-					lname="${bracket.game.players.left.name}"
-					lconnected="${bracket.game.players.left.connected}"
-					lscore="${bracket.game.players.left.score}"
+	const numCols = room.brackets.map(b => b.phase).reduce((acc, curr) => curr > acc ? curr : acc, 1)
 
-					rPlayer="${bracket.game.players.right.id}"
-					rname="${bracket.game.players.right.name}"
-					rconnected="${bracket.game.players.right.connected}"
-					rscore="${bracket.game.players.right.score}"
-				></bracket-card>
-			`).join('')}
+	return /* html */ `
+		<div class="brackets grid gap-4" style="grid-template-columns: repeat(${numCols}, 1fr);">
+			${room.brackets.map(bracket => {
+				const gridPositionFromPhase = `phase-${bracket.phase}`
+
+				if (bracket.game === null) {
+					let lPlayerName = ""
+					let rPlayerName = ""
+					if (bracket.lPlayer !== 0) {
+					    const foundPlayer = room.connectedPlayers.find(p => p.id === bracket.lPlayer)
+						if (foundPlayer) {
+							lPlayerName = foundPlayer.name
+						}
+					}
+					if (bracket.rPlayer !== 0) {
+					    const foundPlayer = room.connectedPlayers.find(p => p.id === bracket.rPlayer)
+						if (foundPlayer) {
+							rPlayerName = foundPlayer.name
+						}
+					}
+
+					return /* html */`
+						<uncompleted-bracket-card
+						    class="${gridPositionFromPhase}"
+							lPlayer="${bracket.lPlayer}"
+							rPlayer="${bracket.rPlayer}"
+
+							${conditionalRender(lPlayerName !== "", `lname="${lPlayerName}"`)}
+							${conditionalRender(rPlayerName !== "", `rname="${rPlayerName}"`)}
+						></uncompleted-bracket-card>
+					`
+				}
+				return /* html */`
+					<bracket-card
+						class="${gridPositionFromPhase}"
+
+						lobby-id="${bracket.game.lobbyId}"
+						game-id="${bracket.game.id}"
+						state="${bracket.game.state}"
+						ready="${bracket.ready}"
+						${conditionalRender(bracket.winner !== null, `winner="${bracket.winner}"`)}
+						
+						lPlayer="${bracket.game.players.left.id}"
+						lname="${bracket.game.players.left.name}"
+						lconnected="${bracket.game.players.left.connected}"
+						lscore="${bracket.game.players.left.score}"
+
+						rPlayer="${bracket.game.players.right.id}"
+						rname="${bracket.game.players.right.name}"
+						rconnected="${bracket.game.players.right.connected}"
+						rscore="${bracket.game.players.right.score}"
+					></bracket-card>
+				`
+			}).join('')}
 		</div>
 	`
 }

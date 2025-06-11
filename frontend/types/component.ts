@@ -41,6 +41,7 @@ type BracketCardAttributes = {
 	"game-id": string;
 	state: GameState;
 	winner: GameSide;
+	ready: StringBool;
 	
 	lPlayer: string;
 	lname: string;
@@ -51,4 +52,12 @@ type BracketCardAttributes = {
 	rname: string;
 	rconnected: StringBool;
 	rscore: string;
+}
+
+type UncompletedBracketCardAttributes = {
+	lPlayer: string;
+	lname: string;
+
+	rPlayer: string;
+	rname: string;
 }

@@ -1,5 +1,4 @@
 import AuthManager from "@/auth/authManager";
-import SocketHandler from "@/auth/socketHandler";
 import Router from "@/router/Router";
 import { conditionalRender } from "@/utils/conditionalRender";
 import BaseAttributeValidationElement from "@component/BaseAttributeValidationElement";
@@ -28,20 +27,21 @@ class BracketCard extends BaseAttributeValidationElement<BracketCardAttributes> 
 
 	static getAttributesValidators() {
 		return super.defineValidator<BracketCardAttributes>({
-			"lobby-id": {},
-			"game-id": {},
+			"lobby-id": { },
+			"game-id": { },
 			state: { values: ["waiting", "active", "stopped", "completed"] },
 			winner: { required: false, values: ["left", "right"] },
+			ready: { },
 
-			lPlayer: {},
-			lname: {},
-			lconnected: {},
-			lscore: {},
+			lPlayer: { },
+			lname: { },
+			lconnected: { },
+			lscore: { },
 
-			rPlayer: {},
-			rname: {},
-			rconnected: {},
-			rscore: {},
+			rPlayer: { },
+			rname: { },
+			rconnected: { },
+			rscore: { },
 		});
 	}
 
@@ -65,7 +65,6 @@ class BracketCard extends BaseAttributeValidationElement<BracketCardAttributes> 
 			connected: this.getAttribute("rconnected")! === "true",
 			score: Number(this.getAttribute("rscore")!)
 		};
-		console.log(data);
 
 		const showJoinButton = data.winner === null && (lPlayer.id === userId || rPlayer.id === userId);
 
@@ -139,7 +138,7 @@ const getButtonAndHandleClick = <T extends string[]>(
 };
 
 document.addEventListener("click", (e) => {
-	getButtonAndHandleClick(e, "join", ["roomId", "gameId"],(roomId, gameId) => {
+	getButtonAndHandleClick(e, "join", ["roomId", "gameId"], (roomId, gameId) => {
 		if (!roomId || !gameId) throw new Error("Invalid roomId or gameId");
 
 		Router.getInstance().navigate("/games/game-room", {}, { roomId, gameId });

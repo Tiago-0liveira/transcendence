@@ -26,15 +26,18 @@ type GameTimer = {
 
 type GameBracket = {
 	/**
-	 * @description player id's only
+	 * @description player id's only or 0 if undefined
 	 */
 	lPlayer: number;
 	/**
-	 * @description player id's only
+	 * @description player id's only or 0 if undefined
 	 */
 	rPlayer: number;
 	winner: BracketWinner;
 	game: Game | null;
+	dependencyIds: string[];
+	ready: boolean;
+	phase: number;
 }
 
 interface PlayerActiveGameData extends GamePlayer {
@@ -63,7 +66,7 @@ type Game = {
 		right: PlayerActiveGameData;
 	}
 	ballData: GameBallData,
-	timer: GameTimer
+	timer: GameTimer,
 }
 
 type LobbyRoom = {
