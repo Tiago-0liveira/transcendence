@@ -1,9 +1,9 @@
 import { activeGameRooms, connectedSocketClients } from "@api/websocket"
-import bcrypt from "bcrypt"
 import { newGameConfigSchema } from "./schemas"
 import { ZodError } from "zod"
 import { lobbyFuncs } from "./lobby"
 import Database from "@db/Database"
+import { v4 } from "uuid"
 
 export const handleNewGameConfig = async function (clientContext: ClientThis, message: SelectSocketMessage<"new-game-config">) {
 	// validate data
@@ -24,20 +24,18 @@ export const handleNewGameConfig = async function (clientContext: ClientThis, me
 	}
 	const roomName = message.roomName.trim();
 	// check if roomName already exists
-	for (const [hashedRoomName] of activeGameRooms) {
-		try {
-			if (await bcrypt.compare(roomName, hashedRoomName)) {
-				return clientContext.socket.send(JSON.stringify({
-					type: "error-new-game-config",
-					error: "Room name already exists!"
-				} satisfies SelectSocketMessage<"error-new-game-config">))
-			}
-		} catch (error) { }
+	for (const [, lobby] of activeGameRooms) {
+		if (roomName.toLowerCase() === lobby.name.toLowerCase()) {
+			return clientContext.socket.send(JSON.stringify({
+				type: "error-new-game-config",
+				error: "Room name already exists!"
+			} satisfies SelectSocketMessage<"error-new-game-config">))
+		}
 	}
-	const nameHash = await bcrypt.hash(message.roomName, 10)
+	const lobbyId = v4()
 
-	activeGameRooms.set(nameHash, {
-		id: nameHash,
+	activeGameRooms.set(lobbyId, {
+		id: lobbyId,
 		name: message.roomName,
 		roomType: message.roomType,
 		status: "waiting",
@@ -55,7 +53,7 @@ export const handleNewGameConfig = async function (clientContext: ClientThis, me
 	console.log(`room created: ${message.roomName}`)
 	return clientContext.socket.send(JSON.stringify({
 		type: "lobby-room-join",
-		roomId: nameHash
+		roomId: lobbyId
 	} satisfies SelectSocketMessage<"lobby-room-join">))
 }
 
