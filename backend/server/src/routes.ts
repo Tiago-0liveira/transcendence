@@ -41,11 +41,11 @@ export default function registerRoutes(app: FastifyInstance) {
 		{ prefix: "/oauth" }
 	)
 	app.register(jwtRoutes, { prefix: "/jwt" })
-	// path: /user/settings
+	// path: /settings
 	app.register(
 		(fastifyInstance, _, done) => {
 			fastifyInstance.register(UserSettingsRoutes)
-			fastifyInstance.register(auth2faRoutes)
+			fastifyInstance.register(auth2faRoutes, { prefix : "/twofa" })
 			done()
 		},
 		{ prefix: "/settings" }

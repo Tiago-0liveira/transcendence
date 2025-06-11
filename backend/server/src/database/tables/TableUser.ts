@@ -101,16 +101,38 @@ class UserTable extends BaseTable<User, UserParams> {
 			resolve({ result: update1.lastInsertRowid as number })
 		})
 	}
-	async updatePassword(id: number, password: string): Promise<DatabaseResult<number>> {
-		return new Promise((resolve, reject) => {
-			const update = this.db.prepare(this._updatePasswordStr)
-			const update1 = update.run(password, id)
-			if (update1.changes === 0) {
-				reject({ error: new Error("Could not update ") })
+	async updatePassword(userId: number, oldPassword: string, newPassword: string): Promise<DatabaseResult<boolean>> {
+		try {
+			const user = await this.findById(userId);
+
+			if (!user) {
+				return { error: new Error(`User not found.`) };
 			}
-			resolve({ result: update1.lastInsertRowid as number })
-		})
+
+			const isValid = bcrypt.compareSync(oldPassword, user.password);
+			if (!isValid) {
+				return { error: new Error("Incorrect current password") };
+			}
+
+			if (oldPassword === newPassword) {
+				return { error: new Error("New password must be different from current password") };
+			}
+
+			const newHash = bcrypt.hashSync(newPassword, 10);
+
+			const stmtUpdate = this.database.database.prepare(this._updatePasswordStr);
+			const result = stmtUpdate.run(newHash, userId);
+
+			if (result.changes === 0) {
+				return { error: new Error(`Failed to update password.`) };
+			}
+
+			return { result: true };
+		} catch (err) {
+			return { error: err instanceof Error ? err : new Error("Unknown database error") };
+		}
 	}
+
 	async login(username: string, password: string): Promise<DatabaseResult<Omit<UserParams, "password"> & UIDD>> {
 		// 1. Check if a user exists
 		const userExists = await this.existsUsername(username);
@@ -176,8 +198,7 @@ class UserTable extends BaseTable<User, UserParams> {
 		return this.exists({ username })
 	}
 
-	async findByUsername(username: string): Promise<{
-		id: number;
+	async findById(userId: number): Promise<{
 		username: string;
 		displayName: string;
 		avatarUrl: string | null;
@@ -185,18 +206,17 @@ class UserTable extends BaseTable<User, UserParams> {
 		authProvider: string;
 	} | undefined> {
 		const stmt = this.database.database.prepare(`
-			SELECT id, username, displayName, avatarUrl, password, authProvider
-			FROM ${this._tableName}
-			WHERE username = ?
-		`);
-		const row = stmt.get(username);
+		SELECT username, displayName, avatarUrl, password, authProvider
+		FROM ${this._tableName}
+		WHERE id = ?
+	`);
+		const row = stmt.get(userId);
 
 		if (!row) {
 			return undefined;
 		}
 
 		return row as {
-			id: number;
 			username: string;
 			displayName: string;
 			avatarUrl: string | null;

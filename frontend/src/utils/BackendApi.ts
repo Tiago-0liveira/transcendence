@@ -34,11 +34,12 @@ const routeTree = {
 	},
 	settings: {
 		update: "update",
+		password: "password",
 		account: "account",
 		twofa: {
-			toggle: "2fa/toggle",
-			verify: "2fa/verify",
-			status: "2fa/status",
+			toggle: "toggle",
+			verify: "verify",
+			status: "status",
 		},
 	},
 } as const;

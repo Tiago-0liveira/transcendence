@@ -50,7 +50,7 @@ export const settingsFormSchema = z.object({
 });
 
 export const passwordFormSchema = z.object({
-	oldPassword: z.string().min(6, "Old password is too short"),
+	oldPassword: z.string(),
 	newPassword: z.string().trim()
 		.min(6, "Password must be at least 6 characters long")
 		.refine(pw => /[A-ZА-ЯЁ]/.test(pw), {

@@ -3,11 +3,18 @@ import Router from "@/router/Router";
 import { authGuard } from "@/router/guards";
 import QRCode from "qrcode";
 import { settingsFormSchema, passwordFormSchema } from "@/auth/validation";
-import {toastHelper} from "@/utils/toastHelper";
+import { toastHelper } from "@/utils/toastHelper";
 import API from "@/utils/BackendApi";
 
 const component = async () => {
     const auth = AuthManager.getInstance();
+    // 🔹 Обновляем пользователя с сервера
+    const ok = await auth.fetchUser();
+    if (!ok || !auth.User) {
+        toastHelper.error("Failed to load user");
+        await Router.getInstance().navigate("/auth/login");
+        return;
+    }
     const user = auth.User!;
     const isGoogleUser = user.authProvider === "google";
 
@@ -29,8 +36,8 @@ const component = async () => {
 				
 				<div class="form-input-group">
 					<label for="avatar" class="form-input-label">Avatar URL</label>
-					<input type="text" id="avatar" class="form-input" placeholder="Link to avatar image" value="${user.avatarUrl || ""}">
-					<div class="error-text" id="avatarUrl-error"></div>
+					<input type="text" id="avatarUrl" class="form-input" placeholder="Link to avatar image" value="${user.avatarUrl || ""}">
+                    <div class="error-text" id="avatarUrl-error"></div>
 				</div>
 
 				<button type="submit" class="btn-steam-fixed">Save Changes</button>
@@ -71,6 +78,33 @@ const component = async () => {
 	`;
 
     document.querySelector("#app")!.innerHTML = template;
+
+    // --- NEW: Clear errors on input ---
+    const displayNameInput = document.getElementById("displayName") as HTMLInputElement | null;
+    const avatarInput = document.getElementById("avatarUrl") as HTMLInputElement | null;
+    if (displayNameInput) displayNameInput.addEventListener("input", () => {
+        displayNameInput.classList.remove("input-error");
+        const err = document.getElementById("displayName-error");
+        if (err) err.textContent = "";
+    });
+    if (avatarInput) avatarInput.addEventListener("input", () => {
+        avatarInput.classList.remove("input-error");
+        const err = document.getElementById("avatarUrl-error");
+        if (err) err.textContent = "";
+    });
+    const oldPasswordInput = document.getElementById("oldPassword") as HTMLInputElement | null;
+    const newPasswordInput = document.getElementById("newPassword") as HTMLInputElement | null;
+    if (oldPasswordInput) oldPasswordInput.addEventListener("input", () => {
+        oldPasswordInput.classList.remove("input-error");
+        const err = document.getElementById("oldPassword-error");
+        if (err) err.textContent = "";
+    });
+    if (newPasswordInput) newPasswordInput.addEventListener("input", () => {
+        newPasswordInput.classList.remove("input-error");
+        const err = document.getElementById("newPassword-error");
+        if (err) err.textContent = "";
+    });
+
 
     const showErrors = (errors: any[]) => {
         document.querySelectorAll(".error-text").forEach(el => el.textContent = "");
@@ -152,11 +186,12 @@ const component = async () => {
     }
 
     const settingsForm = document.getElementById("settings-form") as HTMLFormElement;
+
     settingsForm?.addEventListener("submit", async (e) => {
         e.preventDefault();
 
         const displayName = (document.getElementById("displayName") as HTMLInputElement).value.trim();
-        const avatarUrl = (document.getElementById("avatar") as HTMLInputElement).value.trim();
+        const avatarUrl = (document.getElementById("avatarUrl") as HTMLInputElement).value.trim();
 
         const parse = settingsFormSchema.safeParse({ displayName, avatarUrl });
         if (!parse.success) {
@@ -169,9 +204,8 @@ const component = async () => {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    username: user.username,
                     displayName,
-                    avatarUrl
+                    avatarUrl,
                 }),
             });
 
@@ -180,21 +214,23 @@ const component = async () => {
             if (!res.ok || !data.ok) {
                 throw new Error(data?.error || "Update failed");
             }
+
             if (data.message) {
                 toastHelper.success(data.message);
             }
         } catch (err) {
             console.error("Settings update error:", err);
-            toastHelper.error(err);
+            toastHelper.error(err instanceof Error ? err.message : "Unknown error");
         }
     });
 
     const passwordForm = document.getElementById("password-form") as HTMLFormElement | null;
+
     passwordForm?.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        const oldPassword = (document.getElementById("oldPassword") as HTMLInputElement).value;
-        const newPassword = (document.getElementById("newPassword") as HTMLInputElement).value;
+        const oldPassword = (document.getElementById("oldPassword") as HTMLInputElement).value.trim();
+        const newPassword = (document.getElementById("newPassword") as HTMLInputElement).value.trim();
 
         const parse = passwordFormSchema.safeParse({ oldPassword, newPassword });
         if (!parse.success) {
@@ -206,13 +242,25 @@ const component = async () => {
             const res = await auth.authFetch(API.settings.password, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId: user.id, oldPassword, newPassword }),
+                body: JSON.stringify({ oldPassword, newPassword }),
             });
-            if (!res.ok) throw new Error("Server error");
-            alert("Password changed successfully!");
+
+            const data = await res.json();
+
+            if (!res.ok || !data.ok) {
+                const msg =
+                    data?.error ||
+                    data?.message ||
+                    (data?.errors ? Object.values(data.errors).flat().join(", ") : "Password change failed");
+                toastHelper.error(msg);
+                return;
+            }
+
+            toastHelper.success(data.message || "Password changed successfully");
+            passwordForm.reset();
         } catch (err) {
             console.error("Password change error:", err);
-            alert("Error changing password.");
+            toastHelper.error(err instanceof Error ? err.message : "Unexpected error");
         }
     });
 };
