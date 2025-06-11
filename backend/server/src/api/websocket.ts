@@ -6,6 +6,7 @@ import {
 } from "@utils/websocket";
 import type { FastifyInstance } from "fastify";
 import jwt from "@utils/jwt";
+import { handleIRCMessage } from "./chat/ircHandler";
 
 export const connectedSocketClients: ClientMap = new Map();
 
@@ -45,7 +46,14 @@ export const websocketHandler = async (fastifyInstance: FastifyInstance) => {
 				if (isSocketValidMessage(parsedMessage)) {
 					switch (parsedMessage.type) {
 						case "new-irc-message":
-							console.log(parsedMessage.content); // Insert irc message handler here
+							// console.log(parsedMessage.content); // Insert irc message handler here
+              const result = await handleIRCMessage(parsedMessage.content, userId);
+              if (!result.sucess){
+                socket.send(JSON.stringify({
+                  type: "error",
+                  message: result.error || "Failed to process message";
+                }));
+              }
 							break;
 						default:
 							break;
@@ -72,4 +80,3 @@ export const websocketHandler = async (fastifyInstance: FastifyInstance) => {
 		});
 	});
 };
-
