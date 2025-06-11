@@ -449,3 +449,13 @@ input[type="checkbox"]:checked + .toggle-bg {
 	height: 250px; /* ровно как .steam-avatar */
 	box-sizing: border-box;
 }
+
+.input-error {
+	border-color: red;
+}
+
+.error-text {
+	color: red;
+	font-size: 0.85em;
+	margin-top: 4px;
+}

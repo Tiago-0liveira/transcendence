@@ -6,7 +6,7 @@ import { generateTokens, sendLoginResponse } from "@utils/auth";
 import { connectedSocketClients } from "@api/websocket";
 import { v4 } from "uuid";
 import { websocketRegisterNewLogin } from "@utils/websocket";
-import speakeasy from "speakeasy";
+import {check2FA} from "@utils/check2fa";
 
 /**
  * path: /auth/
@@ -95,35 +95,15 @@ export default async function authenticationRoutes(fastify: FastifyInstance) {
 				});
 			}
 
-			// if 2fa is enabled, check if the token is valid
-			const db = Database.getInstance();
-			const twofaEntry = await db.user2FATable.getByUserId(res.result.id);
-
-			if (twofaEntry.result?.enabled) {
-				if (!token) {
-					return reply.status(403).send({
-						error: "2FA_REQUIRED",
-						ok: false
-					});
-				}
-
-				const verified = speakeasy.totp.verify({
-					secret: twofaEntry.result.secret,
-					encoding: "base32",
-					token,
-					window: 1
+			try {
+				await check2FA(res.result.id, token);
+			} catch (err: any) {
+				return reply.status(err.status).send({
+					error: err.message,
+					ok: false
 				});
-
-				if (!verified) {
-					return reply.status(403).send({
-						error: "Invalid 2fa code",
-						ok: false,
-						message: "Invalid 2fa code"
-					});
-				}
 			}
 
-			// check if user is already connected in another device
 			if (connectedSocketClients.get(res.result.id)) {
 				return reply.status(403).send({
 					error: "User already connected in another device!",

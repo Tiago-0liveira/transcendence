@@ -11,7 +11,7 @@ export default async function auth2faRoutes(fastify: FastifyInstance) {
         enabled: z.boolean(),
     });
 
-    fastify.post("/2fa/toggle", async (request, reply) => {
+    fastify.post("/toggle", async (request, reply) => {
         const parse = bodySchema.safeParse(request.body);
         if (!parse.success) {
             return reply.code(400).send({
@@ -73,7 +73,7 @@ export default async function auth2faRoutes(fastify: FastifyInstance) {
         token: z.string().length(6),
     });
 
-    fastify.post("/2fa/verify", async (request, reply) => {
+    fastify.post("/verify", async (request, reply) => {
         const parsed = verifySchema.safeParse(request.body);
         if (!parsed.success) {
             return reply.code(400).send({
@@ -104,7 +104,7 @@ export default async function auth2faRoutes(fastify: FastifyInstance) {
         }
     });
 
-    fastify.post("/2fa/status", async (request, reply) => {
+    fastify.post("/status", async (request, reply) => {
         const schema = z.object({
             userId: z.number(),
         });
