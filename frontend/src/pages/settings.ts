@@ -46,10 +46,11 @@ const component = async () => {
 				</form>
 
 				<div class="twofa-toggle-group">
-					<input type="checkbox" id="twofa-checkbox" class="sr-only">
+					<input type="checkbox" id="twofa-checkbox" class="sr-only peer">
 					<div class="toggle-bg" id="toggle-visual"></div>
 					<label id="twofa-label" for="toggle-visual" class="toggle-label">Enable 2FA</label>
 				</div>
+<!--				<div id=\"twofa-modal\" class=\"fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden transition-opacity duration-300 opacity-0\">-->
 				<div id="twofa-modal" class="modal-overlay hidden">
 					<div class="modal-content">
 						<h3 class="modal-title">2FA Setup</h3>

@@ -17,33 +17,55 @@
 	-moz-osx-font-smoothing: grayscale;
 
 	--nav-bar-h: 3.5rem;
+
 }
 
-body {
+html, body {
 	margin: 0;
 	display: flex;
+	position: relative;
 	flex-direction: column;
 	width: 100vw;
-	height: 100vh;
+	/*height: 100vh;*/
 	background-color: #171A21;
 	color: #c7d5e0;
+
+	height: 100%;
+	overflow: hidden; /* предотвращает появление скроллбаров */
 }
 
 /* ───── NAVBAR ───── */
-.nav-bar {
+/*.nav-bar {*/
+/*	height: var(--nav-bar-h);*/
+/*	background-color: #121C25;*/
+/*	border-bottom: 1px solid #2a475e;*/
+/*	box-shadow: inset 0 0 0 rgba(0, 0, 0, 0.1);*/
+/*}*/
+
+nav-bar {
 	height: var(--nav-bar-h);
 	background-color: #121C25;
 	border-bottom: 1px solid #2a475e;
-	box-shadow: inset 0 0 0 rgba(0, 0, 0, 0.6);
+	border-left: 1px solid #2a475e;
+	border-right: 1px solid #2a475e;
+	box-shadow: inset 0 0 0px rgba(0, 0, 0, 0.6);
 }
 
 /* ───── APP CONTAINER ───── */
 div#app {
 	background-color: #1b2838;
-	height: calc(100% - var(--nav-bar-h));
+	/*height: calc(100% - var(--nav-bar-h));*/
 	display: flex;
 	text-align: center;
 	box-shadow: inset 0 0 300px rgba(0, 0, 5, 1);
+	justify-content: center;
+	align-items: center;
+
+	height: calc(100% - var(--nav-bar-h));
+	overflow-y: auto; /* если контента будет больше — только тогда скролл */
+	/*overflow-y: scroll;           !* или auto *!*/
+	/*scrollbar-width: none;        !* Firefox *!*/
+	/*-ms-overflow-style: none;*/
 }
 
 /* ───── PROFILE CARD ───── */
@@ -60,15 +82,40 @@ div#app {
 	max-width: 1000px;
 	width: 95%;
 	margin: 0 auto;
-	height: 100%;
+	/*height: 100%;*/
+	min-height: 100%;
 	box-shadow: 1px 50px 500px rgba(255, 222, 173, 0.5);
+	align-self: flex-start;
 }
+
 .profile-card.centered {
+	border-radius: 1px;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	justify-content: center;
+	/*justify-content: center;*/
+	width: 100%;
+
+	max-width: 480px;
+	box-sizing: border-box;
+	padding: 3rem;
+	align-self: flex-start
+	/*flex-shrink: 1;*/
 }
+
+
+.profile-card.auth-box {
+	border-radius: 30px;
+	margin-top: 3rem;
+	margin-bottom: 3rem;
+	height: auto;
+	padding-top: 2rem;
+	padding-bottom: 2rem;
+	border-radius: 1rem;
+	min-height: 0;
+	align-self: flex-start;
+}
+
 
 /* ───── SETTINGS FORM ───── */
 .settings-form {
@@ -273,7 +320,17 @@ div.toastify img.toastify-avatar {
 	text-align: center;
 	margin-top: -1rem;
 	margin-bottom: 1rem;
+
+	min-height: 1.25rem;
+	opacity: 1;
+	transition: opacity 0.2s ease;
 }
+
+.form-message-error.hidden {
+	opacity: 0;
+	visibility: hidden;
+}
+
 
 .form-message-success {
 	color: #22c55e; /* green-500 */
@@ -448,4 +505,274 @@ input[type="checkbox"]:checked + .toggle-bg {
 
 	height: 250px; /* ровно как .steam-avatar */
 	box-sizing: border-box;
+}
+
+/* ───── 2FA MODAL ───── */
+.modal-overlay {
+	position: fixed;
+	inset: 0;
+	background-color: rgba(0, 0, 0, 0.6);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 50;
+
+	transition: opacity 0.3s ease;
+	opacity: 1;
+}
+
+.modal-overlay.hidden {
+	display: none;
+	opacity: 0;
+}
+
+.modal-content {
+	background-color: #1b2838;
+	border: 1px solid rgba(255, 222, 173, 0.5);
+	padding: 2rem;
+	border-radius: 6px;
+	box-shadow: 0 0 60px rgba(0, 0, 0, 0.6);
+	max-width: 400px;
+	width: 90%;
+	color: #c7d5e0;
+	text-align: center;
+}
+
+.modal-title {
+	font-size: 1.25rem;
+	color: navajowhite;
+	margin-bottom: 1rem;
+}
+
+.modal-text {
+	font-size: 0.9rem;
+	margin-bottom: 1rem;
+}
+
+.modal-qr {
+	max-width: 200px;
+	margin: 0 auto 1rem;
+	display: block;
+	border: 2px solid navajowhite;
+	border-radius: 4px;
+}
+
+.modal-code {
+	font-size: 0.75rem;
+	color: #aaaaaa;
+}
+
+.modal-secret {
+	font-family: monospace;
+	background-color: rgba(255, 255, 255, 0.05);
+	padding: 0.3rem 0.6rem;
+	border-radius: 3px;
+	color: #facc15;
+}
+
+.modal-done {
+	margin-top: 1.5rem;
+	background-color: #3b82f6;
+	color: white;
+	padding: 0.5rem 1rem;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	transition: background-color 0.3s ease;
+}
+
+.modal-done:hover {
+	background-color: #2563eb;
+}
+
+
+
+.oauth-buttons {
+	display: flex;
+	justify-content: center;
+	gap: 1rem;
+	flex-wrap: wrap;
+	width: 100%;
+}
+
+.oauth-button {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	border: 2px solid #2c4454;
+	background-color: #1b2838;
+	color: #dce1e4;
+	padding: 0.4em 1em;
+	border-radius: 8px;
+	font-size: 0.9rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background-color 0.2s ease;
+}
+
+.oauth-button:hover {
+	background-color: white;
+	color: black;
+}
+
+/* Чекбокс с "Remember me" */
+.horizontal-inputs {
+	flex-direction: row;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 0.5rem;
+}
+
+.inline-label {
+	display: inline-block;
+	margin-left: 0.5rem;
+}
+
+/* OAuth */
+.oauth-buttons {
+	display: flex;
+	justify-content: center;
+	gap: 1rem;
+	flex-wrap: wrap;
+	width: 100%;
+}
+
+.oauth-button {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	border: 2px solid #2c4454;
+	background-color: #1b2838;
+	color: #dce1e4;
+	padding: 0.4em 1em;
+	border-radius: 8px;
+	font-size: 0.9rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background-color 0.2s ease;
+}
+
+.oauth-button:hover {
+	background-color: white;
+	color: black;
+}
+
+.oauth-logo {
+	width: 24px;
+	height: 24px;
+}
+
+/* Create account ссылка */
+.create-account-link {
+	margin-left: 0;
+	text-decoration: underline;
+	color: #93c5fd;
+}
+
+/* Two-Factor input */
+.twofa-input {
+	text-align: center;
+	font-size: 1.2rem;
+	width: 150px;
+	margin: 1rem auto 0 auto; /* центрируем */
+	display: block;
+}
+
+/* 2FA модалка — кнопка закрытия */
+
+.modal-close {
+	position: absolute;
+	top: 0.5rem;
+	right: 0.5rem;
+	background: none;
+	border: none;
+	font-size: 2rem;
+	color: red;
+	cursor: pointer;
+	line-height: 1;
+	padding: 0;
+}
+.modal-close:hover {
+	color: white;
+}
+/* Скрытие через класс */
+.hidden {
+	display: none !important;
+}
+.modal-content {
+	position: relative; /* важно! */
+}
+
+.form-section-title {
+	text-align: center;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.login-section {
+	margin-top: 2rem;
+}
+
+
+.form-section-title.bottom {
+	margin-bottom: 0;
+	margin-top: 2rem;
+	align-items: center;
+	text-align: center;
+}
+
+.error-2fa {
+	min-height: 1.25rem;
+	opacity: 0;
+	transition: opacity 0.2s ease;
+	color: #ef4444;
+	font-size: 0.875rem;
+	text-align: center;
+	margin-top: 2rem;
+	margin-bottom: -0.5rem;
+}
+
+/* ───── AUTH SIGNUP OVERRIDES ───── */
+.auth-box.signup-box {
+	padding-top: 1.5rem;
+	padding-bottom: 1.5rem;
+	margin-top: 2rem;
+	margin-bottom: 2rem;
+}
+
+/* Уплотнение между группами полей + немного воздуха */
+.signup-box .form-input-group {
+	margin-bottom: 1.5rem;
+	gap: 0.25rem;
+}
+
+/* Уплотнение формы в целом */
+.signup-box .settings-form {
+	padding-bottom: 1rem;
+}
+
+/* Отступы между разделами */
+.signup-box .form-section-divider {
+	margin: 1rem 0;
+}
+
+.signup-box .form-section-title {
+	margin-top: 1rem;
+	margin-bottom: 0.5rem;
+}
+
+.signup-box .form-section-title.bottom {
+	margin-top: 1rem;
+	margin-bottom: 0;
+}
+
+/* Фиксированная высота для ошибок под полями */
+.signup-box .form-message-error {
+	min-height: 1.2rem;
+	font-size: 0.75rem;
+	margin-top: 0.25rem;
+	margin-bottom: 0;
+	transition: opacity 0.2s ease;
+	text-align: left;
 }
