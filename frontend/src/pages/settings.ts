@@ -8,13 +8,6 @@ import API from "@/utils/BackendApi";
 
 const component = async () => {
     const auth = AuthManager.getInstance();
-    // 🔹 Обновляем пользователя с сервера
-    const ok = await auth.fetchUser();
-    if (!ok || !auth.User) {
-        toastHelper.error("Failed to load user");
-        await Router.getInstance().navigate("/auth/login");
-        return;
-    }
     const user = auth.User!;
     const isGoogleUser = user.authProvider === "google";
 
