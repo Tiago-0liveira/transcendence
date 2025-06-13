@@ -8,11 +8,56 @@ type ObjectStringAttributeValidator<T extends StringsObject> = {
 	[K in keyof T]: ElementStringAttributeValidator<T, K>
 }
 
+type StringBool = "true" | "false"
+
 type UserCardAttributes = {
 	"variant": "profile" | "possibleFriend" | "friend";
 	"user-id": string;
 	"avatar-url": string;
 	"display-name": string;
-	"is-pending": "0" | "1";
-	"has-invited-me": "0" | "1";
+	"is-pending": StringBool;
+	"has-invited-me": StringBool;
+}
+
+type LoadingSpinnerAttributes = {
+	size: "sm" | "md" | "xl"
+}
+
+type RoomCardAttributes = {
+	"room-id": string;
+	name: string;
+	owner: string;
+	status: LobbyStatus;
+	"required-players": string;
+	"connected-players-number": string;
+	/* if the user receiving this is friends with the owner */
+	"is-friend": StringBool;
+	"room-type": LobbyType;
+	"can-join": StringBool;
+}
+
+type BracketCardAttributes = {
+	"lobby-id": string;
+	"game-id": string;
+	state: GameState;
+	winner: GameSide;
+	ready: StringBool;
+	
+	lPlayer: string;
+	lname: string;
+	lconnected: StringBool;
+	lscore: string;
+
+	rPlayer: string;
+	rname: string;
+	rconnected: StringBool;
+	rscore: string;
+}
+
+type UncompletedBracketCardAttributes = {
+	lPlayer: string;
+	lname: string;
+
+	rPlayer: string;
+	rname: string;
 }

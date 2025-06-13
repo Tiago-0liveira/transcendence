@@ -1,7 +1,6 @@
 import AuthManager from "@/auth/authManager";
 import Router from "@/router/Router";
 import { authGuard } from "@/router/guards";
-import {toastHelper} from "@/utils/toastHelper";
 
 Router.getInstance().register({
     path: "/profile",
