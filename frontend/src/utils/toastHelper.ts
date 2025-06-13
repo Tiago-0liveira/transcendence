@@ -165,5 +165,15 @@ export const toastHelper = {
 		deployToast(`${name} accepted your request!`, {
 			avatar, className: "friendRequestAccepted"
 		})
+	},
+
+	copyToClipboard: (copyName: string, copyText: string) => {
+		navigator.clipboard.writeText(copyText).then(() => {
+			deployToast(`${copyName} copied to Clipboard!`, {
+				className: "copyToClipboard"
+			})
+		}).catch(err => {
+			toastHelper.error(`Could not copy ${copyName} to clipboard!`)
+		})
 	}
 };

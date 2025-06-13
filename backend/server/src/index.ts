@@ -36,12 +36,28 @@ app.register(fastifyCookie, {
 })
 
 app.register(cors, {
-	origin: [FRONTEND_URL],
-	methods: ["GET", "POST", "DELETE", "PUT"],
-	allowedHeaders: ["Content-Type", "Authorization", "Cookie", "Accept"],
+	origin: (origin, callback) => {
+	  const allowedOrigins = [
+		'http://localhost:3000',
+		/^http:\/\/10\.12\.\d{1,3}\.\d{1,3}(:\d+)?$/ // Regex to match 10.12.x.x
+	  ];
+  
+	  if (!origin) {
+		// Allow non-browser tools like curl/postman
+		return callback(null, true);
+	  }
+  
+	  const isAllowed = allowedOrigins.some(o =>
+		typeof o === 'string' ? o === origin : o.test(origin)
+	  );
+  
+	  callback(null, isAllowed);
+	},
+	methods: ['GET', 'POST', 'DELETE', 'PUT'],
+	allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'Accept'],
 	credentials: true,
 	optionsSuccessStatus: 200
-})
+  });
 app.register(fastifyWebsocket)
 
 registerRoutes(app);

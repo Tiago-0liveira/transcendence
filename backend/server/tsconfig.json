@@ -13,27 +13,14 @@
 		"outDir": "./dist",
 		"strictNullChecks": true,
 		"paths": {
-			"@middleware/*": [
-				"./src/middleware/*"
-			],
-			"@enums/*": [
-				"./src/enums/*"
-			],
-			"@db/*": [
-				"./src/database/*"
-			],
-			"@db-table/*": [
-				"./src/database/tables/*"
-			],
-			"@utils/*": [
-				"./src/utils/*"
-			],
-			"@api/*": [
-				"./src/api/*"
-			],
-			"@config": [
-				"./src/config"
-			],
+			"@middleware/*": [ "./src/middleware/*" ],
+			"@enums/*": [ "./src/enums/*" ],
+			"@db/*": [ "./src/database/*" ],
+			"@db-table/*": [ "./src/database/tables/*" ],
+			"@utils/*": [ "./src/utils/*" ],
+			"@api/*": [ "./src/api/*" ],
+			"@config": [ "./src/config" ],
+			"@game/*": [ "./src/game/*" ]
 		},
 		"baseUrl": ".",
 	},

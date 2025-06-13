@@ -45,7 +45,8 @@ const newDisconnectedClient = (deviceId: string): ClientValue => {
 	return {
 		socket: null,
 		connectedAt: 0,
-		connceted: false,
+		connected: false,
+		connectedToLobby: null,
 		deviceId
 	} as const;
 }
@@ -53,7 +54,7 @@ const newDisconnectedClient = (deviceId: string): ClientValue => {
 export const updateDisconnectedClient = (userId: number, socket: WebSocket) => {
 	const clientValue = connectedSocketClients.get(userId);
 	if (!clientValue) return;
-	clientValue.connceted = true;
+	clientValue.connected = true;
 	clientValue.connectedAt = Date.now();
 	clientValue.socket = socket;
 }
@@ -66,18 +67,23 @@ export const notify = {
 	 * @description dispatches notifications for every friend so they now the user is now online!
 	 */
 	friendsOnline: async (userId: number) => {
-		const friendsWithInfo = await Database.getInstance().friendsTable.getFriendsWithInfo(userId, 0, 5000);
+		const friendsWithInfo = await Database.getInstance().friendsTable.getFriendsWithInfo(userId, 0, 50);
 		if (friendsWithInfo.error) return;
+		
+		const userInfo = await Database.getInstance().userTable.getById(userId);
+		if (userInfo.error) return;
+
+		const sockMessage = JSON.stringify({
+			type: "friend-online",
+			friendName: userInfo.result.displayName,
+			avatar: userInfo.result.avatarUrl
+		} satisfies SocketMessage)
+		
 		friendsWithInfo.result.forEach((friend) => {
 			if (connectedSocketClients.has(friend.id)) {
-
 				const clientValue = connectedSocketClients.get(friend.id);
 				if (!clientValue) return;
-				clientValue.socket?.send(JSON.stringify({
-					type: "friend-online",
-					friendName: friend.displayName,
-					avatar: friend.avatarUrl
-				} satisfies SocketMessage))
+				clientValue.socket?.send(sockMessage)
 			}
 		})
 	},
@@ -87,7 +93,7 @@ export const notify = {
 	 */
 	friendOnline: async (userId: number, friendId: number) => {
 		const connectedFriend = connectedSocketClients.get(friendId);
-		if (connectedFriend && connectedFriend.connceted && connectedFriend.socket) {
+		if (connectedFriend && connectedFriend.connected && connectedFriend.socket) {
 			const dbRes = await Database.getInstance().userTable.getById(userId);
 			if (dbRes.error) return;
 			const user = dbRes.result
@@ -104,7 +110,7 @@ export const notify = {
 	 */
 	friendAcceptedRequest: async (userId: number, friendId: number) => {
 		const connectedFriend = connectedSocketClients.get(friendId);
-		if (connectedFriend && connectedFriend.connceted && connectedFriend.socket) {
+		if (connectedFriend && connectedFriend.connected && connectedFriend.socket) {
 			const dbRes = await Database.getInstance().userTable.getById(userId);
 			if (dbRes.error) return;
 			const user = dbRes.result
@@ -121,7 +127,7 @@ export const notify = {
 	 */
 	friendRequest: async (userId: number, friendId: number) => {
 		const connectedFriend = connectedSocketClients.get(friendId);
-		if (connectedFriend && connectedFriend.connceted && connectedFriend.socket) {
+		if (connectedFriend && connectedFriend.connected && connectedFriend.socket) {
 			const dbRes = await Database.getInstance().userTable.getById(userId);
 			if (dbRes.error) return;
 			const user = dbRes.result
