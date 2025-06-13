@@ -4,12 +4,7 @@ import { UserAuthMethod } from "@enums/enums";
 export const userSignupSchema = z.object({
     username: z.string().trim().toLowerCase().min(3, 'Username must be at least 3 characters long').max(30),
     displayName: z.string().trim().min(3, 'Display name must be at least 3 characters').max(30).optional(),
-    avatarUrl:      z.string()
-        .url('Invalid avatar URL')
-        .refine(
-            (url) => /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(url),
-            { message: 'URL must end with an image extension (jpg, png, gif, etc.)' }
-        ).optional(),
+    avatarUrl:      z.string().url('Invalid avatar URL').optional(),
     password: z
         .string()
         .trim()
@@ -35,12 +30,7 @@ export const userLoginSchema = z.object({
 export const googleSignupCompleteSchema = z.object({
     username:       z.string().trim().toLowerCase().min(3, 'Username must be at least 3 characters long').max(30),
     displayName:    z.string().trim().min(3, 'Display name must be at least 3 characters').max(30).optional(),
-    avatarUrl:      z.string()
-        .url('Invalid avatar URL')
-        .refine(
-            (url) => /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(url),
-            { message: 'URL must end with an image extension (jpg, png, gif, etc.)' }
-        ).optional(),
+    avatarUrl:      z.string().url('Invalid avatar URL').optional(),
 });
 
 export const googleRequestSchema = z.object({
@@ -50,12 +40,7 @@ export const googleRequestSchema = z.object({
 
 export const updateSchema = z.object({
     displayName:    z.string().trim().min(3, 'Display name must be at least 3 characters').max(30),
-    avatarUrl:      z.string()
-        .url('Invalid avatar URL')
-        .refine(
-            (url) => /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(url),
-            { message: 'URL must end with an image extension (jpg, png, gif, etc.)' }
-        ).optional(),
+    avatarUrl:      z.string().url('Invalid avatar URL').optional(),
 });
 
 export const changePasswordSchema = z.object({

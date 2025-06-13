@@ -215,7 +215,7 @@ export default async function oauthGoogleRoutes(fastify: FastifyInstance) {
 
 			const newUserData: UserParams = {
 				username: parsed.username,
-				displayName: parsed.displayName || parsed.username,
+				displayName: parsed.displayName || googlePayload.name,
 				avatarUrl: parsed.avatarUrl || googlePayload.avatar,
 				authProvider: UserAuthMethod.GOOGLE,
 				authProviderId: googlePayload.googleId,
