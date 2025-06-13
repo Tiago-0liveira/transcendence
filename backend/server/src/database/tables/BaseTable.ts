@@ -26,7 +26,7 @@ abstract class BaseTable<T, TPARAMS> {
 	async getById(id: number): Promise<DatabaseResult<T>> {
 		try {
 			const stmt = this.database.database.prepare(`
-			SELECT id, username, displayName, avatarUrl
+			SELECT id, username, displayName, avatarUrl, authProvider
 			FROM ${this._tableName}
 			WHERE id = ?
 		`);

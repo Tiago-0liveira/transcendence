@@ -2,30 +2,42 @@ import AuthManager from "@/auth/authManager";
 import Router from "@/router/Router";
 import { authGuard } from "@/router/guards";
 import QRCode from "qrcode";
+import { settingsFormSchema, passwordFormSchema } from "@/auth/validation";
+import { toastHelper } from "@/utils/toastHelper";
+import API from "@/utils/BackendApi";
 
 const component = async () => {
     const auth = AuthManager.getInstance();
+    // 🔹 Обновляем пользователя с сервера
+    const ok = await auth.fetchUser();
+    if (!ok || !auth.User) {
+        toastHelper.error("Failed to load user");
+        await Router.getInstance().navigate("/auth/login");
+        return;
+    }
     const user = auth.User!;
-    const isGoogleUser = user.authProvider === "GOOGLE";
+    const isGoogleUser = user.authProvider === "google";
 
     const template = /* html */`
 		<div class="profile-card">
 			<h1 class="settings-header password-section">User Settings</h1>
 
 			<form id="settings-form" class="settings-form">
-				<div class="form-input-group">
-					<label for="avatar" class="form-input-label">Avatar URL</label>
-					<input type="text" id="avatar" class="form-input" placeholder="Link to avatar image" value="${user.avatarUrl || ""}">
-				</div>
+			    <div class="form-input-group">
+                    <label for="username" class="form-input-label">Username</label>
+                    <input type="text" id="username" class="form-input" value="${user.username}" disabled>
+                </div>
 
-				<div class="form-input-group">
-					<label for="login" class="form-input-label">Login</label>
-					<input type="text" id="login" class="form-input" placeholder="Enter your login" value="${user.login || ""}">
-				</div>
-
-				<div class="form-input-group">
+			    <div class="form-input-group">
 					<label for="displayName" class="form-input-label">Nickname</label>
 					<input type="text" id="displayName" class="form-input" placeholder="Enter your nickname" value="${user.displayName || ""}">
+					<div class="error-text" id="displayName-error"></div>
+				</div>
+				
+				<div class="form-input-group">
+					<label for="avatar" class="form-input-label">Avatar URL</label>
+					<input type="text" id="avatarUrl" class="form-input" placeholder="Link to avatar image" value="${user.avatarUrl || ""}">
+                    <div class="error-text" id="avatarUrl-error"></div>
 				</div>
 
 				<button type="submit" class="btn-steam-fixed">Save Changes</button>
@@ -37,10 +49,12 @@ const component = async () => {
 					<div class="form-input-group">
 						<label for="oldPassword" class="form-input-label">Current Password</label>
 						<input type="password" id="oldPassword" class="form-input" placeholder="Enter current password">
+						<div class="error-text" id="oldPassword-error"></div>
 					</div>
 					<div class="form-input-group">
 						<label for="newPassword" class="form-input-label">New Password</label>
 						<input type="password" id="newPassword" class="form-input" placeholder="Enter new password">
+						<div class="error-text" id="newPassword-error"></div>
 					</div>
 					<button type="submit" class="btn-steam-fixed">Change Password</button>
 				</form>
@@ -66,6 +80,45 @@ const component = async () => {
 
     document.querySelector("#app")!.innerHTML = template;
 
+    // --- NEW: Clear errors on input ---
+    const displayNameInput = document.getElementById("displayName") as HTMLInputElement | null;
+    const avatarInput = document.getElementById("avatarUrl") as HTMLInputElement | null;
+    if (displayNameInput) displayNameInput.addEventListener("input", () => {
+        displayNameInput.classList.remove("input-error");
+        const err = document.getElementById("displayName-error");
+        if (err) err.textContent = "";
+    });
+    if (avatarInput) avatarInput.addEventListener("input", () => {
+        avatarInput.classList.remove("input-error");
+        const err = document.getElementById("avatarUrl-error");
+        if (err) err.textContent = "";
+    });
+    const oldPasswordInput = document.getElementById("oldPassword") as HTMLInputElement | null;
+    const newPasswordInput = document.getElementById("newPassword") as HTMLInputElement | null;
+    if (oldPasswordInput) oldPasswordInput.addEventListener("input", () => {
+        oldPasswordInput.classList.remove("input-error");
+        const err = document.getElementById("oldPassword-error");
+        if (err) err.textContent = "";
+    });
+    if (newPasswordInput) newPasswordInput.addEventListener("input", () => {
+        newPasswordInput.classList.remove("input-error");
+        const err = document.getElementById("newPassword-error");
+        if (err) err.textContent = "";
+    });
+
+
+    const showErrors = (errors: any[]) => {
+        document.querySelectorAll(".error-text").forEach(el => el.textContent = "");
+        document.querySelectorAll(".form-input").forEach(el => el.classList.remove("input-error"));
+        for (const error of errors) {
+            const field = error.path[0];
+            const input = document.getElementById(field) as HTMLInputElement;
+            const errorDiv = document.getElementById(`${field}-error`);
+            if (input) input.classList.add("input-error");
+            if (errorDiv) errorDiv.textContent = error.message;
+        }
+    };
+
     if (!isGoogleUser) {
         const checkbox = document.querySelector("#twofa-checkbox") as HTMLInputElement;
         const label = document.querySelector("#twofa-label")!;
@@ -81,7 +134,7 @@ const component = async () => {
             visual.classList.toggle("enabled", enabled);
         };
 
-        const res = await auth.authFetch("/auth/2fa/status", {
+        const res = await auth.authFetch(API.settings.twofa.status, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ userId: user.id })
@@ -91,8 +144,9 @@ const component = async () => {
 
         visual.addEventListener("click", async () => {
             const enabled = !checkbox.checked;
+
             try {
-                const res = await auth.authFetch("/auth/2fa/toggle", {
+                const res = await auth.authFetch(API.settings.twofa.toggle, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ userId: user.id, enabled })
@@ -132,7 +186,84 @@ const component = async () => {
         });
     }
 
-    // TODO: Добавить обработчики отправки форм (settings-form, password-form)
+    const settingsForm = document.getElementById("settings-form") as HTMLFormElement;
+
+    settingsForm?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const displayName = (document.getElementById("displayName") as HTMLInputElement).value.trim();
+        const avatarUrl = (document.getElementById("avatarUrl") as HTMLInputElement).value.trim();
+
+        const parse = settingsFormSchema.safeParse({ displayName, avatarUrl });
+        if (!parse.success) {
+            showErrors(parse.error.errors);
+            return;
+        }
+
+        try {
+            const res = await auth.authFetch(API.settings.update, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    displayName,
+                    avatarUrl,
+                }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || !data.ok) {
+                throw new Error(data?.error || "Update failed");
+            }
+
+            if (data.message) {
+                toastHelper.success(data.message);
+            }
+        } catch (err) {
+            console.error("Settings update error:", err);
+            toastHelper.error(err instanceof Error ? err.message : "Unknown error");
+        }
+    });
+
+    const passwordForm = document.getElementById("password-form") as HTMLFormElement | null;
+
+    passwordForm?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const oldPassword = (document.getElementById("oldPassword") as HTMLInputElement).value.trim();
+        const newPassword = (document.getElementById("newPassword") as HTMLInputElement).value.trim();
+
+        const parse = passwordFormSchema.safeParse({ oldPassword, newPassword });
+        if (!parse.success) {
+            showErrors(parse.error.errors);
+            return;
+        }
+
+        try {
+            const res = await auth.authFetch(API.settings.password, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ oldPassword, newPassword }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || !data.ok) {
+                const msg =
+                    data?.error ||
+                    data?.message ||
+                    (data?.errors ? Object.values(data.errors).flat().join(", ") : "Password change failed");
+                toastHelper.error(msg);
+                return;
+            }
+
+            toastHelper.success(data.message || "Password changed successfully");
+            passwordForm.reset();
+        } catch (err) {
+            console.error("Password change error:", err);
+            toastHelper.error(err instanceof Error ? err.message : "Unexpected error");
+        }
+    });
 };
 
 Router.getInstance().register({ path: "/settings", guards: [authGuard], component });

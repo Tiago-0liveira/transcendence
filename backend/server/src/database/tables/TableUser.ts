@@ -78,14 +78,18 @@ class UserTable extends BaseTable<User, UserParams> {
 		}
 	}
 	async delete(id: number): Promise<DatabaseResult<boolean>> {
-		return new Promise((resolve, reject) => {
-			const del = this.database.database.prepare(this._deleteStr)
-			const run1 = del.run(id);
-			if (run1.changes === 0) {
-				reject({ error: new Error(`could not delete ${id}`) })
+		try {
+			const stmt = this.database.database.prepare(this._deleteStr);
+			const result = stmt.run(id);
+
+			if (result.changes === 0) {
+				return { error: new Error(`User with ID ${id} not found or already deleted.`) };
 			}
-			resolve({ result: true })
-		})
+
+			return { result: true };
+		} catch (err) {
+			return { error: err instanceof Error ? err : new Error("Unknown database error") };
+		}
 	}
 	async update(id: number, params: UserParamsNoPass): Promise<DatabaseResult<number>> {
 		return new Promise((resolve, reject) => {
@@ -97,16 +101,38 @@ class UserTable extends BaseTable<User, UserParams> {
 			resolve({ result: update1.lastInsertRowid as number })
 		})
 	}
-	async updatePassword(id: number, password: string): Promise<DatabaseResult<number>> {
-		return new Promise((resolve, reject) => {
-			const update = this.db.prepare(this._updatePasswordStr)
-			const update1 = update.run(password, id)
-			if (update1.changes === 0) {
-				reject({ error: new Error("Could not update ") })
+	async updatePassword(userId: number, oldPassword: string, newPassword: string): Promise<DatabaseResult<boolean>> {
+		try {
+			const user = await this.findById(userId);
+
+			if (!user) {
+				return { error: new Error(`User not found.`) };
 			}
-			resolve({ result: update1.lastInsertRowid as number })
-		})
+
+			const isValid = bcrypt.compareSync(oldPassword, user.password);
+			if (!isValid) {
+				return { error: new Error("Incorrect current password") };
+			}
+
+			if (oldPassword === newPassword) {
+				return { error: new Error("New password must be different from current password") };
+			}
+
+			const newHash = bcrypt.hashSync(newPassword, 10);
+
+			const stmtUpdate = this.database.database.prepare(this._updatePasswordStr);
+			const result = stmtUpdate.run(newHash, userId);
+
+			if (result.changes === 0) {
+				return { error: new Error(`Failed to update password.`) };
+			}
+
+			return { result: true };
+		} catch (err) {
+			return { error: err instanceof Error ? err : new Error("Unknown database error") };
+		}
 	}
+
 	async login(username: string, password: string): Promise<DatabaseResult<Omit<UserParams, "password"> & UIDD>> {
 		// 1. Check if a user exists
 		const userExists = await this.existsUsername(username);
@@ -171,20 +197,54 @@ class UserTable extends BaseTable<User, UserParams> {
 	async existsUsername(username: string): Promise<boolean> {
 		return this.exists({ username })
 	}
+
+	async findById(userId: number): Promise<{
+		username: string;
+		displayName: string;
+		avatarUrl: string | null;
+		password: string;
+		authProvider: string;
+	} | undefined> {
+		const stmt = this.database.database.prepare(`
+		SELECT username, displayName, avatarUrl, password, authProvider
+		FROM ${this._tableName}
+		WHERE id = ?
+	`);
+		const row = stmt.get(userId);
+
+		if (!row) {
+			return undefined;
+		}
+
+		return row as {
+			username: string;
+			displayName: string;
+			avatarUrl: string | null;
+			password: string;
+			authProvider: string;
+		};
+	}
+
 	async existsUsernameOrDisplayName(username: string, displayName: string): Promise<boolean> {
 		return this.exists({ username, displayName })
 	}
 	async existsUsernameAndDisplayName(username: string, displayName: string): Promise<boolean> {
 		return this.exists({ username, displayName }, "AND")
 	}
-	async existsGoogleId(googleId: number): Promise<UIDD | null> {
-		return new Promise((resolve, reject) => {
-			const select = this.db.prepare(`SELECT id FROM ${this._tableName} WHERE authProvider = ? AND authProviderId = ?`)
-			const select1 = select.get(UserAuthMethod.GOOGLE, googleId)
-			console.log("existsGoogleId:", select1)
-			if (select1) resolve(select1 as UIDD)
-			else resolve(null)
-		})
+	async existsGoogleId(googleId: number): Promise<DatabaseResult<UIDD | null>> {
+		try {
+			const stmt = this.db.prepare(
+				`SELECT id FROM ${this._tableName} WHERE authProvider = ? AND authProviderId = ?`
+			);
+
+			const row = stmt.get(UserAuthMethod.GOOGLE, googleId);
+			console.log("existsGoogleId:", row);
+
+			return { result: row ? (row as UIDD) : null };
+
+		} catch (err) {
+			return { error: err instanceof Error ? err : new Error("Unknown error in existsGoogleId") };
+		}
 	}
 
 	bulkInsertTransaction = this.db.transaction((count: number) => {
@@ -202,6 +262,44 @@ class UserTable extends BaseTable<User, UserParams> {
 		} catch (error) {
 			console.log("Something went wrong when bulk inserting")
 			console.error(error)
+		}
+	}
+	async updateDisplayNameAndAvatarById(
+		userId: number,
+		displayName: string | null,
+		avatarUrl: string | null
+	): Promise<DatabaseResult<true>> {
+		try {
+			const fields: string[] = [];
+			const values: any[] = [];
+
+			if (displayName !== null) {
+				fields.push("displayName = ?");
+				values.push(displayName);
+			}
+			if (avatarUrl !== null) {
+				fields.push("avatarUrl = ?");
+				values.push(avatarUrl);
+			}
+
+			// Нечего обновлять — защита на всякий случай
+			if (fields.length === 0) {
+				return { result: true };
+			}
+
+			const sql = `UPDATE users SET ${fields.join(", ")} WHERE id = ?`;
+			values.push(userId);
+
+			const stmt = this.database.database.prepare(sql);
+			const res = stmt.run(...values);
+
+			if (res.changes === 0) {
+				throw new Error("No rows updated");
+			}
+
+			return { result: true };
+		} catch (err: any) {
+			throw new Error(`Database error: ${err.message}`);
 		}
 	}
 }

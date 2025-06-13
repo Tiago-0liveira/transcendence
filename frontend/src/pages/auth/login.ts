@@ -98,24 +98,36 @@ const component = async () => {
 	};
 
 	const googleOauthLoginHandler = () => {
-		google.accounts.oauth2.initCodeClient({
+		const codeClient = google.accounts.oauth2.initCodeClient({
 			client_id: GOOGLE_CLIENT_ID,
 			scope: "profile email",
 			ux_mode: "popup",
-			callback: (response) => {
+			callback: async (response: { code?: string; error?: string }) => {
 				if (response.error) {
-					console.error("google callback error:", response.error);
+					console.error("Google login callback error:", response.error);
+					toastHelper.error("Google authorization failed or was cancelled.");
 					return;
 				}
 
-				AuthManager.getInstance().oauthGoogleLogin(response.code).then(err => {
-					if (!err)
-						Router.getInstance().returnToOrPath("/profile");
-					else
-						console.error("oauthGoogleLogin err: ", err);
-				});
+				try {
+					const err = await AuthManager.getInstance().oauthGoogleLogin(response.code);
+
+					if (!err) {
+						await Router.getInstance().returnToOrPath("/user");
+						toastHelper.success("Login successful!");
+					} else {
+						const message = err || "Unknown error during login";
+						console.error("oauthGoogleLogin error:", err);
+						toastHelper.error(message);
+					}
+				} catch (e) {
+					console.error("Unexpected error in oauthGoogleLogin:", e);
+					toastHelper.error("Unexpected server error. Please try again later.");
+				}
 			},
-		}).requestCode();
+		});
+
+		codeClient.requestCode();
 	};
 
 	const formSubmitHandler = async (e: Event) => {
@@ -137,7 +149,7 @@ const component = async () => {
 
 		try {
 			await AuthManager.getInstance().login(result.data);
-			await Router.getInstance().returnToOrPath("/profile");
+			await Router.getInstance().returnToOrPath("/user");
 			toastHelper.success("Login Successful");
 		} catch (err: any) {
 			console.error("Login error:", err);
@@ -179,7 +191,7 @@ const component = async () => {
 					token: code
 				});
 				hideTwoFAModal();
-				await Router.getInstance().returnToOrPath("/profile");
+				await Router.getInstance().returnToOrPath("/user");
 				toastHelper.success("Login Successful");
 			} catch (err: any) {
 				console.error("2FA error:", err?.message);
