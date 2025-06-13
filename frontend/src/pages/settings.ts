@@ -186,6 +186,10 @@ const component = async () => {
         const displayName = (document.getElementById("displayName") as HTMLInputElement).value.trim();
         const avatarUrl = (document.getElementById("avatarUrl") as HTMLInputElement).value.trim();
 
+        if (displayName === user.displayName && avatarUrl === user.avatarUrl) {
+            return;
+        }
+
         const parse = settingsFormSchema.safeParse({ displayName, avatarUrl });
         if (!parse.success) {
             showErrors(parse.error.errors);
@@ -193,27 +197,11 @@ const component = async () => {
         }
 
         try {
-            const res = await auth.authFetch(API.settings.update, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    displayName,
-                    avatarUrl,
-                }),
-            });
-
-            const data = await res.json();
-
-            if (!res.ok || !data.ok) {
-                throw new Error(data?.error || "Update failed");
-            }
-
-            if (data.message) {
-                toastHelper.success(data.message);
-            }
-        } catch (err) {
-            console.error("Settings update error:", err);
-            toastHelper.error(err instanceof Error ? err.message : "Unknown error");
+            await AuthManager.getInstance().updateProfile({ displayName, avatarUrl });
+            toastHelper.success("Profile updated successfully");
+        } catch (err: any) {
+            console.error("Update error:", err);
+            toastHelper.error(err.message || "Profile update failed");
         }
     });
 

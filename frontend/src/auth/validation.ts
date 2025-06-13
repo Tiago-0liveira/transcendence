@@ -3,12 +3,7 @@ import { z } from "zod";
 export const userSignupSchema = z.object({
 	username: z.string().trim().min(3, 'Username must be at least 3 characters long').max(30),
 	displayName: z.string().trim().min(3, 'Display name must be at least 3 characters').max(30).optional(),
-	avatarUrl: z.string()
-		.url('Invalid avatar URL')
-		.refine(
-			(url) => /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(url),
-			{ message: 'URL must end with an image extension (jpg, png, gif, etc.)' }
-		).optional(),
+	avatarUrl: z.string().url('Invalid avatar URL').optional(),
 	password: z.string().trim()
 		.min(6, "Password must be at least 6 characters long")
 		.refine(pw => /[A-ZА-ЯЁ]/.test(pw), {
@@ -31,22 +26,12 @@ export const userLoginSchema = z.object({
 export const googleOauthCompleteSchema = z.object({
 	username: z.string().trim().min(3, 'Username must be at least 3 characters long').max(30),
 	displayName: z.string().trim().min(3, 'Display name must be at least 3 characters').max(30).optional(),
-	avatarUrl: z.string()
-		.url('Invalid avatar URL')
-		.refine(
-			(url) => /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(url),
-			{ message: 'URL must end with an image extension (jpg, png, gif, etc.)' }
-		).optional(),
+	avatarUrl: z.string().url('Invalid avatar URL').optional(),
 });
 
 export const settingsFormSchema = z.object({
 	displayName: z.string().trim().min(3, "Nickname must be at least 3 characters").max(30),
-	avatarUrl: z.string()
-		.url('Invalid avatar URL')
-		.refine(
-			(url) => /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(url),
-			{ message: 'URL must end with an image extension (jpg, png, gif, etc.)' }
-		).optional(),
+	avatarUrl: z.string().url('Invalid avatar URL').optional(),
 });
 
 export const passwordFormSchema = z.object({
