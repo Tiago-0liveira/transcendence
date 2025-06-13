@@ -96,7 +96,7 @@ const component = async () => {
 	// TODO: add auto redirect to /games/rooms if the room does not exist
 	const template = /* html */`
 		<div class="game-room flex-1 flex flex-col">
-			<div id="game-ui" class="z-10 absolute w-full h-full">
+			<div id="game-ui" class="z-10 absolute w-full flex-1">
 				<div id="player-names" class="select-none absolute top-10 text-white flex items-center justify-evenly w-full px-48">
 					
 				</div>
@@ -115,7 +115,7 @@ const component = async () => {
 					<span id="timer-left" class="hidden"></span>
 					<span id="player-disconnected-time-left" class="hidden"></span>
 				</div>
-				<button id="btn-set-ready" class="absolute top-[15%] left-1/2  transform -translate-x-1/2 -translate-y-[-15%] text-white"></button>
+				<button id="btn-set-ready" class="absolute top-[15%] left-1/2  transform -translate-x-1/2 -translate-y-[-15%] mt-40 text-white"></button>
 				<div id="div-loading" class="bg-gray-300 absolute rounded-md p-4 w-80 flex space-x-8 items-center top-1/2 left-1/2  transform -translate-x-1/2 -translate-y-1/2">
 					<span class="text-2xl">Loading game Data...</span>
 					<loading-spinner size="sm"></loading-spinner>
@@ -128,8 +128,8 @@ const component = async () => {
 					<a href="/games/rooms" class="link">Return to Open Rooms</a>
 				</div>
 			</div>
-			<div id="room-content" class="w-full h-full flex items-center justify-center">
-				<canvas id="gameCanvas" width="${CANVAS.w}" height="${CANVAS.h}" class="bg-black"></canvas>
+			<div id="room-content" class="w-full flex-1 flex items-center justify-center">
+				<canvas id="gameCanvas" style="width:${CANVAS.w}px;height:${CANVAS.h}px;" class="bg-black"></canvas>
 			</div>
 		</div>
 	`;
