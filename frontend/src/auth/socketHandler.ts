@@ -1,7 +1,7 @@
 import { toastHelper } from "@/utils/toastHelper";
 import AuthManager from "./authManager";
+import Router from "@/router/Router";
 
-type SocketMessageHandler = (this: SocketHandler, response: SocketMessage) => void;
 
 class SocketHandler {
 	private static instance: SocketHandler;
@@ -19,7 +19,7 @@ class SocketHandler {
 	private queuedMessages: SocketMessage[];
 
 	static PING_INTERVAL_TIMEOUT = 5000 as const;
-	static RECONNECT_BASE_TIMEOUT = 8000 as const;
+	static RECONNECT_BASE_TIMEOUT = 16000 as const;
 
 	public static getInstance() {
 		if (!SocketHandler.instance) {
@@ -70,7 +70,7 @@ class SocketHandler {
 			const accessToken = AuthManager.getInstance().GetAccessToken();
 			if (!accessToken)
 				throw new Error("Invalid AccessToken")
-			const socket = new WebSocket(`ws://localhost:4000/ws?accessToken=${encodeURIComponent(accessToken)}`);
+			const socket = new WebSocket(`ws://${window.location.hostname}:4000/ws?accessToken=${encodeURIComponent(accessToken)}`);
 			this.prepareSocket(socket);
 			return socket;
 		} catch (error) {
@@ -107,10 +107,8 @@ class SocketHandler {
 	 * @param msg SocketMessage
 	 */
 	public sendMessage(msg: SocketMessage) {
-		if (this.socket)
-		{
-			if (this.socket.readyState === WebSocket.OPEN) 
-			{
+		if (this.socket) {
+			if (this.socket.readyState === WebSocket.OPEN) {
 				this.socket.send(JSON.stringify(msg))
 			} else {
 				this.queuedMessages.push(msg)
@@ -148,7 +146,7 @@ class SocketHandler {
 		try {
 			const parsedMessage = JSON.parse(ev.data);
 			if (SocketHandler.isSocketValidMessage(parsedMessage)) {
-				console.log("parsedMessage: ", parsedMessage);
+				/*console.log("parsedMessage: ", parsedMessage);*/
 				switch (parsedMessage.type) {
 					case "friend-online":
 						toastHelper.friendOnline(parsedMessage.friendName, parsedMessage.avatar);
@@ -159,23 +157,31 @@ class SocketHandler {
 					case "friend-request-accepted":
 						toastHelper.friendRequestAccepted(parsedMessage.friendName, parsedMessage.avatar);
 						break;
+					case "lobby-room-join":
+						Router.getInstance().navigate("/games/lobby-room", {}, { roomId: parsedMessage.roomId })
+						break;
+					case "game-room-join":
+						Router.getInstance().navigate("/games/game-room", {}, { roomId: parsedMessage.roomId, gameId: parsedMessage.gameId })
+						break;
 					default:
 						break;
 				}
 				const messageHandler = this.messageSubscriptions.get(parsedMessage.type);
 				messageHandler && messageHandler.bind(this)(parsedMessage);
+				console.log("type: ", parsedMessage.type, " ,handler: ", messageHandler ? "exists" : "does not exist");
 			}
 		} catch (error) {
+			
 			console.warn("SOCKET MESSAGE WRONG FORMAT ERROR: ", error);
 		}
 	}
 
-	public addMessageHandler(messageName: SocketMessageType, handler: SocketMessageHandler) {
+	public addMessageHandler<T extends SocketMessageType>(messageName: T, handler: SocketMessageHandler<T>) {
 		const setHandler = this.messageSubscriptions.get(messageName);
 		if (setHandler) {
 			this.messageSubscriptions.delete(messageName);
 		}
-		this.messageSubscriptions.set(messageName, handler);
+		this.messageSubscriptions.set(messageName, handler as any);
 	}
 
 	public removeMessageHandler(messageName: SocketMessageType) {
