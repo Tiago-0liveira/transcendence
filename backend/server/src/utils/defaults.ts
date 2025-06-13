@@ -3,7 +3,7 @@ import type { CookieSerializeOptions } from "@fastify/cookie"
 
 const BaseHttpCookieOptions: Partial<CookieSerializeOptions> = {
 	httpOnly: true,
-	sameSite: "strict",
+	sameSite: "lax",
 	secure: false, // TODO: after enabling https make secure: use DEV_MOVE to set secure so it depends on NODE_ENV
 }
 
@@ -36,6 +36,7 @@ const DEFAULTS = {
 			options: (): CookieSerializeOptions => ({
 				...BaseHttpCookieOptions,
 				expires: new Date(Date.now() + 60 * 60 * 24 * 7 * 1000), // 1 Week
+				maxAge: 60 * 60 * 24 * 7,
 				path: "/jwt/refresh" /* the only endpoint it is needed */
 			}),
 			clearOptions: (): CookieSerializeOptions => ({
