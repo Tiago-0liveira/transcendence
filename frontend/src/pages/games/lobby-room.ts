@@ -18,90 +18,88 @@ const getUpdatedRoomTemplate = (room: LobbyRoom, userId: number): string => {
 		room.connectedPlayers.find(u => u.id === userId)?.ready || false
 
 	return /* html */ `
-		<div class="Lobby-Header flex flex-col items-center space-y-4 bg-gray-50 shadow-md rounded-lg p-6 w-full max-w-3xl">
-			<h1 class="text-2xl font-bold text-blue-700">${room.roomType}</h1>
-			<div class="flex items-center space-x-4">
-				<span class="room-name text-lg font-medium text-gray-600">${room.name}</span>
-				${conditionalRender(
-					room.settings.visibility === 'public',
-					`<span class="badge text-green-700 bg-green-100 px-2 py-1 rounded">Public</span>`,
-					`<span class="badge text-red-700 bg-red-100 px-2 py-1 rounded">Private</span>`
-				)}
+		<div class="profile-card centered auth-box">
+			<div class="settings-header login-section">${room.roomType}</div>
+			<div class="form-input-group horizontal-inputs">
+				<span class="form-input-label">Room:</span>
+				<span class="highlight">${room.name}</span>
+				<span class="badge ${room.settings.visibility === 'public' ? 'badge-public' : 'badge-private'}">
+					${room.settings.visibility === 'public' ? 'Public' : 'Private'}
+				</span>
 			</div>
-		</div>
-		${conditionalRender(room.status === "waiting", /* html */ `
-			<div class="Lobby-Content mt-4 w-full max-w-3xl">
-				<div class="players bg-white shadow-md rounded-lg p-6">
-					<div class="players-header flex flex-col items-center space-y-4">
-						<span class="player-ready flex items-center space-x-4 justify-center">
-							<span class="player-ready-status p-2 rounded ${conditionalRender(playerReadyStatus, 'bg-green-100 text-green-700', 'bg-red-100 text-red-700')}">
-								${conditionalRender(playerReadyStatus, 'Ready', 'Not Ready')}
-							</span>
-							<button id="btn-set-ready" data-ready="${playerReadyStatus}" class="p-2 rounded ${conditionalRender(
-								!playerReadyStatus,
-								'bg-green-500 text-white hover:bg-green-600',
-								'bg-red-500 text-white hover:bg-red-600'
-							)}">
-								${conditionalRender(playerReadyStatus, 'Set Not Ready', 'Set Ready')}
-							</button>
-						</span>
-						<span class="text-gray-600 text-sm">
-							Players: 
-							<span class="${conditionalRender(room.connectedPlayersNumber !== room.requiredPlayers, 'text-yellow-500', 'text-green-500')}">
-								${room.connectedPlayersNumber} / ${room.requiredPlayers}
-							</span>
-							${renderOwnerStatus(room, userId)}
-						</span>
-					</div>
+		
+			${room.status === "waiting" ? `
+				<div class="form-section-divider"></div>
+		
+				<div class="form-input-group horizontal-inputs">
+					<span class="form-input-label">Status:</span>
+					<span class="badge ${playerReadyStatus ? 'badge-green' : 'badge-red'}">
+						${playerReadyStatus ? 'Ready' : 'Not Ready'}
+					</span>
+					<button id="btn-set-ready"
+							data-ready="${playerReadyStatus}"
+							class="btn-steam-fixed small">
+						${playerReadyStatus ? 'Set Not Ready' : 'Set Ready'}
+					</button>
 				</div>
-			</div>
-		`)}
-		<div class="main-content mt-4 w-full max-w-6xl">
-			${renderConnectedPlayers(room)}
-			${renderBrackets(room)}
-		</div>
+		
+				<div class="form-input-group horizontal-inputs">
+					<span class="form-input-label">Players:</span>
+					<span class="${room.connectedPlayersNumber !== room.requiredPlayers ? 'text-warning' : 'text-success'}">
+						${room.connectedPlayersNumber} / ${room.requiredPlayers}
+					</span>
+				</div>
+		${renderOwnerStatus(room, userId)}
+	` : ''}
+</div>
+
 	`
 }
 
 const renderOwnerStatus = (room: LobbyRoom, userId: number): string => {
 	const owner = room.connectedPlayers.find(p => p.id === room.owner)
+
 	if (!owner) {
 		return /* html */ `
-			<span class="inline-flex items-center text-sm text-red-500">
+			<span class="owner-status owner-missing">
 				Owner is missing
 			</span>
 		`
 	}
+
 	if (room.owner === userId) {
-		const startGameButton = conditionalRender(
-			room.connectedPlayers.every(p => p.ready),
-			'bg-green-500 text-white hover:bg-green-600',
-			'bg-gray-400 text-gray-600 cursor-not-allowed'
-		)
+		const allReady = room.connectedPlayers.every(p => p.ready)
+
 		return /* html */ `
-			<div class="mt-2 text-gray-600 text-sm">
-				You can start the game when everyone is ready!
+			<div class="owner-status owner-controls">
+				<div class="owner-hint">
+					You can start the game when everyone is ready!
+				</div>
+				<button id="btn-start-game" class="btn-start-game ${allReady ? 'ready' : 'disabled'}">
+					Start Game
+				</button>
 			</div>
-			<button id="btn-start-game" class="mt-2 px-4 py-2 rounded ${startGameButton}">Start Game</button>
 		`
 	}
+
 	return ''
 }
 
 const renderConnectedPlayers = (room: LobbyRoom): string => {
 	if (room.status !== 'waiting') return ''
+
 	return /* html */ `
-		<div class="connected-players grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+		<div class="connected-players-grid">
 			${room.connectedPlayers.map(player => /* html */ `
-				<div class="player flex items-center justify-between space-x-2 bg-gray-50 shadow rounded p-4">
-					<span class="player-name text-lg flex items-center font-medium text-gray-700">
+				<div class="connected-player-card">
+					<span class="connected-player-name">
 						${player.name}
 						${conditionalRender(
-							player.id === room.owner,
-							`<span class="badge text-purple-700 bg-purple-100 px-2 py-1 rounded ml-2">Owner</span>`
-						)}
+		player.id === room.owner,
+		`<span class="owner-badge">Owner</span>`
+	)}
 					</span>
-					<span class="w-5 h-5 rounded-full ${conditionalRender(player.ready, 'bg-green-500', 'bg-red-500')}"></span>
+					<span class="connected-player-status ${player.ready ? 'ready' : 'not-ready'}"></span>
 				</div>
 			`).join('')}
 		</div>

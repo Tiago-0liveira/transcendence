@@ -259,6 +259,11 @@ class AuthManager {
 			return false;
 		}
 	}
+
+	public isGoogleOAuthReady(): boolean {
+		// Пока нет accessToken и user, но мы уже авторизовались через Google
+		return !this.user && !this.accessToken;
+	}
 }
 
 export default AuthManager;

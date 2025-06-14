@@ -12,6 +12,9 @@ import "@page/games/lobby-room"
 import "@/pages/games/rooms"
 import "@page/games/game-room"
 
+import "@page/games/game"
+
+
 import "@page/auth/signup"
 import "@page/auth/logout"
 import "@page/auth/login"
