@@ -3,8 +3,8 @@ import Router from "@/router/Router";
 import API from "@/utils/BackendApi";
 import { backendEndpoint } from "@/utils/path";
 import { toastHelper } from "@/utils/toastHelper";
-import {objectOutputType, ZodString, ZodType} from "zod";
 import SocketHandler from "./socketHandler";
+import {objectOutputType, ZodOptional, ZodString, ZodType} from "zod";
 
 
 class AuthManager {
@@ -98,7 +98,8 @@ class AuthManager {
 				headers: {
 					"Content-Type": "application/json"
 				},
-				body: JSON.stringify(userParams)
+				body: JSON.stringify(userParams),
+				credentials: "include"
 			});
 
 			const data = await res.json();
@@ -125,7 +126,7 @@ class AuthManager {
 		}
 	}
 
-	public async oauthGoogleLogin(googleCode: string): Promise<string | null> {
+	public async oauthGoogleLogin(googleCode: string | undefined): Promise<string | null> {
 		const res = await fetch(backendEndpoint(API.oauth.google.login), {
 			method: "POST",
 			headers: {
@@ -133,22 +134,22 @@ class AuthManager {
 			},
 			body: JSON.stringify({ code: googleCode }),
 			credentials: "include"
-		})
-		const data = await res.json()
+		});
+
+		const data = await res.json();
+		console.log("Данные data: ", data);
+
 		if (!res.ok) {
-			// TODO: send notification here
-			console.error(`${API.oauth.google.login} error:`, data.message);
+			console.error(`${API.oauth.google.login} error:`, data.message || data.error);
 			return data.error;
 		}
-		this.accessToken = data.accessToken;
 
-		await this.fetchUser()
-		return data.error || null;
+		this.accessToken = data.accessToken;
+		await this.fetchUser();
+		return null;
 	}
-	/* returns null if succeeded
-		else return the error
-	*/
-	public async oauthGoogleSignUp(googleCode: string): Promise<string | null> {
+
+	public async oauthGoogleSignUp(googleCode: string | undefined): Promise<string | null> {
 		const res = await fetch(backendEndpoint(API.oauth.google.signup.path), {
 			method: "POST",
 			headers: {
@@ -165,7 +166,11 @@ class AuthManager {
 		return data.error || null;
 	}
 
-	public async oauthGoogleCompleteSignUp(userParams: UserParamsNoPass): Promise<string | null> {
+	public async oauthGoogleCompleteSignUp(userParams: objectOutputType<{
+		username: ZodString;
+		displayName: ZodOptional<ZodString>;
+		avatarUrl: ZodOptional<ZodString>
+	}, ZodType<any, any, any>, "strip">): Promise<string | null> {
 		const res = await fetch(backendEndpoint(API.oauth.google.signup.complete), {
 			method: "POST",
 			headers: {
@@ -176,10 +181,9 @@ class AuthManager {
 		})
 		const data = await res.json()
 		if (!res.ok) {
-			// TODO: send notification here
 			console.error(`${API.oauth.google.signup.complete}:`, data.error);
 			if (res.status === 401) {
-				Router.getInstance().navigate("/auth/login")
+				await Router.getInstance().navigate("/auth/login")
 			}
 
 			return data.error;
@@ -251,9 +255,30 @@ class AuthManager {
 		} catch (error) {
 			console.log("Could not logout, maybe was already logged out?");
 			if (redirect)
-				Router.getInstance().navigate("/")
+				await Router.getInstance().navigate("/")
 			return false;
 		}
+	}
+
+	public async updateProfile(updateData: {
+		displayName?: string;
+		avatarUrl?: string;
+	}): Promise<void> {
+		const res = await this.authFetch(API.settings.update, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify(updateData),
+		});
+
+		const data = await res.json().catch(() => ({}));
+		if (!res.ok || !data.ok) {
+			throw new Error(data?.error || data?.message || "Update failed");
+		}
+
+		this.accessToken = data.accessToken;
+		await this.fetchUser();
 	}
 }
 

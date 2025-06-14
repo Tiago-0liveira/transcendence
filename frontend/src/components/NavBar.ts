@@ -18,23 +18,28 @@ class NavBar extends HTMLElement {
 		const user = AuthManager.getInstance().User;
 		if (user == null) {
 			buttonsElement.innerHTML = `
-				<a href="/auth/login" class="default hover:text-zinc-300">Login</a>
-				<a href="/auth/signup" class="default hover:text-zinc-300">Sign Up</a>
+				<a href="/auth/login" class="btn-login-out">Login</a>
+				<a href="/auth/signup" class="btn-login-out">Sign Up</a>
 			`
 		} else {
 			buttonsElement.innerHTML = `
-				<a href="/user" class="default hover:text-zinc-300">${user?.displayName}</a>
-				<a href="/auth/logout" class"default hover:text-zinc-300">Logout</a>
+				<a href="/profile" class="btn-steam">Game</a>
+				<a href="/profile" class="btn-steam">Profile</a>
+				<a href="/profile" class="btn-steam">Friends</a>
+				<a href="/settings" class="btn-steam">Settings</a>
+  				<a href="/auth/logout" class="btn-logout">Logout</a>
+  				
 			`
 		}
 	}
 
 	render() {
 		this.innerHTML = `
-			<nav id="nav-bar" class="relative w-full bg-blue-500 text-fuchsia-200 p-2 shadow-md">
-				<div class="container mx-auto flex justify-between items-center">
-					<a href="/" class="default text-md font-bold hover:text-zinc-300">Transcendence</a>
-					<div class="buttons space-x-4">
+<!--			<nav id="nav-bar" class="relative w-full bg-dark-500 text-fuchsia-200 p-2 shadow-md">-->
+			<nav id="nav-bar" class="relative w-full bg-dark-500 text-fuchsia-200 p-2 shadow-md">
+				<div class="flex justify-between items-center">
+					<a href="/" class="btn-manual">Transcendence</a>
+					<div class="buttons space-x-2">
 						
 					</div>
 				</div>

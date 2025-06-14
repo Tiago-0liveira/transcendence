@@ -176,40 +176,7 @@ export const toastHelper = {
 
 	friendRequestAccepted: (name: string, avatar: string) => {
 		deployToast(`${name} accepted your request!`, {
-			avatar,
-			className: "friendRequestAccepted",
-		});
-	},
-
-	newMessage: (name: string, avatar: string, friendId: number) => {
-		const div = document.createElement("div");
-		div.classList.add("content");
-		div.innerHTML = /* html */ `
-			<div class="top-content flex items-center">
-				<img src="${avatar}" class="toastify-avatar mr-1">
-				<span class="text-lg">${name} sent you<br> a message!</span>
-			</div>
-			<!-- <div class="div-buttons mt-3 text-xs flex"> -->
-			<!-- 	<button data-friend-id=${friendId} id="toastify-btn-accept-request" class="bg-green-500">Accept</button> -->
-			<!-- 	<button data-friend-id=${friendId} id="toastify-btn-reject-request" class="bg-red-500">Reject</button> -->
-			<!-- </div> -->
-		`;
-		// const acceptBtn = div.querySelector(
-		// 	"button#toastify-btn-accept-request",
-		// ) as HTMLButtonElement;
-		// acceptBtn.addEventListener("click", toastifyRequestAccept(friendId));
-		//
-		// const rejectBtn = div.querySelector(
-		// 	"button#toastify-btn-reject-request",
-		// ) as HTMLButtonElement;
-		// rejectBtn.addEventListener("click", toastifyRequestReject(friendId));
-
-		deployToast(`${name} sent you a message!`, {
-			duration: DURATION * 2,
-			avatar,
-			className: "new-irc-message",
-			node: div,
-		});
-	},
+			avatar, className: "friendRequestAccepted"
+		})
+	}
 };
-

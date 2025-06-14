@@ -52,13 +52,19 @@ class UserCard extends BaseAttributeValidationElement<UserCardAttributes> {
 			isOnline: false
 		}
 
+
+		// Profile Card
+
 		this.innerHTML = /* html */`
-			<div class="player-card min-w-64 max-w-80 max-h-16 rounded-md bg-slate-700 text-white p-2 flex gap-3">
-				<img class="aspect-auto rounded-md w-12" src=${user.avatarUrl}>
+			<div class="">
+<!--			<div class="player-card min-w-64 max-w-80 max-h-16 rounded-md bg-slate-700 text-white p-2 flex gap-3">-->
+<!--				<img class="aspect-auto rounded-md w-12" src=${user.avatarUrl}>-->
+				<img class="steam-avatar" alt="Avatar" src=${user.avatarUrl}>
 				<div class="player-content flex flex-col w-full">
 					<div class="player-info text-left flex-[1] overflow-hidden">
 						<span class="text-1xl self-start break-words block">
-							${user.displayName}
+							 ${user.displayName}
+
 						</span>
 					</div>
 					<div class="player-buttons max-h-16 flex w-full">
@@ -96,8 +102,11 @@ class UserCard extends BaseAttributeValidationElement<UserCardAttributes> {
 				</div>
 			</div>
 	  	`;
-	}
+	}		
 }
+
+
+
 
 const RemoveFriendHandler = (userId: string) => {
 	AuthManager.getInstance().authFetch(API.auth.friends.remove, {

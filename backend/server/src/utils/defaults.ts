@@ -3,9 +3,15 @@ import type { CookieSerializeOptions } from "@fastify/cookie"
 
 const BaseHttpCookieOptions: Partial<CookieSerializeOptions> = {
 	httpOnly: true,
-	sameSite: "strict",
+	sameSite: "lax",
 	secure: false, // TODO: after enabling https make secure: use DEV_MOVE to set secure so it depends on NODE_ENV
 }
+
+export const MAX_PLAYER_DISCONNECT_ACCUMULATED_TIME = 3 * 60 * 1000; /* 3 Minutes in miliseconds */
+/**
+ * @description When the game starts or gets resumed 4 seconds before it actually start so the players are ready
+ */
+export const GAME_START_TIMER = 4 * 1000; /* 4 seconds in miliseconds */
 
 const DEFAULTS = {
 	jwt: {
@@ -21,7 +27,7 @@ const DEFAULTS = {
 	},
 	cookies: {
 		accessToken: {
-			options: (): CookieSerializeOptions => ({ 
+			options: (): CookieSerializeOptions => ({
 				...BaseHttpCookieOptions,
 				expires: new Date(Date.now() + 60 * 60 * 24 * 7 * 1000) // 1 Week
 			})
@@ -30,6 +36,7 @@ const DEFAULTS = {
 			options: (): CookieSerializeOptions => ({
 				...BaseHttpCookieOptions,
 				expires: new Date(Date.now() + 60 * 60 * 24 * 7 * 1000), // 1 Week
+				maxAge: 60 * 60 * 24 * 7,
 				path: "/jwt/refresh" /* the only endpoint it is needed */
 			}),
 			clearOptions: (): CookieSerializeOptions => ({
@@ -50,6 +57,28 @@ const DEFAULTS = {
 				path: "/oauth/google/signup/complete"
 			})
 		}
+	},
+	game: {
+		playerActive: (player: GamePlayer, side: GameSide): PlayerActiveGameData => ({
+			...player,
+			ready: false,/* set player ready to false because it comes from room as true */
+			side,
+			input: { up: false, down: false },
+			paddlePositionY: 0,
+			connected: false,
+			score: 0,
+			disconnectedTime: 0,
+			disconnectedAt: 0,
+		}),
+		ballPosition: (): GameBallData => ({
+			position: { x: 0, y: 0 },
+			velocity: { vx: 0, vy: 0 },
+			angle: 0,
+		}),
+		timer: (): GameTimer => ({
+			startAt: 0,
+			elapsed: 0,
+		})
 	}
 }
 
