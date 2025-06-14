@@ -15,10 +15,8 @@ export async function handleIRCMessage(
     switch (parsed.command){
           case 'PRIVMSG':
             return await handlePrivateMessage(parsed, senderId, db);
-          case 'JOIN':
-              return await handleJoinChannel(parsed, senderId, db);
-          case 'PART':
-              return await handlePartChannel(parsed, senderId, db);
+          case 'ROOMMSG':
+            return await handleRoomMessage(parsed, senderId, db);
           default:
               return { success: false, error: "Command not implemented" };
     }
