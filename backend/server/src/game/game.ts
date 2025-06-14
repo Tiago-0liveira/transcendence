@@ -383,13 +383,11 @@ export const handleGamePlayerLeave = async function (clientContext: ClientThis, 
 	if (!game || !game.game) return;
 
 	const player = game.lPlayer === clientContext.userId ? game.game.players.left : game.game.players.right
-	if (["active", "stopped"].includes(game.game.state)) {
-		player.connected = false;
-		player.disconnectedAt = Date.now()
-		if (game.game.state !== "stopped") {
-			game.game.state = "stopped"
-			game.game.timer.startAt = Date.now()
-		}
+	player.connected = false;
+	player.disconnectedAt = Date.now()
+	if (game.game.state === "active") {
+		game.game.state = "stopped"
+		game.game.timer.startAt = Date.now()
 	}
 }
 
