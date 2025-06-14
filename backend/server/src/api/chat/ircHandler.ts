@@ -1,4 +1,3 @@
-import { parseIRCMessage, validateIRCCommand } from "./ircParser";
 import Database from "@db/Database";
 import { connectedSocketClients } from "@api/websocket";
 
