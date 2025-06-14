@@ -2,7 +2,6 @@ import { toastHelper } from "@/utils/toastHelper";
 import AuthManager from "./authManager";
 import Router from "@/router/Router";
 
-type SocketMessageHandler = (this: SocketHandler, response: SocketMessage) => void;
 
 class SocketHandler {
 	private static instance: SocketHandler;
@@ -84,7 +83,7 @@ class SocketHandler {
 			const accessToken = AuthManager.getInstance().GetAccessToken();
 			if (!accessToken)
 				throw new Error("Invalid AccessToken")
-			const socket = new WebSocket(`ws://localhost:4000/ws?accessToken=${encodeURIComponent(accessToken)}`);
+			const socket = new WebSocket(`ws://${window.location.hostname}:4000/ws?accessToken=${encodeURIComponent(accessToken)}`);
 			this.prepareSocket(socket);
 			return socket;
 		} catch (error) {
@@ -120,10 +119,8 @@ class SocketHandler {
 	 * @param msg SocketMessage
 	 */
 	public sendMessage(msg: SocketMessage) {
-		if (this.socket)
-		{
-			if (this.socket.readyState === WebSocket.OPEN) 
-			{
+		if (this.socket) {
+			if (this.socket.readyState === WebSocket.OPEN) {
 				this.socket.send(JSON.stringify(msg))
 			} else {
 				this.queuedMessages.push(msg);
@@ -182,6 +179,12 @@ class SocketHandler {
 							parsedMessage.avatar,
 						);
 						break;
+					case "lobby-room-join":
+						Router.getInstance().navigate("/games/lobby-room", {}, { roomId: parsedMessage.roomId })
+						break;
+					case "game-room-join":
+						Router.getInstance().navigate("/games/game-room", {}, { roomId: parsedMessage.roomId, gameId: parsedMessage.gameId })
+						break;
 					default:
 						break;
 				}
@@ -197,7 +200,7 @@ class SocketHandler {
 		}
 	}
 
-	public addMessageHandler(messageName: SocketMessageType, handler: SocketMessageHandler) {
+	public addMessageHandler<T extends SocketMessageType>(messageName: T, handler: SocketMessageHandler<T>) {
 		const setHandler = this.messageSubscriptions.get(messageName);
 		if (setHandler) {
 			this.messageSubscriptions.delete(messageName);
