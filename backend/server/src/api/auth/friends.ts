@@ -26,10 +26,6 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 		let offset = (page - 1) * limit;
 		name = name.trim();
 
-		if (!name) {
-			return reply.code(400).send({ message: "Invalid name query" })
-		}
-
 		const dbRes = await Database.getInstance().friendsTable.getPossibleFriends(userId, name, offset, limit)
 		if (dbRes.error) {
 			return reply.code(500).send(dbRes)

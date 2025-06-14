@@ -14,15 +14,15 @@ const buttonColorsMap: Record<ButtonClassId, string> = {
 }
 
 const getButtonElement = (id: string, classId: ButtonClassId, text: string) => {
-	const buttonId = `${classId}-button`
-	const buttonColor = buttonColorsMap[classId]
-
+	const buttonColor = buttonColorsMap[classId] || "bg-gray-500";
 	return `
-		<button data-user-id="${id}" id="${buttonId}" class="${buttonColor} self-end rounded-md font-semibold p-0.5 px-1 text-xs">
-			${text}
-		</button>
-	`
-}
+		<button 
+			data-user-id="${id}" 
+			id="${classId}-button" 
+			class="btn-friend-action ${buttonColor} text-white rounded-md font-semibold text-xs px-2 py-1 w-24 text-center"
+		>${text}</button>
+	`;
+};
 
 class UserCard extends BaseAttributeValidationElement<UserCardAttributes> {
 	constructor() {
@@ -50,63 +50,53 @@ class UserCard extends BaseAttributeValidationElement<UserCardAttributes> {
 			isPending: this.getAttribute("is-pending")! === "1",
 			hasInvitedMe: this.getAttribute("has-invited-me")! === "1",
 			isOnline: false
-		}
-
-
-		// Profile Card
+		};
 
 		this.innerHTML = /* html */`
-			<div class="">
-<!--			<div class="player-card min-w-64 max-w-80 max-h-16 rounded-md bg-slate-700 text-white p-2 flex gap-3">-->
-<!--				<img class="aspect-auto rounded-md w-12" src=${user.avatarUrl}>-->
-				<img class="steam-avatar" alt="Avatar" src=${user.avatarUrl}>
-				<div class="player-content flex flex-col w-full">
-					<div class="player-info text-left flex-[1] overflow-hidden">
-						<span class="text-1xl self-start break-words block">
-							 ${user.displayName}
+		<div class="flex flex-col items-center bg-slate-700 text-white rounded-md overflow-hidden w-full max-w-xs pb-4">
+			<img 
+				class="w-40 h-40 object-cover rounded-md mt-0" 
+				src="${user.avatarUrl}" 
+				alt="Avatar"
+			>
 
+			<div class="w-full px-4 mt-3">
+				<div 
+					class="text-left text-xl font-semibold break-words mb-3"
+					${user.displayName.length > 10 ? `title="${user.displayName}"` : ""}
+				>
+					${user.displayName.length > 10 ? user.displayName.slice(0, 10) + '…' : user.displayName}
+				</div>
+
+				<div class="flex items-center gap-6 w-full">
+					<div class="flex gap-2">
+						${conditionalRender(user.isPending, getButtonElement(user.id, "cancel", "Cancel"))}
+						${conditionalRender(user.hasInvitedMe, `
+							${getButtonElement(user.id, "accept", "Accept")}
+							${getButtonElement(user.id, "reject", "Reject")}
+						`)}
+						${conditionalRender(!user.isPending && !user.hasInvitedMe, getButtonElement(user.id, "add", "Request"))}
+					</div>
+
+					${conditionalRender(user.isPending, `
+						<span id="pending-indicator" class="text-amber-400 text-sm font-semibold flex items-center">
+							Pending<span id="pending-dots">.</span>
 						</span>
-					</div>
-					<div class="player-buttons max-h-16 flex w-full">
-						<div class="badges flex flex-row gap-2 w-[40%]">
-							${conditionalRender(["profile", "friend"].includes(variant), `
-								<span class="badge text-left ${conditionalRender(user.isOnline, `bg-green-500`, `bg-red-500`)}">
-									${conditionalRender(user.isOnline, `Online`, `Offline`)}
-								</span>
-							`)}
-							${conditionalRender(user.isPending, `
-								<span class="badge self-start bg-amber-500">
-									Pending
-								</span>
-							`)}
-							${conditionalRender(user.hasInvitedMe, `
-								<span class="badge self-start bg-blue-400">
-									Invited me
-								</span>
-							`)}
-						</div>
-						<div class="buttons flex flex-row gap-2 w-[60%] justify-end">
-							${conditionalRender(variant === "possibleFriend", `
-								${conditionalRender(user.isPending, getButtonElement(user.id, "cancel", "Cancel"))}
-								${conditionalRender(user.hasInvitedMe, `
-									${getButtonElement(user.id, "accept", "Accept")}
-									${getButtonElement(user.id, "reject", "Reject")}
-								`)}
-								${conditionalRender(!user.isPending && !user.hasInvitedMe, `
-									${getButtonElement(user.id, "add", "Request")}
-								`)}
-							`)}
-							${conditionalRender(variant === "friend", getButtonElement(user.id, "remove", "Remove"))}
-						</div>
-					</div>
+					`)}
 				</div>
 			</div>
-	  	`;
-	}		
+		</div>`;
+
+		const dotsEl = this.querySelector("#pending-dots");
+		if (dotsEl) {
+			let count = 0;
+			setInterval(() => {
+				count = (count + 1) % 4;
+				dotsEl.textContent = '.'.repeat(count);
+			}, 500);
+		}
+	}
 }
-
-
-
 
 const RemoveFriendHandler = (userId: string) => {
 	AuthManager.getInstance().authFetch(API.auth.friends.remove, {
@@ -136,19 +126,19 @@ const AddFriendHandler = (userId: string) => {
 	}).then(res => {
 		res?.json().then((data: { error?: string }) => {
 			if (data.error) {
-				console.error("Error adding friend", data.error)
-				return
+				console.error("Error adding friend", data.error);
+				return;
 			}
-			const playerCardEl: UserCard | null = document.querySelector(`user-card#user-id-${userId}`)
-			if (playerCardEl)
-			{
-				playerCardEl.setAttribute("is-pending", "1")
+			const playerCardEl: UserCard | null = document.querySelector(`user-card#user-id-${userId}`);
+			if (playerCardEl) {
+				playerCardEl.setAttribute("is-pending", "1");
+				playerCardEl.render(); // 👈 ДОБАВЛЕНО
 			}
-		})
+		});
 	}).catch(err => {
-		console.error("Error adding friend", err)
-	})
-}
+		console.error("Error adding friend", err);
+	});
+};
 
 const CancelFriendRequestHandler = (userId: string) => {
 	AuthManager.getInstance().authFetch(API.auth.friends.requests.pending.cancel, {

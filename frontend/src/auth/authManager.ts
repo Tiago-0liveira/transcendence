@@ -137,7 +137,6 @@ class AuthManager {
 		});
 
 		const data = await res.json();
-		console.log("Данные data: ", data);
 
 		if (!res.ok) {
 			console.error(`${API.oauth.google.login} error:`, data.message || data.error);
