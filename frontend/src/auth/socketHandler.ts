@@ -1,7 +1,10 @@
 import { toastHelper } from "@/utils/toastHelper";
 import AuthManager from "./authManager";
 
-type SocketMessageHandler = (this: SocketHandler, response: SocketMessage) => void;
+type SocketMessageHandler = (
+	this: SocketHandler,
+	response: SocketMessage,
+) => void;
 
 class SocketHandler {
 	private static instance: SocketHandler;
@@ -12,7 +15,8 @@ class SocketHandler {
 	private lastPongTime!: number;
 	private lastPingTime!: number;
 	private tryToReconnect!: boolean;
-	private messageSubscriptions: Map<SocketMessageType, SocketMessageHandler> = new Map();
+	private messageSubscriptions: Map<SocketMessageType, SocketMessageHandler> =
+		new Map();
 	/**
 	 * @description Automatically used by openHandler, so when we try to send messages and we are still not connected it will store the messages here and send them all after connecting
 	 */
@@ -29,12 +33,14 @@ class SocketHandler {
 	}
 
 	private pingIntervalHandler() {
-		if (!this.socket)
-			return;
+		if (!this.socket) return;
 		const now = Date.now();
 		if (now - this.lastPongTime > SocketHandler.PING_INTERVAL_TIMEOUT * 2) {
 			console.warn("WebSocket is unresponsive. Attempting to reconnect...");
-			if (this.socket.readyState === WebSocket.CONNECTING || this.socket.readyState === WebSocket.OPEN)
+			if (
+				this.socket.readyState === WebSocket.CONNECTING ||
+				this.socket.readyState === WebSocket.OPEN
+			)
 				this.socket.close();
 			return;
 		}
@@ -51,13 +57,23 @@ class SocketHandler {
 	}
 
 	private constructor() {
-		this.pingIntervalId = setInterval(this.pingIntervalHandler.bind(this), SocketHandler.PING_INTERVAL_TIMEOUT);
-		this.reconnectTimeoutId = setInterval(this.reconnectHandler.bind(this), SocketHandler.RECONNECT_BASE_TIMEOUT);
-		this.queuedMessages = []
+		this.pingIntervalId = setInterval(
+			this.pingIntervalHandler.bind(this),
+			SocketHandler.PING_INTERVAL_TIMEOUT,
+		);
+		this.reconnectTimeoutId = setInterval(
+			this.reconnectHandler.bind(this),
+			SocketHandler.RECONNECT_BASE_TIMEOUT,
+		);
+		this.queuedMessages = [];
 	}
 
 	public disconnect() {
-		if (this.socket && (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING)) {
+		if (
+			this.socket &&
+			(this.socket.readyState === WebSocket.OPEN ||
+				this.socket.readyState === WebSocket.CONNECTING)
+		) {
 			this.socket.close();
 		}
 	}
@@ -68,9 +84,10 @@ class SocketHandler {
 	private createSocket(): WebSocket {
 		try {
 			const accessToken = AuthManager.getInstance().GetAccessToken();
-			if (!accessToken)
-				throw new Error("Invalid AccessToken")
-			const socket = new WebSocket(`ws://localhost:4000/ws?accessToken=${encodeURIComponent(accessToken)}`);
+			if (!accessToken) throw new Error("Invalid AccessToken");
+			const socket = new WebSocket(
+				`ws://localhost:4000/ws?accessToken=${encodeURIComponent(accessToken)}`,
+			);
 			this.prepareSocket(socket);
 			return socket;
 		} catch (error) {
@@ -91,14 +108,13 @@ class SocketHandler {
 	}
 
 	private cleanUpSocketListeners() {
-		if (!this.socket)
-			return;
+		if (!this.socket) return;
 
 		this.socket.removeEventListener("open", this.openHandler.bind(this));
 		this.socket.removeEventListener("message", this.messageHandler.bind(this));
 		this.socket.removeEventListener("error", this.errorHandler.bind(this));
 		this.socket.removeEventListener("close", this.closeHandler.bind(this));
-		this.messageSubscriptions.clear()
+		this.messageSubscriptions.clear();
 		this.socket = null;
 	}
 
@@ -107,13 +123,11 @@ class SocketHandler {
 	 * @param msg SocketMessage
 	 */
 	public sendMessage(msg: SocketMessage) {
-		if (this.socket)
-		{
-			if (this.socket.readyState === WebSocket.OPEN) 
-			{
-				this.socket.send(JSON.stringify(msg))
+		if (this.socket) {
+			if (this.socket.readyState === WebSocket.OPEN) {
+				this.socket.send(JSON.stringify(msg));
 			} else {
-				this.queuedMessages.push(msg)
+				this.queuedMessages.push(msg);
 			}
 		}
 	}
@@ -122,8 +136,8 @@ class SocketHandler {
 		console.log("WebSocket connection opened.");
 		console.log("debug::openHandler: ", this.queuedMessages);
 		this.queuedMessages.forEach((message) => {
-			this.socket?.send(JSON.stringify(message))
-		})
+			this.socket?.send(JSON.stringify(message));
+		});
 		this.queuedMessages = [];
 		this.tryToReconnect = false;
 	}
@@ -134,7 +148,7 @@ class SocketHandler {
 	}
 
 	private static isSocketValidMessage(message: any): message is SocketMessage {
-		return typeof message === "object" && typeof message.type === "string"
+		return typeof message === "object" && typeof message.type === "string";
 	}
 
 	private messageHandler(ev: MessageEvent<any>) {
@@ -151,18 +165,34 @@ class SocketHandler {
 				console.log("parsedMessage: ", parsedMessage);
 				switch (parsedMessage.type) {
 					case "friend-online":
-						toastHelper.friendOnline(parsedMessage.friendName, parsedMessage.avatar);
+						toastHelper.friendOnline(
+							parsedMessage.friendName,
+							parsedMessage.avatar,
+						);
 						break;
 					case "friend-request":
-						toastHelper.friendRequest(parsedMessage.friendName, parsedMessage.avatar, parsedMessage.friendId);
+						toastHelper.friendRequest(
+							parsedMessage.friendName,
+							parsedMessage.avatar,
+							parsedMessage.friendId,
+						);
 						break;
 					case "friend-request-accepted":
-						toastHelper.friendRequestAccepted(parsedMessage.friendName, parsedMessage.avatar);
+						toastHelper.friendRequestAccepted(
+							parsedMessage.friendName,
+							parsedMessage.avatar,
+						);
 						break;
+					case "new-irc-notification":
+					// toastHelper.newMessage()
+					case "new-irc-message":
+					//new message handler
 					default:
 						break;
 				}
-				const messageHandler = this.messageSubscriptions.get(parsedMessage.type);
+				const messageHandler = this.messageSubscriptions.get(
+					parsedMessage.type,
+				);
 				messageHandler && messageHandler.bind(this)(parsedMessage);
 			}
 		} catch (error) {
@@ -170,7 +200,10 @@ class SocketHandler {
 		}
 	}
 
-	public addMessageHandler(messageName: SocketMessageType, handler: SocketMessageHandler) {
+	public addMessageHandler(
+		messageName: SocketMessageType,
+		handler: SocketMessageHandler,
+	) {
 		const setHandler = this.messageSubscriptions.get(messageName);
 		if (setHandler) {
 			this.messageSubscriptions.delete(messageName);
@@ -183,7 +216,10 @@ class SocketHandler {
 	}
 
 	private closeHandler(ev: CloseEvent) {
-		console.warn("WebSocket connection closed. Reason:", ev.reason || "Unknown");
+		console.warn(
+			"WebSocket connection closed. Reason:",
+			ev.reason || "Unknown",
+		);
 		console.log(`closeHandler: ${ev.code}`);
 		this.cleanUpSocketListeners();
 		/*
