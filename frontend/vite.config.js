@@ -20,7 +20,11 @@ export default defineConfig({
 		watch: {
 			usePolling: true,
 		},
-		port: 3000,
+		https: {
+			cert: '/etc/nginx/ssl/nginx-selfsigned.crt',
+			key: '/etc/nginx/ssl/nginx-selfsigned.key'
+		},
+		port: 443,
 		strictPort: true,
 		historyApiFallback: true,
 		host: "0.0.0.0",

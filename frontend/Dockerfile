@@ -1,24 +1,10 @@
 # Build stage
-FROM node:18 AS builder
+FROM node:18-alpine AS builder
 
 WORKDIR /app
 
 COPY package*.json ./
 RUN npm install
-
-COPY . .
-RUN npm run build
-
-# Dev stage
-FROM node:18 AS dev
-
-WORKDIR /app
-COPY --from=builder /app ./
-
-CMD ["npm", "run", "dev"]
-
-# Prod stage
-FROM nginx:alpine AS prod
 
 # Install openssl for self-signed certificate
 RUN apk add --no-cache openssl bash curl nss
@@ -36,12 +22,28 @@ RUN mkcert -install \
     && mv localhost.pem /etc/nginx/ssl/nginx-selfsigned.crt \
     && mv localhost-key.pem /etc/nginx/ssl/nginx-selfsigned.key
 
+COPY . .
+RUN npm run build
+
+# Dev stage
+FROM node:18-alpine AS dev
+
+WORKDIR /app
+COPY --from=builder /app ./
+COPY --from=builder /etc/nginx/ssl /etc/nginx/ssl
+
+CMD ["npm", "run", "dev"]
+
+# Prod stage
+FROM nginx:alpine AS prod
+
 # NGINX config
 RUN rm /etc/nginx/conf.d/default.conf
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy Vite build output
 COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=builder /etc/nginx/ssl /etc/nginx/ssl
 
 EXPOSE 80 443
 
