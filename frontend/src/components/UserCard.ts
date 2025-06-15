@@ -3,26 +3,46 @@ import API from "@/utils/BackendApi";
 import { conditionalRender } from "@/utils/conditionalRender";
 import BaseAttributeValidationElement from "@component/BaseAttributeValidationElement";
 
-type ButtonClassId = "accept" | "cancel" | "add" | "reject" | "remove"
+type ButtonClassId = "accept" | "cancel" | "add" | "reject" | "remove" | "block" | "message";
 
 const buttonColorsMap: Record<ButtonClassId, string> = {
 	accept: "bg-green-700",
 	cancel: "bg-red-700",
 	add: "bg-green-700",
 	reject: "bg-red-700",
-	remove: "bg-red-700"
-}
+	remove: "bg-red-700",
+	block: "bg-yellow-600",
+	message: "bg-blue-600"
+};
 
 const getButtonElement = (id: string, classId: ButtonClassId, text: string) => {
-	const buttonColor = buttonColorsMap[classId] || "bg-gray-500";
+	const buttonId = `${classId}-button`
+	const buttonColor = buttonColorsMap[classId]
+
+	let iconMarkup = text;
+
+	if (classId === "message") {
+		iconMarkup = `
+			<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+				viewBox="0 0 24 24" class="w-5 h-5">
+				<path d="M1.5 5.25A2.25 2.25 0 013.75 3h16.5a2.25 2.25 0 012.25 2.25v13.5A2.25 2.25 0 0120.25 21H3.75A2.25 2.25 0 011.5 18.75V5.25Zm1.842.422a.75.75 0 00-.092 1.056l8.25 9a.75.75 0 001.1 0l8.25-9a.75.75 0 10-1.1-1.02L12 14.331 3.65 5.708a.75.75 0 00-1.057-.036Z"/>
+			</svg>
+		`;
+	} else if (classId === "remove") {
+		iconMarkup = `
+			<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+				viewBox="0 0 24 24" class="w-5 h-5">
+				<path d="M6 7h12v12.75A2.25 2.25 0 0115.75 22H8.25A2.25 2.25 0 016 19.75V7Zm9.25-3a1 1 0 01.92.606l.326.722H19a1 1 0 110 2h-1v1H6V6H5a1 1 0 110-2h2.504l.326-.722A1 1 0 019.25 4h5.5Z"/>
+			</svg>
+		`;
+	}
+
 	return `
-		<button 
-			data-user-id="${id}" 
-			id="${classId}-button" 
-			class="btn-friend-action ${buttonColor} text-white rounded-md font-semibold text-xs px-2 py-1 w-24 text-center"
-		>${text}</button>
-	`;
-};
+		<button data-user-id="${id}" id="${buttonId}" class="${buttonColor} rounded-md font-semibold p-1 text-xs flex items-center justify-center gap-1">
+			${iconMarkup}
+		</button>
+	`
+}
 
 class UserCard extends BaseAttributeValidationElement<UserCardAttributes> {
 	constructor() {
@@ -31,7 +51,7 @@ class UserCard extends BaseAttributeValidationElement<UserCardAttributes> {
 
 	static getAttributesValidators() {
 		return super.defineValidator<UserCardAttributes>({
-			variant: { values: ["profile", "possibleFriend", "friend"]},
+			variant: { values: ["possibleFriend", "friend"]},
 			"user-id": { },
 			"avatar-url": { },
 			"display-name": { },
@@ -68,22 +88,35 @@ class UserCard extends BaseAttributeValidationElement<UserCardAttributes> {
 					${user.displayName.length > 10 ? user.displayName.slice(0, 10) + '…' : user.displayName}
 				</div>
 
-				<div class="flex items-center gap-6 w-full">
-					<div class="flex gap-2">
-						${conditionalRender(user.isPending, getButtonElement(user.id, "cancel", "Cancel"))}
-						${conditionalRender(user.hasInvitedMe, `
-							${getButtonElement(user.id, "accept", "Accept")}
-							${getButtonElement(user.id, "reject", "Reject")}
+				${conditionalRender(variant === "possibleFriend", `
+					<div class="flex items-center gap-6 w-full">
+						<div class="flex gap-2">
+							${conditionalRender(user.isPending, getButtonElement(user.id, "cancel", "Cancel"))}
+							${conditionalRender(user.hasInvitedMe, `
+								${getButtonElement(user.id, "accept", "Accept")}
+								${getButtonElement(user.id, "reject", "Reject")}
+							`)}
+							${conditionalRender(!user.isPending && !user.hasInvitedMe, getButtonElement(user.id, "add", "Request"))}
+						</div>
+				
+						${conditionalRender(user.isPending, `
+							<span id="pending-indicator" class="text-amber-400 text-sm font-semibold flex items-center">
+								Pending<span id="pending-dots">.</span>
+							</span>
 						`)}
-						${conditionalRender(!user.isPending && !user.hasInvitedMe, getButtonElement(user.id, "add", "Request"))}
 					</div>
-
-					${conditionalRender(user.isPending, `
-						<span id="pending-indicator" class="text-amber-400 text-sm font-semibold flex items-center">
-							Pending<span id="pending-dots">.</span>
-						</span>
-					`)}
-				</div>
+				`)}
+				${conditionalRender(variant === "friend", `
+					<div class="flex gap-2 w-full pr-6 relative">
+						<div class="flex gap-2">
+							${getButtonElement(user.id, "message", "Message")}
+							${getButtonElement(user.id, "block", "Block")}
+						</div>
+						<div class="absolute bottom-0 right-0">
+							${getButtonElement(user.id, "remove", "Remove")}
+						</div>
+					</div>
+				`)}
 			</div>
 		</div>`;
 
@@ -132,7 +165,7 @@ const AddFriendHandler = (userId: string) => {
 			const playerCardEl: UserCard | null = document.querySelector(`user-card#user-id-${userId}`);
 			if (playerCardEl) {
 				playerCardEl.setAttribute("is-pending", "1");
-				playerCardEl.render(); // 👈 ДОБАВЛЕНО
+				playerCardEl.render();
 			}
 		});
 	}).catch(err => {
@@ -238,6 +271,16 @@ document.addEventListener("click", (e) => {
 		console.log("Remove userId: ", userId)
 		RemoveFriendHandler(userId)
 	})
+	getButtonAndHandleClick(e, "message", (userId) => {
+		console.log("Message userId: ", userId);
+		window.location.href = `/chat/${userId}`; // или Router.getInstance().navigate(...)
+	});
+
+	getButtonAndHandleClick(e, "block", (userId) => {
+		console.log("Block userId: ", userId);
+		// Реализация блокировки
+	});
+
 })
 
 customElements.define("user-card", UserCard);
