@@ -34,6 +34,15 @@ class BlockedUsersTable extends BaseTable<BlockedUser, BlockedUserParams> {
     this.init();
   }
 
+  async delete(id: number): Promise<DatabaseResult<boolean>> {
+    throw Error("This table does not have a delete method!");
+  }
+
+  async update(id: number, params: BlockedUserParams): Promise<DatabaseResult<number>> {
+    throw Error("This table does not have a update method!");
+  }
+  
+
   async new(params: BlockedUserParams): Promise<DatabaseResult<number>> {
     try {
       // Prevent users from blocking themselves
