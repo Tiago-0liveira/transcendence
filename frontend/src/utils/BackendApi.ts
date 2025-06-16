@@ -8,6 +8,7 @@ const routeTree = {
 		friends: {
 			possibleFriends: "possibleFriends",
 			me: "me",
+			blocked: "blocked",
 			add: "add",
 			remove: "remove",
 			requests: {

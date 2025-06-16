@@ -51,7 +51,7 @@ class UserCard extends BaseAttributeValidationElement<UserCardAttributes> {
 
 	static getAttributesValidators() {
 		return super.defineValidator<UserCardAttributes>({
-			variant: { values: ["possibleFriend", "friend"]},
+			variant: { values: ["possibleFriend", "friend", "blocked"]},
 			"user-id": { },
 			"avatar-url": { },
 			"display-name": { },
@@ -110,10 +110,20 @@ class UserCard extends BaseAttributeValidationElement<UserCardAttributes> {
 					<div class="flex gap-2 w-full pr-6 relative">
 						<div class="flex gap-2">
 							${getButtonElement(user.id, "message", "Message")}
-							${getButtonElement(user.id, "block", "Block")}
 						</div>
 						<div class="absolute bottom-0 right-0">
 							${getButtonElement(user.id, "remove", "Remove")}
+						</div>
+					</div>
+				`)}
+
+				${conditionalRender(variant === "blocked", `
+					<div class="flex gap-2 w-full pr-6 relative">
+						<div class="flex gap-2">
+							${getButtonElement(user.id, "accept", "Accept")}
+						</div>
+						<div class="absolute bottom-0 right-0">
+							${getButtonElement(user.id, "remove", "Unblock")}
 						</div>
 					</div>
 				`)}
@@ -237,6 +247,26 @@ const RejectFriendRequestHandler = (userId: string) => {
 	})
 }
 
+const UnblockUserHandler = (userId: string) => {
+	AuthManager.getInstance().authFetch(API.auth.friends.remove, {
+		method: "POST", // или DELETE — зависит от твоего бекенда
+		body: JSON.stringify({ userId }),
+	}).then(res => {
+		res?.json().then((data: { error?: string }) => {
+			if (data.error) {
+				console.error("Error unblocking user", data.error);
+				return;
+			}
+			const card: UserCard | null = document.querySelector(`user-card#blocked-user-id-${userId}`);
+			if (card) {
+				card.hidden = true;
+			}
+		});
+	}).catch(err => {
+		console.error("Error unblocking user", err);
+	});
+};
+
 const getButtonAndHandleClick = (e: MouseEvent, classId: ButtonClassId, cb: (userId: string) => void) => {
 	if (!e.target) return;
 	if (!(e.target instanceof Element)) return;
@@ -268,17 +298,22 @@ document.addEventListener("click", (e) => {
 		AddFriendHandler(userId)
 	})
 	getButtonAndHandleClick(e, "remove", (userId) => {
-		console.log("Remove userId: ", userId)
-		RemoveFriendHandler(userId)
-	})
+		console.log("Remove/Unblock userId: ", userId);
+		const card = document.querySelector(`user-card#user-id-${userId}`) ??
+			document.querySelector(`user-card#blocked-user-id-${userId}`);
+
+		const isBlocked = card?.getAttribute("variant") === "blocked";
+		if (isBlocked) {
+			console.log("→ Unblocking user...");
+			UnblockUserHandler(userId);
+		} else {
+			console.log("→ Removing friend...");
+			RemoveFriendHandler(userId);
+		}
+	});
 	getButtonAndHandleClick(e, "message", (userId) => {
 		console.log("Message userId: ", userId);
 		window.location.href = `/chat/${userId}`; // или Router.getInstance().navigate(...)
-	});
-
-	getButtonAndHandleClick(e, "block", (userId) => {
-		console.log("Block userId: ", userId);
-		// Реализация блокировки
 	});
 
 })
