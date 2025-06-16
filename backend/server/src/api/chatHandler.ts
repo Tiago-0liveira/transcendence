@@ -1,23 +1,27 @@
 import Database from "@db/Database";
 import { connectedSocketClients } from "@api/websocket";
-import BlockedUsersService from "@api/BlockedUsersService";
+import BlockedUsersService from "@utils/BlockedUsersService";
 
 export async function handleChatMessage(
   rawMessage: string,
-  senderId: number,
+  clientContext: ClientThis,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // Parse the incoming socket message (it's already structured, not IRC format)
-    const message = JSON.parse(rawMessage) as SocketMessage;
+    const message = JSON.parse(
+      rawMessage,
+    ) as SelectSocketMessage<"chat-message">;
 
-    console.log(`💬 Chat Handler - Processing message from user ${senderId}`);
+    console.log(
+      `💬 Chat Handler - Processing message from user ${clientContext.userId}`,
+    );
     console.log(`   Type: ${message.isPrivateMessage ? "Private" : "Room"}`);
     console.log(`   Content: ${message.content}`);
 
     if (message.isPrivateMessage) {
-      return await handlePrivateMessage(message, senderId);
+      return await handlePrivateMessage(message, clientContext);
     } else if (message.isChannelMessage) {
-      return await handleRoomMessage(message, senderId);
+      return await handleRoomMessage(message, clientContext);
     } else {
       return {
         success: false,
@@ -35,10 +39,12 @@ export async function handleChatMessage(
  */
 async function handlePrivateMessage(
   message: any,
-  senderId: number,
+  clientContext: ClientThis,
 ): Promise<{ success: boolean; error?: string }> {
   const targetUserId = message.target;
-  console.log(`📨 Private message from ${senderId} to ${targetUserId}`);
+  console.log(
+    `📨 Private message from ${clientContext.userId} to ${message.target}`,
+  );
 
   const blockedUsersService = BlockedUsersService.getInstance();
 
@@ -78,7 +84,7 @@ async function handlePrivateMessage(
  */
 async function handleRoomMessage(
   message: any,
-  senderId: number,
+  clientContext: ClientThis,
 ): Promise<{ success: boolean; error?: string }> {
   console.log(`📢 Room message from user ${senderId}`);
 
