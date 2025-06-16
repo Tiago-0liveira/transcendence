@@ -24,7 +24,7 @@ export default defineConfig({
 			cert: '/etc/nginx/ssl/nginx-selfsigned.crt',
 			key: '/etc/nginx/ssl/nginx-selfsigned.key'
 		},
-		port: 443,
+		port: 2000,
 		strictPort: true,
 		historyApiFallback: true,
 		host: "0.0.0.0",
