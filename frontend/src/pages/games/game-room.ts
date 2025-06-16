@@ -17,15 +17,15 @@ const setError = (el: HTMLDivElement, error: string) => {
 
 const canvasDrawMiddleLine = function (ctx: CanvasRenderingContext2D) {
 	ctx.strokeStyle = 'lightgray';
-    ctx.lineWidth = 4;
+	ctx.lineWidth = 4;
 
-    ctx.setLineDash([13, 13]);// dash size, gap
+	ctx.setLineDash([13, 13]);// dash size, gap
 
-    // Draw the line
-    ctx.beginPath();
-    ctx.moveTo(CANVAS.w / 2, 0); // Start
-    ctx.lineTo(CANVAS.w / 2, CANVAS.h); // End
-    ctx.stroke();
+	// Draw the line
+	ctx.beginPath();
+	ctx.moveTo(CANVAS.w / 2, 0); // Start
+	ctx.lineTo(CANVAS.w / 2, CANVAS.h); // End
+	ctx.stroke();
 }
 
 const canvasDrawPaddles = function (ctx: CanvasRenderingContext2D, leftY: number, rightY: number) {
@@ -41,7 +41,7 @@ const canvasDrawBall = function (ctx: CanvasRenderingContext2D, ball: GameBallDa
 	ctx.fill();
 }
 
-const updateCanvas = function (game: Game, ctx: CanvasRenderingContext2D ) {
+const updateCanvas = function (game: Game, ctx: CanvasRenderingContext2D) {
 	ctx.clearRect(0, 0, CANVAS.w, CANVAS.h);
 
 	canvasDrawMiddleLine(ctx)
@@ -57,7 +57,7 @@ const component = async () => {
 	const inputState = { up: false, down: false }
 	let goToLobbyIntervalId: number | null = null;
 	let returnToLobbyTimer = 5;
-	
+
 	const queryParams = router.getCurrentRoute()?.query
 	if (!queryParams || !queryParams.roomId || !queryParams.gameId) {
 		throw new Error("Room not found!")
@@ -66,22 +66,22 @@ const component = async () => {
 		if (!gameRoom || !["active", "stopped"].includes(gameRoom.state)) return
 
 		const thisPlayer = gameRoom.players.left.id === user.id ? gameRoom.players.left : gameRoom.players.right;
-		
+
 		if (gameRoom.timer.startAt !== 0) {
 
-			
+
 		} else {
 			/* predict movement on clientSide */
 			updatePaddle(thisPlayer, inputState.up, inputState.down)
 		}
-		
+
 		const canvas = document.getElementById("gameCanvas")
 		if (!canvas) throw new Error("Could not find canvas")
 		const ctx = (canvas as HTMLCanvasElement).getContext("2d")
 		if (!ctx) throw new Error("Could not get canvas context 2d!")
 
 		updateCanvas(gameRoom, ctx)
-		
+
 		/* send actual data to server to get the real one */
 		if (gameRoom.timer.startAt === 0) {
 			sh.sendMessage({
@@ -111,11 +111,11 @@ const component = async () => {
 						<a href="/" id="a-go-to-lobby" class="link">Go to Lobby now!</a>
 					</span>
 				</div>
-				<div id="timer-div" class="absolute rounded-full p-4 hidden bg-gray-50 items-center justify-center top-1/2 left-1/2  transform -translate-x-1/2 -translate-y-1/2">
+				<div id="timer-div" class="rounded-full fixed p-4 hidden bg-gray-50 items-center justify-center top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[-1/2]">
 					<span id="timer-left" class="hidden"></span>
 					<span id="player-disconnected-time-left" class="hidden"></span>
 				</div>
-				<button id="btn-set-ready" class="absolute top-[15%] left-1/2  transform -translate-x-1/2 -translate-y-[-15%] mt-40 text-white"></button>
+				<button id="btn-set-ready" class="absolute top-[15%] left-1/2 transform -translate-x-1/2 -translate-y-[-15%] mt-40 text-white"></button>
 				<div id="div-loading" class="bg-gray-300 absolute rounded-md p-4 w-80 flex space-x-8 items-center top-1/2 left-1/2  transform -translate-x-1/2 -translate-y-1/2">
 					<span class="text-2xl">Loading game Data...</span>
 					<loading-spinner size="sm"></loading-spinner>
@@ -129,7 +129,7 @@ const component = async () => {
 				</div>
 			</div>
 			<div id="room-content" class="w-full flex-1 flex items-center justify-center">
-				<canvas id="gameCanvas" style="width:${CANVAS.w}px;height:${CANVAS.h}px;" class="bg-black"></canvas>
+				<canvas id="gameCanvas" style="width:${CANVAS.w}px;height:${CANVAS.h}px;" width="${CANVAS.w}" height="${CANVAS.h}" class="bg-black"></canvas>
 			</div>
 		</div>
 	`;
@@ -207,7 +207,7 @@ const component = async () => {
 				if (!timerDiv) throw new Error("Could not find div#timer-div")
 				if (!startTimerSpan) throw new Error("Could not find span#timer-left")
 				if (!disconnectedPlayerTimeLeftSpan) throw new Error("Could not find span#player-disconnected-time-left")
-				
+
 				if (gameRoom.timer.startAt !== 0) {
 					if (timerDiv.classList.contains("hidden")) {
 						timerDiv.classList.remove("hidden")
@@ -217,9 +217,9 @@ const component = async () => {
 							disconnectedPlayerTimeLeftSpan.classList.remove("hidden")
 						}
 						const disconnectedPlayer = !gameRoom.players.left.connected ? gameRoom.players.left : gameRoom.players.right
-						
+
 						const timeLeft = MAX_PLAYER_DISCONNECT_ACCUMULATED_TIME - (Date.now() - disconnectedPlayer.disconnectedAt) - disconnectedPlayer.disconnectedTime
-						
+
 						disconnectedPlayerTimeLeftSpan.textContent = `${disconnectedPlayer.name} has ${timeToText(timeLeft)} to connect!`
 
 						if (!startTimerSpan.classList.contains("hidden")) {
@@ -247,7 +247,7 @@ const component = async () => {
 			<span class="text-2xl">${middleText}</span>
 			<span class="text-2xl w-96">${rNameText}</span>
 		`;
-		
+
 		if (gameRoom.state === "active") {
 			const canvas = document.getElementById("gameCanvas")
 			if (!canvas) throw new Error("Could not find canvas")
@@ -326,13 +326,13 @@ const component = async () => {
 		if (!gameRoom) return
 
 		if (event.key === "ArrowUp") inputState.up = true;
-    	if (event.key === "ArrowDown") inputState.down = true;
+		if (event.key === "ArrowDown") inputState.down = true;
 	})
 	document.addEventListener("keyup", (event) => {
 		if (!gameRoom) return
 
 		if (event.key === "ArrowUp") inputState.up = false;
-    	if (event.key === "ArrowDown") inputState.down = false;
+		if (event.key === "ArrowDown") inputState.down = false;
 	})
 
 	return () => {

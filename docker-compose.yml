@@ -9,7 +9,7 @@ services:
     environment:
       - NODE_ENV=development
     ports:
-      - "3000:3000"
+      - "443:443"
     volumes:
       - ./frontend:/app
       - /app/node_modules

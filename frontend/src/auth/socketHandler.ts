@@ -83,7 +83,7 @@ class SocketHandler {
 			const accessToken = AuthManager.getInstance().GetAccessToken();
 			if (!accessToken)
 				throw new Error("Invalid AccessToken")
-			const socket = new WebSocket(`ws://${window.location.hostname}:4000/ws?accessToken=${encodeURIComponent(accessToken)}`);
+			const socket = new WebSocket(`wss://${window.location.hostname}:4000/ws?accessToken=${encodeURIComponent(accessToken)}`);
 			this.prepareSocket(socket);
 			return socket;
 		} catch (error) {
