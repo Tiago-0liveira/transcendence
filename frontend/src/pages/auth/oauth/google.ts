@@ -3,55 +3,52 @@ import Router from "@/router/Router";
 import AuthManager from "@/auth/authManager";
 
 const component = async () => {
+	// Redirect if no temporary Google OAuth data
+	if (!AuthManager.getInstance().isGoogleOAuthReady()) {
+		await Router.getInstance().navigate("/auth/login");
+		return;
+	}
+
 	const template = /*html*/`
-	<div class="flex-1 flex items-center justify-center bg-white">
-		<div class="w-full max-w-sm bg-white border border-gray-200 rounded-lg shadow-sm">
-			<form id="form-oauth-google-completeSignin" class="p-6 space-y-7">
-				<div class="relative mb-6">
-					<div class="text-2xl text-center flex space-x-2 items-center justify-center font-medium text-gray-900">
-						<img class="aspect-auto w-11 h-11" src="/google-logo.svg" alt="">
-						<span>Complete Signup</span>
-					</div>
-					<p id="form-error-message" class="hidden text-sm text-red-600 absolute w-full text-center left-0 -bottom-5"></p>
-				</div>
-				
-				<div class="relative">
-					<label for="username" class="form-input-label">Your Username</label>
-					<input type="text" name="username" id="username" placeholder="Username" required class="form-input">
-					<p id="error-username" class="hidden text-sm text-red-600 absolute left-0 -bottom-5"></p>
-				</div>
+  <div class="profile-card centered auth-box signup-box">
+    <div class="settings-header login-section">Complete Google Signup</div>
 
-				<div class="relative">
-					<label for="displayName" class="form-input-label">Display Name</label>
-					<input type="text" name="displayName" id="displayName" placeholder="Default to Username" class="form-input">
-					<p id="error-displayName" class="hidden text-sm text-red-600 absolute left-0 -bottom-5"></p>
-				</div>
+    <form id="form-oauth-google-completeSignin" class="settings-form">
+      <p id="error-form" class="form-message-error hidden"></p>
 
-				<div class="relative">
-					<label for="avatarUrl" class="form-input-label">Your avatarUrl</label>
-					<input type="text" name="avatarUrl" id="avatarUrl" placeholder="Default to Google avatar" class="form-input">
-					<p id="error-avatarUrl" class="hidden text-sm text-red-600 absolute left-0 -bottom-5"></p>
-				</div>
+      <div class="form-input-group">
+        <label for="username" class="form-input-label">Username</label>
+        <input type="text" id="username" name="username" class="form-input" placeholder="Enter your username" required />
+        <p id="error-username" class="form-message-error"></p>
+      </div>
 
-				<button id="submit-btn" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-1 text-center">
-					Sign In
-				</button>
-			</form>
-		</div>
-	</div>
+      <div class="form-input-group">
+        <label for="displayName" class="form-input-label">Display Name</label>
+        <input type="text" id="displayName" name="displayName" class="form-input" placeholder="Default to Google name" />
+        <p id="error-displayName" class="form-message-error"></p>
+      </div>
+
+      <div class="form-input-group">
+        <label for="avatarUrl" class="form-input-label">Avatar URL</label>
+        <input type="text" id="avatarUrl" name="avatarUrl" class="form-input" placeholder="Default to Google avatar" />
+        <p id="error-avatarUrl" class="form-message-error"></p>
+      </div>
+
+      <button id="submit-btn" type="submit" class="btn-steam-fixed">Complete Registration</button>
+    </form>
+  </div>
 `;
 
 	document.querySelector('#app')!.innerHTML = template;
 
-	const form = document.getElementById("form-oauth-google-completeSignin");
+	const form = document.getElementById("form-oauth-google-completeSignin") as HTMLFormElement;
 	const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
-	const errorMessageEl = document.getElementById("form-error-message") as HTMLParagraphElement;
-
-	if (!form || !submitBtn) return;
+	const errorMessageEl = document.getElementById("error-form") as HTMLParagraphElement;
 
 	const formSubmitHandler = async (e: Event) => {
 		e.preventDefault();
 
+		// Очистка ошибок
 		["username", "displayName", "avatarUrl"].forEach(field => {
 			const el = document.getElementById(`error-${field}`);
 			if (el) {
@@ -59,15 +56,14 @@ const component = async () => {
 				el.classList.add("hidden");
 			}
 		});
-
 		errorMessageEl.textContent = "";
 		errorMessageEl.classList.add("hidden");
 
-		const data = new FormData(form as HTMLFormElement);
+		const formData = new FormData(form);
 		const raw = {
-			username: data.get("username")?.toString() ?? "",
-			displayName: data.get("displayName")?.toString() || undefined,
-			avatarUrl: data.get("avatarUrl")?.toString() || undefined,
+			username: formData.get("username")?.toString() ?? "",
+			displayName: formData.get("displayName")?.toString() || undefined,
+			avatarUrl: formData.get("avatarUrl")?.toString() || undefined,
 		};
 
 		const parsed = googleOauthCompleteSchema.safeParse(raw);
@@ -84,10 +80,7 @@ const component = async () => {
 		}
 
 		submitBtn.disabled = true;
-
-		const payload = parsed.data;
-		const error = await AuthManager.getInstance().oauthGoogleCompleteSignUp(payload);
-
+		const error = await AuthManager.getInstance().oauthGoogleCompleteSignUp(parsed.data);
 		submitBtn.disabled = false;
 
 		if (error === null) {
@@ -100,6 +93,7 @@ const component = async () => {
 	};
 
 	form.addEventListener("submit", formSubmitHandler);
+
 	return () => {
 		form.removeEventListener("submit", formSubmitHandler);
 	};

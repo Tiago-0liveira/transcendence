@@ -260,6 +260,11 @@ class AuthManager {
 		}
 	}
 
+	public isGoogleOAuthReady(): boolean {
+		// Пока нет accessToken и user, но мы уже авторизовались через Google
+		return !this.user && !this.accessToken;
+	}
+
 	public async updateProfile(updateData: {
 		displayName?: string;
 		avatarUrl?: string;
