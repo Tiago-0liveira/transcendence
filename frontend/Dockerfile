@@ -32,6 +32,8 @@ WORKDIR /app
 COPY --from=builder /app ./
 COPY --from=builder /etc/nginx/ssl /etc/nginx/ssl
 
+EXPOSE 2000
+
 CMD ["npm", "run", "dev"]
 
 # Prod stage
@@ -45,6 +47,6 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY --from=builder /etc/nginx/ssl /etc/nginx/ssl
 
-EXPOSE 80 443
+EXPOSE 80 2000
 
 CMD ["nginx", "-g", "daemon off;"]
