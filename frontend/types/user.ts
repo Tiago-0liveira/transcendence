@@ -22,9 +22,11 @@ interface User extends UserParams, UIDD {
 type UserNoPass = Omit<User, "password">
 type UserParamsNoPass = Omit<UserParams, "password">
 
-interface FriendUser extends UIDD, UserParamsNoPass {}
+interface FriendUser extends UIDD, UserParamsNoPass {
+	online: boolean
+}
 
-interface PossibleFriendUser extends FriendUser {
-	hasInvitedMe: boolean;
-	isPending: boolean
+interface PossibleFriendUser extends UIDD, Required<Omit<UserParamsNoPass, "authProvider">> {
+	hasInvitedMe: "0" | "1";
+	isPending: "0" | "1";
 }

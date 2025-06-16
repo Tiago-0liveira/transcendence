@@ -7,3 +7,26 @@ type GameRoomFuncs = {
 	gameRoomSetPlayerReady: (this: LobbyRoom, playerId: number, gameRoomId: string, ready: boolean) => void;
 	startGame: (this: LobbyRoom, playerId: number) => void;
 }
+
+type GameHistory = {
+	id: number;
+	lobbyId: string;
+	winnerId: number;
+	loserId: number;
+	scoreWinner: number;
+	scoreLoser: number;
+	startTime: string;
+	endTime: string;
+	duration: number;
+};
+
+type GameHistoryParams = {
+	lobbyId: string;
+	winnerId: number;
+	loserId: number;
+	scoreWinner: number;
+	scoreLoser: number;
+	startTime: string;
+	endTime: string;
+	duration: number;
+};

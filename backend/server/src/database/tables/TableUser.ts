@@ -70,6 +70,7 @@ class UserTable extends BaseTable<User, UserParams> {
 				enabled: false,
 				secret: ""
 			});
+			await this.database.userStatsTable.new({ userId: result.lastInsertRowid as number })
 
 			return { result: result.lastInsertRowid as number };
 
