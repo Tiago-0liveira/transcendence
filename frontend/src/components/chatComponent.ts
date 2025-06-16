@@ -1,3 +1,5 @@
+import ChatManager, { type ChatMessage } from "@/auth/chatManager";
+import AuthManager from "@/auth/authManager";
 // Types
 interface Message {
   id: string;
@@ -9,96 +11,200 @@ interface Message {
 interface Conversation {
   id: string;
   title: string;
+  targetId?: number;
   messages: Message[];
   lastMessage: string;
   timestamp: Date;
+  isPrivate: boolean;
 }
 
 class ChatSidebar extends HTMLElement {
   private isCollapsed = false;
   private conversations: Conversation[] = [];
   private activeConversationId: string | null = null;
+  private chatManager: ChatManager;
+  private currentUserId: number;
+  private messageHandler: (message: ChatMessage) => void;
 
   constructor() {
     super();
+    this.chatManager = ChatManager.getInstance();
+    this.currentUserId = AuthManager.getInstance().User?.id || 0;
     this.initializeData();
+
+    //bind message handler
+    this.messageHandler = this.handleIncomingMessage.bind(this);
   }
 
   connectedCallback(): void {
     this.render();
     this.attachEventListeners();
+    this.chatManager.setupChatManager();
+  }
+
+  disconnectedCallback(): void {
+    this.chatManager.offMessage(this.messageHandler);
+  }
+
+  private setupChatManager() {
+    // Subscribe to incoming messages
+    this.chatManager.onMessage(this.messageHandler);
+
+    // Ensure connection (this will use the existing SocketHandler connection)
+    if (!this.chatManager.isConnected) {
+      this.chatManager.connect();
+    }
+  }
+
+  private handleIncomingMessage(message: ChatMessage) {
+    console.log("Chat component received message:", message);
+
+    // Don't process our own messages (they're already shown locally)
+    if (message.senderId === this.currentUserId) {
+      return;
+    }
+
+    if (message.isChannelMessage) {
+      // Room message - add to general room conversation
+      this.addMessageToRoom(message);
+    } else if (message.isPrivateMessage) {
+      // Private message from another user
+      this.addPrivateMessage(message);
+    }
+  }
+
+  private addMessageToRoom(message: ChatMessage) {
+    let roomConversation = this.conversations.find((c) => !c.isPrivate);
+
+    if (!roomConversation) {
+      roomConversation = {
+        id: "room",
+        title: "General Chat",
+        messages: [],
+        lastMessage: "",
+        timestamp: new Date(),
+        isPrivate: false,
+      };
+      this.conversations.push(roomConversation);
+    }
+
+    const newMessage: Message = {
+      id: message.id,
+      content: message.content,
+      timestamp: message.timestamp,
+      sender: "friend",
+      senderId: message.senderId,
+      senderName: message.senderName,
+    };
+
+    roomConversation.messages.push(newMessage);
+    roomConversation.lastMessage = message.content;
+    roomConversation.timestamp = message.timestamp;
+
+    this.updateUI();
+  }
+
+  private addPrivateMessage(message: ChatMessage) {
+    const conversationId = `private_${message.senderId}`;
+    let conversation = this.conversations.find((c) => c.id === conversationId);
+
+    if (!conversation) {
+      conversation = {
+        id: conversationId,
+        title: message.senderName || `User ${message.senderId}`,
+        messages: [],
+        lastMessage: "",
+        timestamp: new Date(),
+        isPrivate: true,
+        targetId: message.senderId,
+      };
+      this.conversations.push(conversation);
+    }
+
+    const newMessage: Message = {
+      id: message.id,
+      content: message.content,
+      timestamp: message.timestamp,
+      sender: "friend",
+      senderId: message.senderId,
+      senderName: message.senderName,
+    };
+
+    conversation.messages.push(newMessage);
+    conversation.lastMessage = message.content;
+    conversation.timestamp = message.timestamp;
+
+    this.updateUI();
   }
 
   private initializeData(): void {
-    // Sample data
+    //Initialize with general room
     this.conversations = [
       {
-        id: "1",
-        title: "General Discussion",
-        messages: [
-          {
-            id: "1",
-            content: "Hello! How can I help you today?",
-            timestamp: new Date(Date.now() - 3600000),
-            sender: "assistant",
-          },
-          {
-            id: "2",
-            content: "I need help with my project",
-            timestamp: new Date(Date.now() - 3500000),
-            sender: "user",
-          },
-          {
-            id: "3",
-            content:
-              "I'd be happy to help! What kind of project are you working on?",
-            timestamp: new Date(Date.now() - 3400000),
-            sender: "assistant",
-          },
-        ],
-        lastMessage:
-          "I'd be happy to help! What kind of project are you working on?",
-        timestamp: new Date(Date.now() - 3400000),
-      },
-      {
-        id: "2",
-        title: "Technical Support",
-        messages: [
-          {
-            id: "4",
-            content: "What technical issue are you experiencing?",
-            timestamp: new Date(Date.now() - 7200000),
-            sender: "assistant",
-          },
-          {
-            id: "5",
-            content: "My application is running slowly",
-            timestamp: new Date(Date.now() - 7100000),
-            sender: "user",
-          },
-        ],
-        lastMessage: "My application is running slowly",
-        timestamp: new Date(Date.now() - 7100000),
-      },
-      {
-        id: "3",
-        title: "Feature Requests",
-        messages: [
-          {
-            id: "6",
-            content: "What new features would you like to see?",
-            timestamp: new Date(Date.now() - 86400000),
-            sender: "assistant",
-          },
-        ],
-        lastMessage: "What new features would you like to see?",
-        timestamp: new Date(Date.now() - 86400000),
-      },
+        id: "room",
+        title: "General Chat",
+        messages: [],
+        lastMessage: "Welcome to the chat!",
+        timestamp: new Date(),
+        isPrivate: false;
+      }
     ];
-
-    // Set first conversation as active by default
-    this.activeConversationId = this.conversations[0].id;
+    this.activeConversationId = "room";
   }
+
+  private sendMessage(content: string): void {
+      if (!content.trim() || !this.activeConversationId) return;
+
+      const conversation = this.conversations.find(c => c.id === this.activeConversationId);
+      if (!conversation) return;
+
+      let sent = false;
+
+      if (conversation.isPrivate && conversation.targetUserId) {
+        // Send private message
+        sent = this.chatManager.sendPrivateMessage(content, conversation.targetUserId);
+      } else {
+        // Send room message
+        sent = this.chatManager.sendRoomMessage(content);
+      }
+
+      if (sent) {
+        // Add message to local conversation immediately for user feedback
+        const newMessage: Message = {
+          id: Date.now().toString(),
+          content: content,
+          timestamp: new Date(),
+          sender: "user",
+          senderId: this.currentUserId
+        };
+
+        conversation.messages.push(newMessage);
+        conversation.lastMessage = content;
+        conversation.timestamp = new Date();
+
+        this.updateUI();
+      } else {
+        console.error("Failed to send message");
+        // You could show an error message in the UI here
+      }
+    }
+
+    // Update the new chat creation to support private messages
+    private createNewChat(): void {
+      // For now, just create another room chat
+      // In a real app, you might want to show a user picker for private chats
+      const newConversation: Conversation = {
+        id: Date.now().toString(),
+        title: `Chat ${this.conversations.length + 1}`,
+        messages: [],
+        lastMessage: "New conversation started",
+        timestamp: new Date(),
+        isPrivate: false // Set to true for private chats
+      };
+
+      this.conversations.unshift(newConversation);
+      this.selectConversation(newConversation.id);
+    }
 
   private render(): void {
     this.innerHTML = this.getTemplate();
