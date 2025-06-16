@@ -264,6 +264,27 @@ class AuthManager {
 		// Пока нет accessToken и user, но мы уже авторизовались через Google
 		return !this.user && !this.accessToken;
 	}
+
+	public async updateProfile(updateData: {
+		displayName?: string;
+		avatarUrl?: string;
+	}): Promise<void> {
+		const res = await this.authFetch(API.settings.update, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify(updateData),
+		});
+
+		const data = await res.json().catch(() => ({}));
+		if (!res.ok || !data.ok) {
+			throw new Error(data?.error || data?.message || "Update failed");
+		}
+
+		this.accessToken = data.accessToken;
+		await this.fetchUser();
+	}
 }
 
 export default AuthManager;

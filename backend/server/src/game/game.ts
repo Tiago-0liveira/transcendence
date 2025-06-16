@@ -110,9 +110,9 @@ setInterval(() => {
 
 
 export const updateBracketsAfterGameFinnish = (lobby: LobbyRoom, gameId: string, phase: number, winnerId: number) => {
+	let allFinnished = true;
 	lobby.brackets.forEach(bracket => {
 		if (bracket.dependencyIds.includes(gameId) && bracket.phase === phase + 1) {
-			console.log("before: ", bracket)
 			if (bracket.lPlayer === 0) {
 				bracket.lPlayer = winnerId;
 			} else if (bracket.rPlayer === 0) {
@@ -124,9 +124,16 @@ export const updateBracketsAfterGameFinnish = (lobby: LobbyRoom, gameId: string,
 				bracket.ready = true;
 				bracket.game = createGame(lobby, bracket.lPlayer, bracket.rPlayer);
 			}
-			console.log("after: ", bracket)
+		}
+		if (bracket.game?.state !== "completed")
+		{
+			allFinnished = false;
 		}
 	});
+	if (allFinnished)
+	{
+		lobby.status = "completed";
+	}
 }
 
 export const sendGameRoomUpdate = (game: Game) => {
@@ -286,55 +293,60 @@ function updateBall(ball: GameBallData, leftPaddleY: number, rightPaddleY: numbe
 	const pos = ball.position;
 	const vel = ball.velocity;
 
-	pos.x += vel.vx
-	pos.y += vel.vy
+	const EDGE_HIT_BONUS = 1.0; // small extra speed when hitting paddle near edges
 
-	// Check for collision with top and bottom walls
+	pos.x += vel.vx;
+	pos.y += vel.vy;
+
+	// Bounce off top and bottom
 	if (pos.y - BALL_RADIUS < 0 || pos.y + BALL_RADIUS > CANVAS.h) {
-		vel.vy *= -1; // Reverse vertical velocity
-		pos.y = Math.max(BALL_RADIUS, Math.min(CANVAS.h - BALL_RADIUS, pos.y)); // Clamp to prevent clipping
+		vel.vy *= -1;
+		pos.y = Math.max(BALL_RADIUS, Math.min(CANVAS.h - BALL_RADIUS, pos.y));
 	}
 
-	// Check for collision with the left paddle
+	// Collision with left paddle
 	if (
-		pos.x - BALL_RADIUS <= PADDLE_OFFSET + PADDLE_W && // Ball is at the left paddle's x
-		pos.y >= leftPaddleY && // Ball is within the paddle's top
-		pos.y <= leftPaddleY + PADDLE_H // Ball is within the paddle's bottom
+		pos.x - BALL_RADIUS <= PADDLE_OFFSET + PADDLE_W &&
+		pos.y >= leftPaddleY &&
+		pos.y <= leftPaddleY + PADDLE_H
 	) {
-		vel.vx *= -1; // Reverse horizontal velocity
-		const hitPosition = pos.y - (leftPaddleY + PADDLE_H / 2); // Relative hit position on paddle
-		vel.vy += hitPosition * 0.1; // Adjust vertical velocity based on hit position
-		vel.vx += hitPosition * 0.08;
-		pos.x = PADDLE_W + PADDLE_OFFSET + BALL_RADIUS; // Reposition to prevent clipping
+		const hitPos = (pos.y - (leftPaddleY + PADDLE_H / 2)) / (PADDLE_H / 2); // [-1, 1]
+		const baseSpeed = Math.hypot(vel.vx, vel.vy);
+		const extraSpeed = BALL_VELOCITY_INCREMENT + Math.abs(hitPos) * EDGE_HIT_BONUS;
+		const speed = baseSpeed + extraSpeed;
+		const angle = hitPos * (Math.PI / 4);
 
-		vel.vx += BALL_VELOCITY_INCREMENT;
-		vel.vy += BALL_VELOCITY_INCREMENT;
+		vel.vx = speed * Math.cos(angle);
+		vel.vy = speed * Math.sin(angle);
+		if (vel.vx < 0) vel.vx *= -1; // Ensure ball goes right
+		pos.x = PADDLE_OFFSET + PADDLE_W + BALL_RADIUS;
 	}
 
-	// Check for collision with the right paddle
+	// Collision with right paddle
 	if (
-		pos.x + BALL_RADIUS >= CANVAS.w - PADDLE_OFFSET - PADDLE_W && // Ball is at the right paddle's x
-		pos.y >= rightPaddleY && // Ball is within the paddle's top
-		pos.y <= rightPaddleY + PADDLE_H // Ball is within the paddle's bottom
+		pos.x + BALL_RADIUS >= CANVAS.w - PADDLE_OFFSET - PADDLE_W &&
+		pos.y >= rightPaddleY &&
+		pos.y <= rightPaddleY + PADDLE_H
 	) {
-		vel.vx *= -1; // Reverse horizontal velocity
-		const hitPosition = pos.y - (rightPaddleY + PADDLE_H / 2); // Relative hit position on paddle
-		vel.vy += hitPosition * 0.1; // Adjust vertical velocity based on hit position
-		vel.vx += hitPosition * 0.08;
-		pos.x = CANVAS.w - PADDLE_W - BALL_RADIUS - PADDLE_OFFSET; // Reposition to prevent clipping
+		const hitPos = (pos.y - (rightPaddleY + PADDLE_H / 2)) / (PADDLE_H / 2); // [-1, 1]
+		const baseSpeed = Math.hypot(vel.vx, vel.vy);
+		const extraSpeed = BALL_VELOCITY_INCREMENT + Math.abs(hitPos) * EDGE_HIT_BONUS;
+		const speed = baseSpeed + extraSpeed;
+		const angle = hitPos * (Math.PI / 4);
 
-		vel.vx += BALL_VELOCITY_INCREMENT;
-		vel.vy += BALL_VELOCITY_INCREMENT;
+		vel.vx = -speed * Math.cos(angle); // Ensure ball goes left
+		vel.vy = speed * Math.sin(angle);
+		pos.x = CANVAS.w - PADDLE_OFFSET - PADDLE_W - BALL_RADIUS;
 	}
 
-	// Check for scoring
-	if (pos.x - BALL_RADIUS < 0) {
-		return "right"; // Right player scores
-	} else if (pos.x + BALL_RADIUS > CANVAS.w) {
-		return "left"; // Left player scores
-	}
+	// Scoring
+	if (pos.x - BALL_RADIUS < 0) return "right";
+	if (pos.x + BALL_RADIUS > CANVAS.w) return "left";
+
 	return null;
 }
+
+
 
 function handleGoal(game: Game, scorer: GameSide) {
 	if (scorer === "left") {
@@ -371,13 +383,11 @@ export const handleGamePlayerLeave = async function (clientContext: ClientThis, 
 	if (!game || !game.game) return;
 
 	const player = game.lPlayer === clientContext.userId ? game.game.players.left : game.game.players.right
-	if (["active", "stopped"].includes(game.game.state)) {
-		player.connected = false;
-		player.disconnectedAt = Date.now()
-		if (game.game.state !== "stopped") {
-			game.game.state = "stopped"
-			game.game.timer.startAt = Date.now()
-		}
+	player.connected = false;
+	player.disconnectedAt = Date.now()
+	if (game.game.state === "active") {
+		game.game.state = "stopped"
+		game.game.timer.startAt = Date.now()
 	}
 }
 

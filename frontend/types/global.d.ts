@@ -7,7 +7,7 @@ import RoomCard from '@/components/RoomCard';
 declare global {
 	interface ImportMeta {
 		env: {
-			VITE_BACKEND_URL?: string;
+			VITE_BACKEND_PORT?: string;
 			VITE_GOOGLE_CLIENT_ID?: string;
 		}
 	}
