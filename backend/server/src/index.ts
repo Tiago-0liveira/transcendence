@@ -2,30 +2,22 @@ import Fastify from "fastify";
 import cors from "@fastify/cors"
 import fastifyCookie from "@fastify/cookie"
 import fastifyWebsocket from "@fastify/websocket";
-import { PORT, FRONTEND_URL, JWT_SECRET, DEV_MODE } from "@config"
+import { PORT, FRONTEND_URL, JWT_SECRET } from "@config"
 import registerRoutes from "./routes";
 import Database from "@db/Database";
+import fs from "fs"
 
-/*import fs from "fs"
-import path from "path"*/
 
 Database.getInstance()/* Force db creation */
 
-const BaseFastifyOptions = {
+const fastifyOptions = {
 	logger: true, // Enable Fastify logger if needed
+	https: {
+		key: fs.readFileSync('/etc/certs/selfsigned.key'),
+		cert: fs.readFileSync('/etc/certs/selfsigned.crt'),
+		maxVersion: 'TLSv1.3'
+	}
 };
-
-// SSL certificates for development mode (HTTPS)
-const httpsOptions = DEV_MODE ? {
-	/* use this on prod */
-	/*https: {
-	  key: fs.readFileSync(path.join(__dirname, 'etc/certs/nginx-selfsigned.key')),
-	  cert: fs.readFileSync(path.join(__dirname, 'etc/certs/nginx-selfsigned.crt')),
-	}*/
-} : {};
-
-// Combine base options with HTTPS options if needed
-const fastifyOptions = DEV_MODE ? { ...BaseFastifyOptions, ...httpsOptions } : BaseFastifyOptions;
 
 const app = Fastify(fastifyOptions);
 
@@ -37,27 +29,27 @@ app.register(fastifyCookie, {
 
 app.register(cors, {
 	origin: (origin, callback) => {
-	  const allowedOrigins = [
-		'http://localhost:3000',
-		/^http:\/\/10\.12\.\d{1,3}\.\d{1,3}(:\d+)?$/ // Regex to match 10.12.x.x
-	  ];
-  
-	  if (!origin) {
-		// Allow non-browser tools like curl/postman
-		return callback(null, true);
-	  }
-  
-	  const isAllowed = allowedOrigins.some(o =>
-		typeof o === 'string' ? o === origin : o.test(origin)
-	  );
-  
-	  callback(null, isAllowed);
+		const allowedOrigins = [
+			FRONTEND_URL,
+			/^https:\/\/10\.12\.\d{1,3}\.\d{1,3}(:\d+)?$/ // Regex to match 10.12.x.x
+		];
+		console.log("origin: ", origin)
+		if (!origin) {
+			// Allow non-browser tools like curl/postman
+			return callback(null, true);
+		}
+
+		const isAllowed = allowedOrigins.some(o =>
+			typeof o === 'string' ? o === origin : o.test(origin)
+		);
+
+		callback(null, isAllowed);
 	},
 	methods: ['GET', 'POST', 'DELETE', 'PUT'],
 	allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'Accept'],
 	credentials: true,
 	optionsSuccessStatus: 200
-  });
+});
 app.register(fastifyWebsocket)
 
 registerRoutes(app);

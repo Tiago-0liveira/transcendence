@@ -57,7 +57,7 @@ class UserCard extends BaseAttributeValidationElement<UserCardAttributes> {
 			"display-name": { },
 			"is-pending": { required: false, conditional: { variant: "possibleFriend" } },
 			"has-invited-me": { required: false, conditional: { variant: "possibleFriend" } },
-			/*"online": { required: false, conditional: { variant: "profile" } }*/
+			"online": { required: false, conditional: { variant: "friend" } }
 		});
 	}
 
@@ -67,10 +67,13 @@ class UserCard extends BaseAttributeValidationElement<UserCardAttributes> {
 			id: this.getAttribute("user-id")!,
 			avatarUrl: this.getAttribute("avatar-url")!,
 			displayName: this.getAttribute("display-name")!,
-			isPending: this.getAttribute("is-pending")! === "1",
-			hasInvitedMe: this.getAttribute("has-invited-me")! === "1",
-			isOnline: false
-		};
+			isPending: this.getAttribute("is-pending")! === "true",
+			hasInvitedMe: this.getAttribute("has-invited-me")! === "true",
+			isOnline: this.getAttribute("online")! === 'true'
+		}
+
+
+		// Profile Card
 
 		this.innerHTML = /* html */`
 		<div class="flex flex-col items-center bg-slate-700 text-white rounded-md overflow-hidden w-full max-w-xs pb-4">
@@ -172,10 +175,10 @@ const AddFriendHandler = (userId: string) => {
 				console.error("Error adding friend", data.error);
 				return;
 			}
-			const playerCardEl: UserCard | null = document.querySelector(`user-card#user-id-${userId}`);
-			if (playerCardEl) {
-				playerCardEl.setAttribute("is-pending", "1");
-				playerCardEl.render();
+			const playerCardEl: UserCard | null = document.querySelector(`user-card#user-id-${userId}`)
+			if (playerCardEl)
+			{
+				playerCardEl.setAttribute("is-pending", "true")
 			}
 		});
 	}).catch(err => {
@@ -196,7 +199,7 @@ const CancelFriendRequestHandler = (userId: string) => {
 			const playerCardEl: UserCard | null = document.querySelector(`user-card#user-id-${userId}`)
 			if (playerCardEl)
 			{
-				playerCardEl.setAttribute("is-pending", "0")
+				playerCardEl.setAttribute("is-pending", "false")
 			}
 		})
 	}).catch(err => {
@@ -217,7 +220,7 @@ const AcceptFriendRequestHandler = (userId: string) => {
 			const playerCardEl: UserCard | null = document.querySelector(`user-card#user-id-${userId}`)
 			if (playerCardEl)
 			{
-				playerCardEl.setAttribute("has-invited-me", "0")
+				playerCardEl.setAttribute("has-invited-me", "false")
 				playerCardEl.setAttribute("variant", "profile")
 			}
 		})

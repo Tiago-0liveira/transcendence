@@ -6,16 +6,6 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-COPY . .
-
-# Dev stage
-FROM builder AS dev
-CMD ["npm", "run", "dev"]
-
-# Prod stage
-FROM builder AS prod
-RUN npm run build
-
 RUN apk add --no-cache openssl bash curl nss
 
 # Download and install mkcert as alpine does not have it in their default repositories
@@ -28,8 +18,22 @@ RUN mkdir -p /etc/certs
 # Create the local CA and generate the certificate
 RUN mkcert -install \
     && mkcert localhost \
-    && mv localhost.pem /etc/certs/nginx-selfsigned.crt \
-    && mv localhost-key.pem /etc/certs/nginx-selfsigned.key
+    && mv localhost.pem /etc/certs/selfsigned.crt \
+    && mv localhost-key.pem /etc/certs/selfsigned.key
+
+COPY . .
+
+# Dev stage
+FROM builder AS dev
+CMD ["npm", "run", "dev"]
+
+COPY --from=builder /etc/certs/ /etc/certs/
+
+# Prod stage
+FROM builder AS prod
+RUN npm run build
+
+COPY --from=builder /etc/certs/ /etc/certs/
 
 EXPOSE 4000
 

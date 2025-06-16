@@ -51,7 +51,9 @@ type FriendParams = {
 	friendId: number;
 };
 
-interface FriendUser extends UIDD, BaseUserParams {}
+interface FriendUser extends UIDD, BaseUserParams {
+	online: boolean;
+}
 
 interface PossibleFriendUser extends FriendUser {
 	hasInvitedMe: boolean;
@@ -69,4 +71,22 @@ type User2FAParams = {
 	userId: number;
 	enabled: boolean;
 	secret: string;
+};
+
+type UserStats = {
+	userId: number;
+	wins: number;
+	losses: number;
+	totalGames: number;
+	tournamentWins: number;
+	tournamentLosses: number;
+};
+
+type UserStatsParams = {
+	userId: number;
+	wins?: number;
+	losses?: number;
+	totalGames?: number;
+	tournamentWins?: number;
+	tournamentLosses?: number;
 };

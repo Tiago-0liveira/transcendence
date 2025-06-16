@@ -17,6 +17,7 @@ type UserCardAttributes = {
 	"display-name": string;
 	"is-pending": StringBool;
 	"has-invited-me": StringBool;
+	"online": StringBool;
 }
 
 type LoadingSpinnerAttributes = {

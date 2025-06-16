@@ -110,9 +110,9 @@ setInterval(() => {
 
 
 export const updateBracketsAfterGameFinnish = (lobby: LobbyRoom, gameId: string, phase: number, winnerId: number) => {
+	let allFinnished = true;
 	lobby.brackets.forEach(bracket => {
 		if (bracket.dependencyIds.includes(gameId) && bracket.phase === phase + 1) {
-			console.log("before: ", bracket)
 			if (bracket.lPlayer === 0) {
 				bracket.lPlayer = winnerId;
 			} else if (bracket.rPlayer === 0) {
@@ -124,9 +124,16 @@ export const updateBracketsAfterGameFinnish = (lobby: LobbyRoom, gameId: string,
 				bracket.ready = true;
 				bracket.game = createGame(lobby, bracket.lPlayer, bracket.rPlayer);
 			}
-			console.log("after: ", bracket)
+		}
+		if (bracket.game?.state !== "completed")
+		{
+			allFinnished = false;
 		}
 	});
+	if (allFinnished)
+	{
+		lobby.status = "completed";
+	}
 }
 
 export const sendGameRoomUpdate = (game: Game) => {
@@ -376,13 +383,11 @@ export const handleGamePlayerLeave = async function (clientContext: ClientThis, 
 	if (!game || !game.game) return;
 
 	const player = game.lPlayer === clientContext.userId ? game.game.players.left : game.game.players.right
-	if (["active", "stopped"].includes(game.game.state)) {
-		player.connected = false;
-		player.disconnectedAt = Date.now()
-		if (game.game.state !== "stopped") {
-			game.game.state = "stopped"
-			game.game.timer.startAt = Date.now()
-		}
+	player.connected = false;
+	player.disconnectedAt = Date.now()
+	if (game.game.state === "active") {
+		game.game.state = "stopped"
+		game.game.timer.startAt = Date.now()
 	}
 }
 
