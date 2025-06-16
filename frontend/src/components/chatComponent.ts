@@ -146,65 +146,70 @@ class ChatSidebar extends HTMLElement {
         messages: [],
         lastMessage: "Welcome to the chat!",
         timestamp: new Date(),
-        isPrivate: false;
-      }
+        isPrivate: false,
+      },
     ];
     this.activeConversationId = "room";
   }
 
   private sendMessage(content: string): void {
-      if (!content.trim() || !this.activeConversationId) return;
+    if (!content.trim() || !this.activeConversationId) return;
 
-      const conversation = this.conversations.find(c => c.id === this.activeConversationId);
-      if (!conversation) return;
+    const conversation = this.conversations.find(
+      (c) => c.id === this.activeConversationId,
+    );
+    if (!conversation) return;
 
-      let sent = false;
+    let sent = false;
 
-      if (conversation.isPrivate && conversation.targetUserId) {
-        // Send private message
-        sent = this.chatManager.sendPrivateMessage(content, conversation.targetUserId);
-      } else {
-        // Send room message
-        sent = this.chatManager.sendRoomMessage(content);
-      }
-
-      if (sent) {
-        // Add message to local conversation immediately for user feedback
-        const newMessage: Message = {
-          id: Date.now().toString(),
-          content: content,
-          timestamp: new Date(),
-          sender: "user",
-          senderId: this.currentUserId
-        };
-
-        conversation.messages.push(newMessage);
-        conversation.lastMessage = content;
-        conversation.timestamp = new Date();
-
-        this.updateUI();
-      } else {
-        console.error("Failed to send message");
-        // You could show an error message in the UI here
-      }
+    if (conversation.isPrivate && conversation.targetId) {
+      // Send private message
+      sent = this.chatManager.sendPrivateMessage(
+        content,
+        conversation.targetId,
+      );
+    } else {
+      // Send room message
+      sent = this.chatManager.sendRoomMessage(content);
     }
 
-    // Update the new chat creation to support private messages
-    private createNewChat(): void {
-      // For now, just create another room chat
-      // In a real app, you might want to show a user picker for private chats
-      const newConversation: Conversation = {
+    if (sent) {
+      // Add message to local conversation immediately for user feedback
+      const newMessage: Message = {
         id: Date.now().toString(),
-        title: `Chat ${this.conversations.length + 1}`,
-        messages: [],
-        lastMessage: "New conversation started",
+        content: content,
         timestamp: new Date(),
-        isPrivate: false // Set to true for private chats
+        sender: "user",
+        senderId: this.currentUserId,
       };
 
-      this.conversations.unshift(newConversation);
-      this.selectConversation(newConversation.id);
+      conversation.messages.push(newMessage);
+      conversation.lastMessage = content;
+      conversation.timestamp = new Date();
+
+      this.updateUI();
+    } else {
+      console.error("Failed to send message");
+      // You could show an error message in the UI here
     }
+  }
+
+  // Update the new chat creation to support private messages
+  private createNewChat(): void {
+    // For now, just create another room chat
+    // In a real app, you might want to show a user picker for private chats
+    const newConversation: Conversation = {
+      id: Date.now().toString(),
+      title: `Chat ${this.conversations.length + 1}`,
+      messages: [],
+      lastMessage: "New conversation started",
+      timestamp: new Date(),
+      isPrivate: false, // Set to true for private chats
+    };
+
+    this.conversations.unshift(newConversation);
+    this.selectConversation(newConversation.id);
+  }
 
   private render(): void {
     this.innerHTML = this.getTemplate();
@@ -398,50 +403,16 @@ class ChatSidebar extends HTMLElement {
       "#message-input",
     ) as HTMLInputElement;
 
-    const sendMessage = (): void => {
-      if (
-        messageInput &&
-        messageInput.value.trim() &&
-        this.activeConversationId
-      ) {
-        this.addMessage(
-          this.activeConversationId,
-          messageInput.value.trim(),
-          "user",
-        );
-        messageInput.value = "";
-
-        // Simulate assistant response
-        setTimeout(
-          () => {
-            if (this.activeConversationId) {
-              const responses = [
-                "Thanks for your message! How can I help you further?",
-                "That's interesting! Tell me more about that.",
-                "I understand. What would you like to know?",
-                "Great question! Let me help you with that.",
-                "I see what you mean. Here's what I think...",
-                "Could you provide more details about that?",
-                "That makes sense. What's your next step?",
-                "I'm here to help! What else can I assist with?",
-              ];
-              const randomResponse =
-                responses[Math.floor(Math.random() * responses.length)];
-              this.addMessage(
-                this.activeConversationId,
-                randomResponse,
-                "assistant",
-              );
-            }
-          },
-          1000 + Math.random() * 1000,
-        );
-      }
-    };
-
     if (sendBtn) {
       sendBtn.addEventListener("click", sendMessage);
     }
+
+    const sendMessage = (): void => {
+      if (messageInput && messageInput.value.trim()) {
+        this.sendMessage(messageInput.value.trim());
+        messageInput.value = "";
+      }
+    };
 
     if (messageInput) {
       messageInput.addEventListener("keypress", (e: KeyboardEvent) => {
@@ -454,41 +425,6 @@ class ChatSidebar extends HTMLElement {
     }
   }
 
-  private createNewChat(): void {
-    const newConversation: Conversation = {
-      id: Date.now().toString(),
-      title: `New Chat ${this.conversations.length + 1}`,
-      messages: [
-        {
-          id: Date.now().toString(),
-          content: "Hello! How can I assist you today?",
-          timestamp: new Date(),
-          sender: "assistant",
-        },
-      ],
-      lastMessage: "Hello! How can I assist you today?",
-      timestamp: new Date(),
-    };
-
-    this.conversations.unshift(newConversation);
-    this.selectConversation(newConversation.id);
-  }
-
-  private selectConversation(conversationId: string): void {
-    this.activeConversationId = conversationId;
-    this.render();
-    this.attachEventListeners();
-
-    // Scroll to bottom of messages
-    setTimeout(() => {
-      const messagesContainer = this.querySelector(
-        "#messages-container",
-      ) as HTMLElement;
-      if (messagesContainer) {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      }
-    }, 100);
-  }
 
   private addMessage(
     conversationId: string,
@@ -531,6 +467,37 @@ class ChatSidebar extends HTMLElement {
       }
     }, 100);
   }
+
+
+  private selectConversation(conversationId: string): void {
+    this.activeConversationId = conversationId;
+    this.render();
+    this.attachEventListeners();
+
+    // Scroll to bottom of messages
+    setTimeout(() => {
+      const messagesContainer = this.querySelector("#messages-container") as HTMLElement;
+      if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+    }, 100);
+  }
+
+  private updateUI(): void {
+    this.render();
+    this.attachEventListeners();
+
+    // Scroll to bottom of messages
+    setTimeout(() => {
+      const messagesContainer = this.querySelector("#messages-container") as HTMLElement;
+      if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+    }, 100);
+  }
+
+  // ... keep all your existing render methods unchanged
+}
 
   private formatTime(date: Date): string {
     const now = new Date();
