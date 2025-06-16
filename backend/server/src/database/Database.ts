@@ -8,7 +8,7 @@ import {
 } from "@config";
 import TableUser from "@db-table/TableUser";
 import TableBlackListTokens from "@db-table/TableBlackListTokens";
-import BlockedUsersTable from "@db-tables/TableBlockedUsers";
+import BlockedUsersTable from "@db-table/TableBlockedUsers";
 import TableFriends from "@db-table/TableFriends";
 import TableFriendRequests from "@db-table/TableFriendRequests";
 import User2FATable from "@db-table/User2FATable";
