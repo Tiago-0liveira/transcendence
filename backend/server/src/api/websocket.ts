@@ -169,7 +169,7 @@ const socketOnMessage = (
             await handleGamePlayerLeave(clientContext, parsedMessage);
             break;
           case "chat-message":
-            await handleChatMessage(clientContext, parsedMessage);
+            await handleChatMessage(parsedMessage, clientContext);
             break;
           default:
             console.log("unkown message: ", message);
