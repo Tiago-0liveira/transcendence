@@ -48,20 +48,16 @@ type SocketMessage =
   | SocketMessageBase<
       "chat-notification",
       {
-        // command: string;
-        // params: string[];
-        source?: number;
-        target: number;
-        // content: string;
+        source: number;
+        target?: number;
+        content: string;
       }
     >
   | SocketMessageBase<
       "chat-message",
       {
-        command: string;
-        params: string[];
-        source?: number;
-        target: number;
+        source: number;
+        target?: number;
         content: string;
         isPrivateMessage: boolean;
         isChannelMessage: boolean;
