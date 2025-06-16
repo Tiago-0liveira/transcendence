@@ -947,3 +947,191 @@ input[type="checkbox"]:checked + .toggle-bg {
 .connected-player-status.not-ready {
 	background-color: #ef4444; /* red */
 }
+
+.brackets-wrapper {
+	margin-top: 2rem;
+	padding: 1rem;
+	border: 2px solid rgba(255, 255, 255, 0.1);
+	border-radius: 10px;
+	background-color: #1b1b1b;
+	box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+}
+
+.brackets-grid {
+	display: grid;
+	gap: 1rem;
+	width: 100%;
+}
+
+.bracket-card {
+	border: 1px solid rgba(255, 255, 255, 0.15);
+	border-radius: 8px;
+	padding: 0.5rem;
+	background-color: #2a2a2a;
+	box-shadow: 0 0 4px rgba(0, 0, 0, 0.25);
+}
+
+.lobby-room {
+	width: 100%;
+	padding: 2rem;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2rem;
+}
+
+.lobby-loading {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.loading-text {
+	font-size: 1.25rem;
+	color: #c7d5e0;
+}
+
+.lobby-error {
+	color: #ff6b6b;
+	text-align: center;
+}
+
+.return-link {
+	color: #61dafb;
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+.room-content-wrapper {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.room-name-truncated {
+	max-width: 15ch;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	display: inline-block;
+	vertical-align: bottom;
+}
+
+.centered-badge {
+	display: flex;
+	justify-content: center;
+	margin-top: -0.5rem;
+	margin-bottom: 1rem;
+}
+
+.room-name-block {
+	margin-top: 1rem;
+}
+
+.ready-button-group {
+	display: flex;
+	justify-content: center;
+	gap: 1rem;
+	margin-top: -1rem;
+}
+
+.btn-steam-fixed.active {
+	border: 2px solid #ffd700;
+	box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+}
+
+.btn-steam-fixed.active[data-ready="true"] {
+	background-color: #22c55e; /* green */
+	color: white;
+	box-shadow: 0 0 8px 2px gold;
+	border: 2px solid gold;
+}
+
+.btn-steam-fixed.active[data-ready="false"] {
+	background-color: #ef4444; /* red */
+	color: white;
+	box-shadow: 0 0 8px 2px gold;
+	border: 2px solid gold;
+}
+
+
+.room-card {
+	background-color: #1b1b1b;
+	border: 1px solid rgba(255,255,255,0.1);
+	border-radius: 6px;
+	padding: 1rem 1.5rem;
+	box-shadow: 0 0 12px rgba(0, 0, 0, 0.5);
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	/*min-width: 250px;*/
+	/*max-width: 360px;*/
+	width: 100%;
+}
+
+.room-card-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-weight: bold;
+	color: navajowhite;
+	font-size: 1.2rem;
+}
+
+.room-card-info {
+	display: flex;
+	flex-direction: column;
+	gap: 0.3rem;
+}
+
+.room-card-line {
+	display: flex;
+	justify-content: space-between;
+	font-size: 0.9rem;
+	color: #c7d5e0;
+}
+
+.label {
+	color: #93c5fd;
+	font-weight: 600;
+}
+
+.value {
+	color: white;
+}
+
+.room-card-actions {
+	margin-top: 0.5rem;
+	display: flex;
+	justify-content: flex-end;
+}
+
+.rooms-wrapper {
+	display: flex;
+	flex-direction: column; /* ⬅ ключевая строка */
+	gap: 1.5rem;
+	width: 100%;
+	margin-top: 1rem;
+}
+.room-card-container {
+	/*flex: 1 1 calc(50% - 1.5rem);*/
+	/*max-width: 400px;*/
+	/*min-width: 280px;*/
+	width: 100%;
+}
+
+@media (min-width: 1024px) {
+	.room-card-container {
+		flex: 1 1 calc(33.333% - 1.5rem);
+	}
+}
+
+.room-card-title {
+	font-size: 1.5rem;
+	font-weight: bold;
+	color: navajowhite;
+	text-align: left;
+	width: 100%;
+	margin-bottom: 1.5rem;
+}

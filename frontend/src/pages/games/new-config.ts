@@ -7,21 +7,11 @@ import { z, ZodError } from "zod";
 
 const tournamentTemplate = /* html */`
   <div class="form-input-group">
-    <label for="select-type" class="form-input-label">Number of Players</label>
-<!--    <label for="select-type" class="form-input-label">Game Type</label>-->
-    <select name="select-type" id="select-type" class="form-input">
-    <option value="min">4</option>
-    <option value="max">8</option>
-<!--    <input-->
-<!--      type="number"-->
-<!--      name="playersNumber"-->
-<!--      id="playersNumber"-->
-<!--      min="4"-->
-<!--      max="8"-->
-<!--      value="4"-->
-<!--      step="4"-->
-<!--      class="form-input"-->
-<!--    />-->
+    <label for="playersNumber" class="form-input-label">Number of Players</label>
+    <select name="playersNumber" id="playersNumber" class="form-input">
+      <option value="4">4</option>
+      <option value="8">8</option>
+    </select>
   </div>
 `
 
@@ -82,8 +72,6 @@ const component = async () => {
       <button type="submit" id="btn-create" class="btn-steam-fixed">Create Room</button>
     </form>
   </div>
-\`;
-
 	`;
 	document.querySelector('#app')!.innerHTML = template;
 
