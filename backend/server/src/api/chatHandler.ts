@@ -60,9 +60,7 @@ async function handlePrivateMessage(
 
   // Send message to target user if they're online
   const delivered = await sendMessageToUser(targetUserId, {
-    type: "new-irc-message",
-    command: message.command,
-    params: message.params,
+    type: "chat-message",
     source: senderId,
     target: targetUserId,
     content: message.content,
@@ -122,9 +120,7 @@ async function handleRoomMessage(
 
     // Send message to this friend if they're online
     const delivered = await sendMessageToUser(friendId, {
-      type: "new-irc-message",
-      command: message.command,
-      params: message.params,
+      type: "chat-message",
       source: senderId,
       target: 0, // Room message
       content: message.content,
