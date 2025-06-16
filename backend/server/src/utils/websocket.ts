@@ -55,7 +55,7 @@ const newDisconnectedClient = (deviceId: string): ClientValue => {
 export const updateDisconnectedClient = (userId: number, socket: WebSocket) => {
   const clientValue = connectedSocketClients.get(userId);
   if (!clientValue) return;
-  clientValue.connceted = true;
+  clientValue.connected = true;
   clientValue.connectedAt = Date.now();
   clientValue.socket = socket;
 };
@@ -97,7 +97,7 @@ export const notify = {
     const connectedFriend = connectedSocketClients.get(friendId);
     if (
       connectedFriend &&
-      connectedFriend.connceted &&
+      connectedFriend.connected &&
       connectedFriend.socket
     ) {
       const dbRes = await Database.getInstance().userTable.getById(userId);
@@ -120,7 +120,7 @@ export const notify = {
     const connectedFriend = connectedSocketClients.get(friendId);
     if (
       connectedFriend &&
-      connectedFriend.connceted &&
+      connectedFriend.connected &&
       connectedFriend.socket
     ) {
       const dbRes = await Database.getInstance().userTable.getById(userId);
@@ -143,7 +143,7 @@ export const notify = {
     const connectedFriend = connectedSocketClients.get(friendId);
     if (
       connectedFriend &&
-      connectedFriend.connceted &&
+      connectedFriend.connected &&
       connectedFriend.socket
     ) {
       const dbRes = await Database.getInstance().userTable.getById(userId);
@@ -168,7 +168,7 @@ export const notify = {
     const connectedFriend = connectedSocketClients.get(friendId);
     if (
       connectedFriend &&
-      connectedFriend.connceted &&
+      connectedFriend.connected &&
       connectedFriend.socket
     ) {
       const dbRes = await Database.getInstance().userTable.getById(userId);
