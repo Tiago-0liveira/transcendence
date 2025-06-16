@@ -25,6 +25,19 @@ const fetchUsers = (query: string, page: number, limit: number, cb: (query: stri
 }
 
 const getPlayerLi = (user: PossibleFriendUser) => {
+	const d = /* html */`
+		<user-card 
+			variant="possibleFriend" 
+			user-id="${user.id}" 
+			avatar-url="${user.avatarUrl}" 
+			display-name="${user.displayName}"
+			is-pending="${!!user.isPending}"
+			has-invited-me="${!!user.hasInvitedMe}"
+			id="user-id-${user.id}"
+		>
+		</user-card>
+	`
+	console.log(d, user)
 	return /* html */`
 		<user-card 
 			variant="possibleFriend" 

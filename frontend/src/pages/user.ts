@@ -13,6 +13,7 @@ const getPlayerLi = (user: FriendUser) => {
 			avatar-url="${user.avatarUrl}"
 			display-name="${user.displayName}"
 			id="user-id-${user.id}"
+			online="${user.online}"
 		>
 		</user-card>
 	`

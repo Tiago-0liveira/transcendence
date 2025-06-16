@@ -8,6 +8,8 @@ import TableFriends from "@db-table/TableFriends";
 import TableFriendRequests from "@db-table/TableFriendRequests";
 import User2FATable from "@db-table/User2FATable";
 import fs from "fs"
+import UserStatsTable from './tables/TableUserStats';
+import GameHistoryTable from './tables/TableGameHistory';
 
 class Database {
 	private static s_instance: Database | null;
@@ -18,6 +20,8 @@ class Database {
 	private _friendsTable: TableFriends;
 	private _friendRequestsTable: TableFriendRequests;
 	private _user2FATable: User2FATable;
+	private _userStatsTable: UserStatsTable;
+	private _gameHistoryTable: GameHistoryTable;
 
 	public static getInstance(): Database {
 		if (!Database.s_instance) {
@@ -25,6 +29,8 @@ class Database {
 
 			if (DEV_DB_INSERT_FAKE_DATA) {
 				Database.s_instance.userTable.bulkInsert(200);
+				Database.s_instance._gameHistoryTable.bulkInsert(200);
+				Database.s_instance._userStatsTable.bulkInsert(200);
 			}
 		}
 		return Database.s_instance;
@@ -49,6 +55,8 @@ class Database {
 		this._friendRequestsTable = new TableFriendRequests(this, this._userTable.tableName);
 		this._friendsTable = new TableFriends(this, this._userTable.tableName, this._friendRequestsTable.tableName);
 		this._user2FATable = new User2FATable(this);
+		this._userStatsTable = new UserStatsTable(this);
+		this._gameHistoryTable = new GameHistoryTable(this);
 	}
 
 	public get database() { return this._database; }
@@ -59,6 +67,8 @@ class Database {
 	public get friendsTable() { return this._friendsTable; }
 	public get friendRequestsTable() { return this._friendRequestsTable; }
 	public get user2FATable() { return this._user2FATable; }
+	public get userStatsTable() { return this._userStatsTable; }
+	public get gameHistoryTable() { return this._gameHistoryTable; }
 }
 
 export default Database;

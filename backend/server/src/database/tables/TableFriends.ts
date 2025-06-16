@@ -1,5 +1,6 @@
 import Database from "@db/Database";
 import BaseTable from "./BaseTable";
+import { connectedSocketClients } from "@api/websocket";
 
 class FriendsTable extends BaseTable<Friend, FriendParams> {
 	protected _tableName = "friends";
@@ -147,7 +148,13 @@ class FriendsTable extends BaseTable<Friend, FriendParams> {
 		return new Promise((resolve, reject) => {
 			const getFriends = this.db.prepare(this._getFriendsWithInfoStr)
 			const run1 = getFriends.all(userId, limit, offset)
-			if (run1) resolve({ result: run1 as FriendUser[] })
+			if (run1) {
+				(run1 as FriendUser[]).forEach(friendUser => {
+					const friendUserConnectedClient = connectedSocketClients.get(friendUser.id)
+					friendUser.online = friendUserConnectedClient !== undefined && friendUserConnectedClient.connected
+				})
+				resolve({ result: run1 as FriendUser[] })
+			}
 			else resolve({ result: [] as FriendUser[] })
 		});
 	}
@@ -159,7 +166,7 @@ class FriendsTable extends BaseTable<Friend, FriendParams> {
 	 * @param limit - The maximum number of results to return (default is 50).
 	 * @returns A promise that resolves to an array of possible friends.
 	 */
-	async getPossibleFriends(userId: number, name: string, offset = 0, limit = 50): Promise<DatabaseResult<FriendUser[]>> {
+	async getPossibleFriends(userId: number, name: string, offset = 0, limit = 50): Promise<DatabaseResult<PossibleFriendUser[]>> {
 		const nameSearch = `%${name}%`;
 		return new Promise((resolve, reject) => {
 			const possibleFriends = this.db.prepare(this._getPossibleFriendsStr)
@@ -170,7 +177,7 @@ class FriendsTable extends BaseTable<Friend, FriendParams> {
 				limit, offset
 			)
 			if (get1) {
-				return resolve({ result: get1 as FriendUser[] })
+				return resolve({ result: get1 as PossibleFriendUser[] })
 			} else {
 				return resolve({ result: [] })
 			}
