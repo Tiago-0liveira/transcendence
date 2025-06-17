@@ -68,6 +68,10 @@ export const notify = {
    * @description dispatches notifications for every friend so they now the user is now online!
    */
   friendsOnline: async (userId: number) => {
+    const dbRes = await Database.getInstance().userTable.getById(userId);
+    if (dbRes.error) return;
+    const user = dbRes.result;
+
     const friendsWithInfo =
       await Database.getInstance().friendsTable.getFriendsWithInfo(
         userId,
@@ -82,8 +86,8 @@ export const notify = {
         clientValue.socket?.send(
           JSON.stringify({
             type: "friend-online",
-            friendName: friend.displayName,
-            avatar: friend.avatarUrl,
+            friendName: user.displayName,
+            avatar: user.avatarUrl,
           } satisfies SocketMessage),
         );
       }

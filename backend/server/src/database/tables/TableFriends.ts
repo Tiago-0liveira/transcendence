@@ -13,6 +13,7 @@ class FriendsTable extends BaseTable<Friend, FriendParams> {
 	protected _updateStr = ""; // Not used
 	protected _getFriendsWithInfoStr;/* Defined in constructor */
 	protected _getPossibleFriendsStr;/* Defined in constructor */
+	protected _getBlockedUsersWithInfoStr;/* Defined in constructor */
 
 	constructor(database: Database, usersTableName: string, friendRequestsTableName: string) {
 		super(database);
@@ -35,6 +36,14 @@ class FriendsTable extends BaseTable<Friend, FriendParams> {
 			ORDER BY u.username
 			LIMIT ? OFFSET ?
 		;`;
+		this._getBlockedUsersWithInfoStr = `
+			SELECT u.id, u.username, u.displayName, u.avatarUrl
+			FROM ${this._friendRequestsTableName} fr
+					 JOIN ${this._usersTableName} u ON u.id = fr.senderId
+			WHERE fr.receiverId = ? AND fr.status = 'rejected'
+			ORDER BY u.username
+				LIMIT ? OFFSET ?
+			;`;
 		this._getPossibleFriendsStr = `
 			SELECT 
 				u.id, 
@@ -158,6 +167,65 @@ class FriendsTable extends BaseTable<Friend, FriendParams> {
 			else resolve({ result: [] as FriendUser[] })
 		});
 	}
+
+	async getBlockedUsersWithInfo(userId: number, offset = 0, limit = 50): Promise<DatabaseResult<FriendUser[]>> {
+		return new Promise((resolve, reject) => {
+			const getBlocked = this.db.prepare(this._getBlockedUsersWithInfoStr);
+			const result = getBlocked.all(userId, limit, offset);
+			if (result) resolve({ result: result as FriendUser[] });
+			else resolve({ result: [] as FriendUser[] });
+		});
+	}
+
+	getRelationBetweenUsers(receiverId: number, senderId: number): { status: string } | null {
+		const stmt = this.database.database.prepare(`SELECT status FROM friend_requests
+              WHERE (senderId = ? AND receiverId = ?)
+                 OR (senderId = ? AND receiverId = ?) LIMIT 1
+		`);
+
+		const row = stmt.get(receiverId, senderId, senderId, receiverId);
+		console.log("row", row);
+		return row ?? null;
+	}
+
+	deleteSpecificRelation(receiverId: number, senderId: number, status: string): DatabaseResult<void> {
+		try {
+			if (status === "accepted") {
+				// Удаляем из friends (в обе стороны)
+				const deleteFromFriends = this.database.database.prepare(`
+				DELETE FROM friends
+				WHERE (userId = ? AND friendId = ?)
+				   OR (userId = ? AND friendId = ?)
+			`);
+				deleteFromFriends.run(receiverId, senderId, senderId, receiverId);
+
+				// Удаляем заявки из friends_request
+				const deleteRequests = this.database.database.prepare(`
+				DELETE FROM friend_requests
+				WHERE (senderId = ? AND receiverId = ?)
+				   OR (senderId = ? AND receiverId = ?)
+			`);
+				deleteRequests.run(receiverId, senderId, senderId, receiverId);
+
+			} else if (status === "rejected") {
+				// Только из friends_request
+				const deleteRejected = this.database.database.prepare(`
+				DELETE FROM friend_requests
+				WHERE (senderId = ? AND receiverId = ?)
+				   OR (senderId = ? AND receiverId = ?)
+			`);
+				deleteRejected.run(senderId, receiverId, receiverId, senderId);
+			} else {
+				return { error: `Unsupported status '${status}'` };
+			}
+
+			return { result: undefined };
+		} catch (error) {
+			return { error };
+		}
+	}
+
+
 
 	/**
 	 * @param userId - The ID of the user to search for possible friends.

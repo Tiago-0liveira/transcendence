@@ -147,15 +147,28 @@ export const toastHelper = {
     const div = document.createElement("div");
     div.classList.add("content");
     div.innerHTML = /* html */ `
-			<div class="top-content flex items-center">
-				<img src="${avatar}" class="toastify-avatar mr-1">
-				<span class="text-lg">${name} sent you<br> a friend request!</span>
-			</div>
-			<div class="div-buttons mt-3 text-xs flex">
-				<button data-friend-id=${friendId} id="toastify-btn-accept-request" class="bg-green-500">Accept</button>
-				<button data-friend-id=${friendId} id="toastify-btn-reject-request" class="bg-red-500">Reject</button>
-			</div>
-		`;
+      <div class="top-content flex items-center">
+          <img src="${avatar}" class="toastify-avatar mr-2 w-8 h-8 rounded-full">
+          <span class="text-sm sm:text-base leading-tight font-bold">
+              ${name} sent you<br>
+              <span class="font-semibold">a friend request!</span>
+          </span>
+      </div>
+      <div class="div-buttons mt-3 flex gap-2 justify-end text-xl">
+          <button
+              id="toastify-btn-accept-request"
+              data-friend-id="${friendId}"
+              class="w-8 h-8 flex items-center justify-center bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
+              title="Accept"
+          >✓</button>
+          <button
+              id="toastify-btn-reject-request"
+              data-friend-id="${friendId}"
+              class="w-8 h-8 flex items-center justify-center bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+              title="Reject"
+          >✕</button>
+      </div>
+  `;
     const acceptBtn = div.querySelector(
       "button#toastify-btn-accept-request",
     ) as HTMLButtonElement;

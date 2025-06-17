@@ -2,7 +2,7 @@ import "@component/registry"
 
 import "@page/index"
 import "@page/players"
-import "@page/user"
+import "@page/friends"
 import "@page/404"
 import "@page/settings"
 import "@page/profile"

@@ -175,7 +175,7 @@ const component = async () => {
 			if (formError) {
 				formError.textContent = "";
 			}
-			await Router.getInstance().returnToOrPath("/profile");
+			await Router.getInstance().returnToOrPath("/game");
 			toastHelper.success("Registration Successful");
 		} else {
 			//Show backend/server error message under "Sign Up"
