@@ -67,14 +67,14 @@ class UserCard extends BaseAttributeValidationElement<UserCardAttributes> {
 			id: this.getAttribute("user-id")!,
 			avatarUrl: this.getAttribute("avatar-url")!,
 			displayName: this.getAttribute("display-name")!,
-			isPending: this.getAttribute("is-pending")! === "true",
-			hasInvitedMe: this.getAttribute("has-invited-me")! === "true",
+			isPending: this.getAttribute("is-pending")! === "1",
+			hasInvitedMe: this.getAttribute("has-invited-me")! === "1",
 			isOnline: this.getAttribute("online")! === 'true'
 		}
 
+		console.log("user", user)
 
 		// Profile Card
-
 		this.innerHTML = /* html */`
 		<div class="flex flex-col items-center bg-slate-700 text-white rounded-md overflow-hidden w-full max-w-xs pb-4">
 			<img 
@@ -110,15 +110,22 @@ class UserCard extends BaseAttributeValidationElement<UserCardAttributes> {
 					</div>
 				`)}
 				${conditionalRender(variant === "friend", `
-					<div class="flex gap-2 w-full pr-6 relative">
-						<div class="flex gap-2">
-							${getButtonElement(user.id, "message", "Message")}
-						</div>
-						<div class="absolute bottom-0 right-0">
-							${getButtonElement(user.id, "remove", "Remove")}
+					<div class="w-full px-2 mt-3 flex flex-col justify-between grow relative min-h-[20px]">
+						<div class="flex items-center justify-between mt-auto">
+							<!-- Статус -->
+							<span class="text-sm font-semibold ${user.isOnline ? 'text-green-400' : 'text-gray-400'}">
+								${user.isOnline ? 'Online' : 'Offline'}
+							</span>
+				
+							<!-- Кнопки -->
+							<div class="flex gap-2 items-center">
+								${conditionalRender(user.isOnline, getButtonElement(user.id, "message", "Message"))}
+								${getButtonElement(user.id, "remove", "Remove")}
+							</div>
 						</div>
 					</div>
 				`)}
+
 
 				${conditionalRender(variant === "blocked", `
 					<div class="flex gap-2 w-full pr-6 relative">
@@ -178,7 +185,7 @@ const AddFriendHandler = (userId: string) => {
 			const playerCardEl: UserCard | null = document.querySelector(`user-card#user-id-${userId}`)
 			if (playerCardEl)
 			{
-				playerCardEl.setAttribute("is-pending", "true")
+				playerCardEl.setAttribute("is-pending", "1")
 			}
 		});
 	}).catch(err => {
@@ -199,7 +206,7 @@ const CancelFriendRequestHandler = (userId: string) => {
 			const playerCardEl: UserCard | null = document.querySelector(`user-card#user-id-${userId}`)
 			if (playerCardEl)
 			{
-				playerCardEl.setAttribute("is-pending", "false")
+				playerCardEl.setAttribute("is-pending", "0")
 			}
 		})
 	}).catch(err => {
@@ -220,7 +227,7 @@ const AcceptFriendRequestHandler = (userId: string) => {
 			const playerCardEl: UserCard | null = document.querySelector(`user-card#user-id-${userId}`)
 			if (playerCardEl)
 			{
-				playerCardEl.setAttribute("has-invited-me", "false")
+				playerCardEl.setAttribute("has-invited-me", "0")
 				playerCardEl.setAttribute("variant", "profile")
 			}
 		})

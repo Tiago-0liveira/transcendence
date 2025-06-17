@@ -27,6 +27,7 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 		name = name.trim();
 
 		const dbRes = await Database.getInstance().friendsTable.getPossibleFriends(userId, name, offset, limit)
+		console.log("Потенциальный друг: ", dbRes)
 		if (dbRes.error) {
 			return reply.code(500).send(dbRes)
 		}
@@ -114,7 +115,8 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 			await notify.friendRequest(senderId, receiverId);
 			return reply.code(201).send({})
 		} catch (e) {
-			return reply.code(400).send({ message: "Invalid userId" })
+			console.error("Exception in /remove handler:", e);
+			return reply.code(500).send({ message: "Internal server error" });
 		}
 	})
 
@@ -143,15 +145,14 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 			console.log("receiverId: ", receiverId);
 			console.log("senderId: ", senderId);
 
-			// Получаем текущую связь
 			const relation = db.getRelationBetweenUsers(receiverId, senderId);
+			console.log("relation 1: ", relation);
 			if (!relation || !["accepted", "rejected"].includes(relation.status)) {
 				return reply.code(400).send({ message: "User is neither a friend nor blocked" });
 			}
 
-			console.log("relation: ", relation);
+			console.log("relation 2: ", relation);
 
-			// Удаляем только если статус accepted или blocked
 			const res = db.deleteSpecificRelation(receiverId, senderId, relation.status);
 			if (res.error) {
 				return reply.code(500).send(res);

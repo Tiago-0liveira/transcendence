@@ -4,7 +4,6 @@ import { authGuard } from "@/router/guards";
 import API from "@/utils/BackendApi";
 
 const getPlayerLi = (user: FriendUser) => {
-	console.log("DATA: ", user);
 	return /* html */ `
 		<user-card
 			class="flex-none w-[280px]"
@@ -13,6 +12,7 @@ const getPlayerLi = (user: FriendUser) => {
 			avatar-url="${user.avatarUrl}"
 			display-name="${user.displayName}"
 			id="user-id-${user.id}"
+			online="${user.online}"
 		></user-card>
 	`;
 };
