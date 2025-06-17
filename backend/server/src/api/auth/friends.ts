@@ -26,11 +26,8 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 		let offset = (page - 1) * limit;
 		name = name.trim();
 
-		if (!name) {
-			return reply.code(400).send({ message: "Invalid name query" })
-		}
-
 		const dbRes = await Database.getInstance().friendsTable.getPossibleFriends(userId, name, offset, limit)
+		console.log("Потенциальный друг: ", dbRes)
 		if (dbRes.error) {
 			return reply.code(500).send(dbRes)
 		}
@@ -59,6 +56,25 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 
 		return reply.code(200).send({ friends: friendsRes.result });
 	})
+
+	fastify.get<{
+		Querystring: {
+			page?: number;
+			limit?: number;
+		};
+	}>("/blocked", { preHandler: authJwtMiddleware }, async (request, reply) => {
+		const { page = 1, limit = 50 } = request.query;
+		const offset = (page - 1) * limit;
+		const userId = request.user.id;
+
+		const blockedRes = await Database.getInstance().friendsTable.getBlockedUsersWithInfo(userId, offset, limit);
+		if (blockedRes.error) {
+			return reply.code(500).send(blockedRes.error);
+		}
+
+		return reply.code(200).send({ blocked: blockedRes.result });
+	});
+
 
 	/**
 	 * Sends a new friend request
@@ -99,7 +115,8 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 			await notify.friendRequest(senderId, receiverId);
 			return reply.code(201).send({})
 		} catch (e) {
-			return reply.code(400).send({ message: "Invalid userId" })
+			console.error("Exception in /remove handler:", e);
+			return reply.code(500).send({ message: "Internal server error" });
 		}
 	})
 
@@ -108,28 +125,47 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 	 */
 	fastify.post<{
 		Body: {
-			userId: string
+			userId: string;
 		};
 	}>("/remove", {
 		preHandler: authJwtMiddleware,
 		schema: {}
 	}, async (request, reply) => {
 		const { userId: userIdStr } = request.body;
-		const userId = request.user.id;
+		const receiverId = request.user.id;
 
-		try {
-			const friendId = Number(userIdStr);
-
-			const dbRes = await Database.getInstance().friendsTable.delete(userId, friendId);
-			if (dbRes.error) {
-				return reply.code(422).send(dbRes);
-			}
-		} catch (e) {
-			return reply.code(400).send({ message: "Invalid userId" })
+		if (!userIdStr || isNaN(Number(userIdStr))) {
+			return reply.code(400).send({ message: "Invalid userId" });
 		}
 
-		return reply.code(200).send({});
-	})
+		const senderId = Number(userIdStr);
+		const db = Database.getInstance().friendsTable;
+
+		try {
+			console.log("receiverId: ", receiverId);
+			console.log("senderId: ", senderId);
+
+			const relation = db.getRelationBetweenUsers(receiverId, senderId);
+			console.log("relation 1: ", relation);
+			if (!relation || !["accepted", "rejected"].includes(relation.status)) {
+				return reply.code(400).send({ message: "User is neither a friend nor blocked" });
+			}
+
+			console.log("relation 2: ", relation);
+
+			const res = db.deleteSpecificRelation(receiverId, senderId, relation.status);
+			if (res.error) {
+				return reply.code(500).send(res);
+			}
+
+			return reply.code(200).send({ removedStatus: relation.status });
+		} catch (e) {
+			console.error("Exception in /remove handler:", e);
+			return reply.code(500).send({ message: "Internal server error" });
+		}
+	});
+
+
 
 
 	// Friends requests

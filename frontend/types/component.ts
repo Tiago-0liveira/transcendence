@@ -11,7 +11,7 @@ type ObjectStringAttributeValidator<T extends StringsObject> = {
 type StringBool = "true" | "false"
 
 type UserCardAttributes = {
-	"variant": "profile" | "possibleFriend" | "friend";
+	"variant": "profile" | "possibleFriend" | "friend" | "blocked";
 	"user-id": string;
 	"avatar-url": string;
 	"display-name": string;

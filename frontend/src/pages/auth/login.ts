@@ -113,7 +113,7 @@ const component = async () => {
 					const err = await AuthManager.getInstance().oauthGoogleLogin(response.code);
 
 					if (!err) {
-						await Router.getInstance().returnToOrPath("/user");
+						await Router.getInstance().returnToOrPath("/game");
 						toastHelper.success("Login successful!");
 					} else {
 						const message = err || "Unknown error during login";
@@ -149,7 +149,7 @@ const component = async () => {
 
 		try {
 			await AuthManager.getInstance().login(result.data);
-			await Router.getInstance().returnToOrPath("/user");
+			await Router.getInstance().returnToOrPath("/game");
 			toastHelper.success("Login Successful");
 		} catch (err: any) {
 			console.error("Login error:", err);
@@ -191,7 +191,7 @@ const component = async () => {
 					token: code
 				});
 				hideTwoFAModal();
-				await Router.getInstance().returnToOrPath("/user");
+				await Router.getInstance().returnToOrPath("/game");
 				toastHelper.success("Login Successful");
 			} catch (err: any) {
 				console.error("2FA error:", err?.message);

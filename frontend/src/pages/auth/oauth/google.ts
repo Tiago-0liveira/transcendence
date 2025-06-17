@@ -84,7 +84,7 @@ const component = async () => {
 		submitBtn.disabled = false;
 
 		if (error === null) {
-			await Router.getInstance().returnToOrPath("/user");
+			await Router.getInstance().returnToOrPath("/game");
 		} else {
 			console.error("Signup error:", error);
 			errorMessageEl.textContent = error;
