@@ -6,61 +6,67 @@ import {toastHelper} from "@/utils/toastHelper";
 
 
 const component = async () => {
-	const template = /* html */`
-		 <div class="flex-1 flex items-center justify-center">
-    		<div class="w-full max-w-sm bg-white border border-gray-200 rounded-lg shadow-sm">
-				<form id="form-signup" class="p-6 space-y-6" action="#">
-					<h5 class="text-xl text-center font-medium mb-4 text-gray-900">Sign Up</h5> 
-					<p id="error-form" class="text-red-600 text-sm text-center mb-2"></p>
-					<div>
-						<label for="username" class="block mb-0.5 text-sm font-medium text-gray-900 text-left">Your Username</label>
-						<input type="text" name="username" id="username" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2.5" placeholder="Username" required>
-						<p id="error-username" class="text-red-600 text-sm mt-1"></p>
+		const template = /* html */`
+			  <div class="profile-card centered auth-box signup-box">
+				<div class="settings-header login-section">Sign Up</div>
+			
+				<form id="form-signup" class="settings-form">
+				  <p id="error-form" class="form-message-error"></p>
+			
+				  <div class="form-input-group">
+					<label for="username" class="form-input-label">Username</label>
+					<input type="text" id="username" name="username" class="form-input" placeholder="Enter your username" required />
+					<p id="error-username" class="form-message-error"></p>
+				  </div>
+			
+				  <div class="form-input-group">
+					<label for="displayName" class="form-input-label">Display Name</label>
+					<input type="text" id="displayName" name="displayName" class="form-input" placeholder="Optional display name" />
+					<p id="error-displayName" class="form-message-error"></p>
+				  </div>
+			
+				  <div class="form-input-group">
+					<label for="avatarUrl" class="form-input-label">Avatar URL</label>
+					<input type="text" id="avatarUrl" name="avatarUrl" class="form-input" placeholder="Optional avatar URL" />
+					<p id="error-avatarUrl" class="form-message-error"></p>
+				  </div>
+			
+				  <div class="form-input-group">
+					<label for="password" class="form-input-label">Password</label>
+					<input type="password" id="password" name="password" class="form-input" placeholder="Enter your password" required />
+					<p id="error-password" class="form-message-error"></p>
+				  </div>
+			
+				  <div class="form-input-group horizontal-inputs">
+					<div class="remember-checkbox">
+					  <input id="remember" type="checkbox" />
+					  <label for="remember" class="form-input-label inline-label">Remember me</label>
 					</div>
-
-					<div>
-						<label for="displayName" class="block mb-0.5 text-sm font-medium text-gray-900 text-left">Your Display Name</label>
-						<input type="text" name="displayName" id="displayName" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2.5" placeholder="Display Name">
-						<p id="error-displayName" class="text-red-600 text-sm mt-1"></p>
+				  </div>
+			
+				  <button type="submit" class="btn-steam-fixed">Sign Up</button>
+			
+				  <div class="form-section-divider"></div>
+			
+				  <div class="form-section-title">Or sign up with</div>
+				  <div class="oauth-buttons">
+					<div id="google-oauth" class="oauth-button">
+					  <span>Google</span>
+					  <img src="/google-logo.svg" alt="Google logo" class="oauth-logo" />
 					</div>
-
-					<div>
-						<label for="avatarUrl" class="block mb-0.5 text-sm font-medium text-gray-900 text-left">Your Avatar Url</label>
-						<input type="text" name="avatarUrl" id="avatarUrl" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2.5" placeholder="https://avatar.xxxxxx">
-						<p id="error-avatarUrl" class="text-red-600 text-sm mt-1"></p>
-					</div>
-
-					<div>
-						<label for="password" class="block mb-0.5 text-sm font-medium text-gray-900 text-left">Your Password</label>
-						<input type="password" name="password" id="password" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2.5" placeholder="***********" required>
-						<p id="error-password" class="text-red-600 text-sm mt-1"></p>
-					</div>
-
-					<div class="flex items-start">
-						<div class="flex items-start">
-							<div class="flex items-center h-5">
-								<input id="remember" type="checkbox" value="" class="w-4 h-4 border border-gray-300 rounded-sm bg-gray-50 focus:ring-3 focus:ring-purple-500">
-							</div>
-							<label for="remember" class="ms-2 text-sm font-medium text-gray-900">Remember me</label>
-						</div>
-					</div>
-					<button type="submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-1 text-center" >Sign Up</button>
-					<div class="flex justify-center flex-row space-x-6">
-						<div id="google-oauth" class="border rounded-lg p-1 hover:cursor-pointer border-yellow-300">
-							<span class="text-lg text-yellow-600 flex items-center">Sign Up w/ <img class="w-7 h-7 rounded-full mx-1" src="/google-logo.svg" alt=""></span>
-						</div>
-						<div id="42-oauth" class="border rounded-lg p-1 hover:cursor-pointer border-gray-700">
-							<span class="text-lg text-black flex items-center">Sign Up w/ <img class="w-7 h-7 rounded-none mx-1" src="/42-logo.svg" alt=""></span>
-						</div> 
-					</div>
-					<div class="text-sm font-medium text-gray-500 dark:text-gray-300 space-x-1">
-						<span class="">Already registered?</span>
-						<a href="/auth/login" class="text-blue-700 hover:underline dark:text-blue-500">Login</a>
-					</div>
+				  </div>
+			
+				  <div class="form-section-divider"></div>
+			
+				  <div class="form-section-title bottom">
+					<span>Already registered?</span>
+					<a href="/auth/login" class="form-input-label create-account-link">Login</a>
+				  </div>
 				</form>
-			</div>
-		</div>
+			  </div>
 	`;
+
+
 	document.querySelector('#app')!.innerHTML = template;
 
 	const form = document.getElementById("form-signup")
@@ -169,12 +175,13 @@ const component = async () => {
 			if (formError) {
 				formError.textContent = "";
 			}
-			await Router.getInstance().returnToOrPath("/user");
+			await Router.getInstance().returnToOrPath("/profile");
 			toastHelper.success("Registration Successful");
 		} else {
 			//Show backend/server error message under "Sign Up"
 			if (formError) {
 				formError.textContent = res.message ?? "Registration failed";
+				formError.classList.remove("hidden"); //ak
 			}
 		}
 	};

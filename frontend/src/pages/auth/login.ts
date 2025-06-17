@@ -6,77 +6,72 @@ import { GOOGLE_CLIENT_ID } from "@/utils/config";
 
 const component = async () => {
 	const template = /* html */`
-		<div class="flex-1 flex items-center justify-center bg-white">
-			<div class="w-full max-w-sm bg-white border border-gray-200 rounded-lg shadow-sm">
-				<form id="loginForm" class="p-6 space-y-6" action="#">
-					<div class="relative mb-8">
-						<h5 class="text-xl text-center font-medium text-gray-900">Login</h5>
-						<p id="login-error" class="text-sm text-red-600 absolute w-full text-center left-0 -bottom-5 hidden"></p>
+			<div class="profile-card centered auth-box">
+				<div class="settings-header login-section">Login</div>
+		
+				<form id="loginForm" class="settings-form">
+					<p id="login-error" class="form-message-error"></p>
+		
+					<div class="form-input-group">
+						<label for="username" class="form-input-label">Username</label>
+						<input type="text" id="username" name="username" class="form-input" placeholder="Enter your username" required />
 					</div>
-
-					<div>
-						<label for="username" class="block mb-2 text-sm font-medium text-left text-gray-900">Your Username</label>
-						<input type="text" name="username" id="username" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2.5" placeholder="username" required>
+		
+					<div class="form-input-group">
+						<label for="password" class="form-input-label">Password</label>
+						<input type="password" id="password" name="password" class="form-input" placeholder="Enter your password" required />
 					</div>
-					<div>
-						<label for="password" class="block mb-2 text-sm font-medium text-left text-gray-900">Your Password</label>
-						<input type="password" name="password" id="password" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2.5" placeholder="***********" required>
-					</div>
-					<div class="flex items-start">
-						<div class="flex items-start">
-							<div class="flex items-center h-5">
-								<input id="remember" type="checkbox" value="" class="w-4 h-4 border border-gray-300 rounded-sm focus:ring-3 ring-white focus:ring-purple-500">
-							</div>
-							<label for="remember" class="ms-2 text-sm font-medium text-gray-900">Remember me</label>
+		
+					<div class="form-input-group horizontal-inputs">
+						<div class="remember-checkbox">
+							<input id="remember" type="checkbox" />
+							<label for="remember" class="form-input-label inline-label">Remember me</label>
 						</div>
-						<a href="#" class="ms-auto text-sm text-blue-700 hover:underline">Lost password</a>
 					</div>
-					<button type="submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-1 text-center">Sign In</button>
-					<div class="flex justify-center flex-row space-x-6">
-						<div id="google-oauth" class="border rounded-lg p-1 hover:cursor-pointer border-yellow-300">
-							<span class="text-lg text-yellow-600 flex items-center">Login w/ <img class="w-7 h-7 rounded-full mx-1" src="/google-logo.svg" alt=""></span>
+		
+					<button type="submit" class="btn-steam-fixed">Sign In</button>
+		
+					<div class="form-section-divider"></div>
+		
+					<div class="form-section-title">Or login with</div>
+					<div class="oauth-buttons">
+						<div id="google-oauth" class="oauth-button">
+							<span>Google</span>
+							<img src="/google-logo.svg" alt="Google logo" class="oauth-logo" />
 						</div>
-						<div id="42-oauth" class="border rounded-lg p-1 hover:cursor-pointer border-gray-700">
-							<span class="text-lg text-black flex items-center">Login w/ <img class="w-7 h-7 rounded-none mx-1" src="/42-logo.svg" alt=""></span>
-						</div> 
-					</div>  
-					<div class="text-sm font-medium text-gray-500 dark:text-gray-300 space-x-1">
-						<span class="">Not registered?</span>
-						<a href="/auth/signup" class="text-blue-700 hover:underline dark:text-blue-500">Create account</a>
+					</div>
+		
+					<div class="form-section-divider"></div>
+					
+					<div class="form-section-title bottom">
+						<span>Not registered?</span>
+						<a href="/auth/signup" class="form-input-label create-account-link">Create account</a>
 					</div>
 				</form>
-			</div>
 		</div>
 
-		<div id="twofa-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-			<div class="relative bg-white px-4 py-4 rounded-lg shadow-lg w-[320px] flex flex-col items-center">
-				<button id="twofa-close"
-					class="absolute top-1.5 right-1.5 text-gray-400 hover:text-gray-600 text-base font-semibold leading-none focus:outline-none"
-					title="Close"
-					aria-label="Close"
-				>
-					&times;
-				</button>
-
-				<label for="twofa-code" class="text-sm font-medium text-gray-700 mb-2 text-center">Enter 6-digit code</label>
+<!-- 2FA MODAL -->
+		<div id="twofa-modal" class="modal-overlay hidden">
+			<div class="modal-content">
+				<button id="twofa-close" class="modal-close">&times;</button>
+				<h3 class="modal-title">Two-Factor Authentication</h3>
+				<label for="twofa-code" class="modal-text">Enter 6-digit code</label>
 				<input
 					type="text"
 					id="twofa-code"
 					maxlength="6"
 					inputmode="numeric"
 					pattern="[0-9]*"
-					class="w-40 h-11 text-center text-xl border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-					placeholder="хххххх"
+					class="form-input twofa-input"
+					placeholder="______"
 					autocomplete="one-time-code"
 					autofocus
-				>
-				<p id="twofa-error"
-					class="text-sm text-red-600 text-center mt-2 transition-opacity duration-200"
-					style="min-height: 1.25rem; opacity: 0;">
-				</p>
+				/>
+<!--				<p id="twofa-error" class="form-message-error hidden"></p>-->
+				<p id="twofa-error" class="form-message-error error-2fa">Invalid code</p>
 			</div>
 		</div>
-	`;
+		`;
 
 	document.querySelector('#app')!.innerHTML = template;
 
@@ -189,17 +184,12 @@ const component = async () => {
 		errorBox.textContent = "";
 		errorBox.style.opacity = "0";
 
-		if (code.length === 6) {
+		if (code.length === 6 && savedLoginData) {
 			try {
-				if (savedLoginData) {
-					await AuthManager.getInstance().login({
-						...savedLoginData,
-						token: code
-					});
-				} else {
-					throw new Error("No login data available for 2FA");
-				}
-
+				await AuthManager.getInstance().login({
+					...savedLoginData,
+					token: code
+				});
 				hideTwoFAModal();
 				await Router.getInstance().returnToOrPath("/user");
 				toastHelper.success("Login Successful");
@@ -210,6 +200,7 @@ const component = async () => {
 			}
 		}
 	});
+
 
 	document.getElementById("twofa-close")?.addEventListener("click", () => {
 		hideTwoFAModal();

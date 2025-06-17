@@ -27,6 +27,7 @@ class NavBar extends HTMLElement {
 				<a href="/players" class="btn-steam">Players</a>
 				<a href="/profile" class="btn-steam">Profile</a>
 				<a href="/friends" class="btn-steam">Friends</a>
+				<a href="/game" class="btn-steam">Game</a>
 				<a href="/settings" class="btn-steam">Settings</a>
   				<a href="/auth/logout" class="btn-logout">Logout</a>
   				

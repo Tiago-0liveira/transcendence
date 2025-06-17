@@ -8,6 +8,7 @@ import API from "@/utils/BackendApi";
 
 const component = async () => {
     const auth = AuthManager.getInstance();
+    // 🔹 Обновляем пользователя с сервера
     const user = auth.User!;
     const isGoogleUser = user.authProvider === "google";
 
@@ -53,7 +54,7 @@ const component = async () => {
 				</form>
 
 				<div class="twofa-toggle-group">
-					<input type="checkbox" id="twofa-checkbox" class="sr-only">
+					<input type="checkbox" id="twofa-checkbox" class="sr-only peer">
 					<div class="toggle-bg" id="toggle-visual"></div>
 					<label id="twofa-label" for="toggle-visual" class="toggle-label">Enable 2FA</label>
 				</div>

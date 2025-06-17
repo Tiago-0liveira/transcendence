@@ -8,6 +8,7 @@ import oauthGoogleRoutes from "@api/oauth/google";
 import { websocketHandler } from "./api/websocket";
 import auth2faRoutes from "@api/2fa";
 import UserSettingsRoutes from "@api/settings";
+import blockedUsersRoutes from "@api/auth/blocked";
 
 /**
  * @description Registers all endpoints necessary for the server (in a organized way)
@@ -50,4 +51,5 @@ export default function registerRoutes(app: FastifyInstance) {
 		},
 		{ prefix: "/settings" }
 	)
+	app.register(blockedUsersRoutes, { prefix: "/blocked"})
 }
