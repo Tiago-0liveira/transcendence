@@ -47,7 +47,8 @@ const newDisconnectedClient = (deviceId: string): ClientValue => {
   return {
     socket: null,
     connectedAt: 0,
-    connceted: false,
+    connected: false,
+    connectedToLobby: null,
     deviceId,
   } as const;
 };

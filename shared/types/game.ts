@@ -1,7 +1,7 @@
 type NewGameConfig = {
 	roomName: string,
 	playersNumber: number,
-	roomType: "1v1" | "tournament",
+	roomType: LobbyType,
 	locality: "local" | "online",
 	visibility: "friends" | "public"
 }
@@ -11,6 +11,7 @@ type LobbyStatus = "waiting" | "active" | "completed"
 type GameSide = "left" | "right"
 type GameState = "waiting" | "active" | "stopped" | "completed"
 type BracketWinner = null | GameSide
+type PlayerInput = { up: boolean, down: boolean }
 
 type GamePlayer = {
 	id: number;
@@ -42,7 +43,7 @@ type GameBracket = {
 
 interface PlayerActiveGameData extends GamePlayer {
 	paddlePositionY: number;
-	input: { up: boolean, down: boolean },
+	input: PlayerInput,
 	side: GameSide;
 	score: number,
 	disconnectedTime: number,

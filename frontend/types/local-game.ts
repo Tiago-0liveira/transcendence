@@ -1,0 +1,32 @@
+
+type LocalLobbyRoomParams = {
+    type: LobbyType;
+    playerNames: string[];
+}
+
+type LocalGamePlayer = {
+    paddlePositionY: number;
+    input: PlayerInput;
+    side: GameSide;
+    score: number;
+}
+
+type LocalGame = {
+    id: string;
+    lPlayer: string;
+    rPlayer: string;
+    winner: string | null;
+    state: GameState;
+    dependencyIds: string[];
+    startAt: number;
+    phase: number;
+    players: {
+        left: LocalGamePlayer;
+        right: LocalGamePlayer;
+    };
+    ballData: GameBallData;
+}
+
+interface LocalLobbyRoom extends LocalLobbyRoomParams {
+    games: LocalGame[]
+}

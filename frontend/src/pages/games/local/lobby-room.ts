@@ -1,4 +1,5 @@
 import AuthManager from '@/auth/authManager';
+import LocalGameRoomManager from '@/auth/LocalGameManager';
 import SocketHandler from '@/auth/socketHandler';
 import { authGuard } from '@/router/guards';
 import Router from '@/router/Router';
@@ -14,13 +15,7 @@ const setError = (el: HTMLDivElement, error: string) => {
 	}
 };
 
-const isRoomFullyReady = (room: LobbyRoom): boolean => {
-	return room.requiredPlayers === room.connectedPlayersNumber &&
-		room.connectedPlayers.every(p => p.ready);
-};
-
 const getUpdatedRoomTemplate = (room: LobbyRoom, userId: number): string => {
-	console.log("getUpdatedRoomTemplate")
 	const playerReadyStatus = room.connectedPlayers.find(u => u.id === userId)?.ready || false;
 
 	const userBracket = room.brackets.find(b =>
@@ -72,15 +67,14 @@ const getUpdatedRoomTemplate = (room: LobbyRoom, userId: number): string => {
 				${renderOwnerStatus(room, userId)}
 			` : ''}
 
-			${renderBrackets(room)}
-			/* ${showJoinGameButton ? `
+			${showJoinGameButton ? `
 				<div class="form-input-group">
 					<button id="btn-join-active-game"
 						data-game-id="${userBracket?.game?.id}"
 						data-room-id="${room.id}"
 						class="btn-steam-fixed">Join Game</button>
 				</div>
-			` : ''} */
+			` : ''}
 		</div>
 	`;
 };
@@ -92,14 +86,12 @@ const renderOwnerStatus = (room: LobbyRoom, userId: number): string => {
 	}
 
 	if (room.owner === userId) {
-		const allPlayersReadyStatus = isRoomFullyReady(room);
-
 		return /* html */ `
 			<div class="owner-status owner-controls">
 				<div class="owner-hint">
 					You can start the game when all players are connected and ready!
 				</div>
-				<button id="btn-start-game" class="btn-start-game ${allPlayersReadyStatus ? 'ready' : 'disabled'}">
+				<button id="btn-start-game" class="btn-start-game ready">
 					Start Game
 				</button>
 			</div>
@@ -107,23 +99,6 @@ const renderOwnerStatus = (room: LobbyRoom, userId: number): string => {
 	}
 
 	return '';
-};
-
-const renderConnectedPlayers = (room: LobbyRoom): string => {
-	if (room.status !== 'waiting') return '';
-	return /* html */ `
-		<div class="connected-players-grid">
-			${room.connectedPlayers.map(player => `
-				<div class="connected-player-card">
-					<span class="connected-player-name">
-						${player.name}
-						${conditionalRender(player.id === room.owner, `<span class="owner-badge">Owner</span>`)}
-					</span>
-					<span class="connected-player-status ${player.ready ? 'ready' : 'not-ready'}"></span>
-				</div>
-			`).join('')}
-		</div>
-	`;
 };
 
 const renderBrackets = (room: LobbyRoom): string => {
@@ -173,9 +148,13 @@ const renderBrackets = (room: LobbyRoom): string => {
 
 const component = async () => {
 	const user = AuthManager.getInstance().User!;
-	const sh = SocketHandler.getInstance();
+	const localGameManager = LocalGameRoomManager.getInstance();
 	const router = Router.getInstance();
-	let gameRoom: LobbyRoom | null = null;
+
+    if (localGameManager.activeGameLobby === null) {
+        throw new Error("No active Game Lobby")
+    }
+	let gameRoom: LocalLobbyRoom = localGameManager.activeGameLobby;
 
 	const queryParams = router.getCurrentRoute()?.query;
 	if (!queryParams?.roomId) throw new Error('Room not found!');
@@ -198,61 +177,25 @@ const component = async () => {
 	const divContent = document.querySelector<HTMLDivElement>('#room-content')!;
 	const divError = document.querySelector<HTMLDivElement>('#lobby-error')!;
 
-	const handleSocketMessages = () => {
-		sh.addMessageHandler('lobby-room-error', res => {
-			divLoading.style.display = 'none';
-			divContent.style.display = 'none';
-			setError(divError, res.error);
-		});
-
-		sh.addMessageHandler('lobby-room-data-update', res => {
-			divError.style.display = 'none';
-			divLoading.style.display = 'none';
-			divContent.innerHTML = getUpdatedRoomTemplate(res, user.id);
-			gameRoom = res;
-		});
-
-		sh.addMessageHandler('lobby-room-leave', res => {
-			if (res.reason) toastHelper.warning(res.reason);
-			router.navigate('/games/rooms');
-		});
-	};
-
 	const handleUserActions = (ev: MouseEvent) => {
 		if (!(ev.target instanceof Element)) return;
 		const targetButton = ev.target.closest('button');
 		if (!targetButton) return;
 
 		switch (targetButton.id) {
-			case 'btn-set-ready-false':
-			case 'btn-set-ready-true': {
-				const ready = targetButton.dataset.ready === 'true';
-				sh.sendMessage({
-					type: 'lobby-room-player-set-ready',
-					roomId: gameRoom!.id,
-					ready
-				});
-				break;
-			}
 			case 'btn-start-game': {
-				if (gameRoom && isRoomFullyReady(gameRoom)) {
-					sh.sendMessage({
-						type: 'lobby-room-start-game',
-						roomId: gameRoom.id
-					});
-				}
+				
 				break;
 			}
-			case "btn-join-active-game": {
+			case "btn-join-game": {
 				const gameId = targetButton.dataset.gameId;
-				const roomId = targetButton.dataset.roomId;
-
-				if (!gameId || !roomId) {
+				
+				if (!gameId) {
 					toastHelper.error("Game not found or room info missing");
 					return;
 				}
 
-				router.navigate("/games/game-room", {}, { roomId, gameId });
+				router.navigate("/games/local/game-room", {}, { gameId });
 				break;
 			}
 		}
@@ -260,30 +203,17 @@ const component = async () => {
 
 	const initialize = () => {
 		document.addEventListener('click', handleUserActions);
-		handleSocketMessages();
-		sh.sendMessage({
-			type: 'lobby-room-join-request',
-			roomId: queryParams.roomId
-		});
 	};
 
 	initialize();
 
 	return () => {
-		if (gameRoom) {
-			sh.sendMessage({
-				type: 'lobby-room-leave',
-				roomId: gameRoom.id
-			});
-		}
-		sh.removeMessageHandler('lobby-room-error');
-		sh.removeMessageHandler('lobby-room-data-update');
 		document.removeEventListener('click', handleUserActions);
 	};
 };
 
 Router.getInstance().register({
-	path: '/games/lobby-room',
+	path: '/games/local/lobby-room',
 	component,
 	guards: [authGuard]
 });

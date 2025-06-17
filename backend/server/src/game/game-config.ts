@@ -61,6 +61,7 @@ export const handleGameRoomGetData = async function (clientContext: ClientThis, 
 	const room = activeGameRooms.get(message.roomId)
 	const connectedUser = connectedSocketClients.get(clientContext.userId);
 
+	console.log(connectedUser)
 	if (!room) {
 		return clientContext.socket.send(JSON.stringify({
 			type: "lobby-room-error",

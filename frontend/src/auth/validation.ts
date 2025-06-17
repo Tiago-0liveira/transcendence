@@ -56,3 +56,7 @@ export const newGameConfigSchema = z.object({
 	locality: z.enum(["local", "online"]).default("local"),
 	visibility: z.enum(["friends", "public"]).default("friends")
 });
+
+export const newLocalGameConfigSchema = z.object({
+	roomType: z.enum(["1v1", "tournament"]),
+});

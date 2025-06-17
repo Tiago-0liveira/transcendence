@@ -22,6 +22,12 @@ const component = async () => {
               <span>Create Room</span>
             </a>
           </div>
+
+          <div class="form-input-group">
+            <a href="/games/local/create-game" class="btn-steam-fixed game-select-button">
+              <span>Create Local Game</span>
+            </a>
+          </div>
         
           <div class="form-section-divider"></div>
         
