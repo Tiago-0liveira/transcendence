@@ -51,5 +51,5 @@ export default function registerRoutes(app: FastifyInstance) {
 		},
 		{ prefix: "/settings" }
 	)
-	app.register(blockedUsersRoutes, { prefix "/blocked"})
+	app.register(blockedUsersRoutes, { prefix: "/blocked"})
 }
