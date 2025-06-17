@@ -30,6 +30,7 @@ class RoomCard extends BaseAttributeValidationElement<RoomCardAttributes> {
 			"room-id": {},
 			name: {},
 			owner: {},
+			ownerName: {},
 			"room-type": { values: ["tournament", "1v1"] },
 			status: { values: ["waiting", "active", "completed"] },
 			"required-players": {},
@@ -41,10 +42,11 @@ class RoomCard extends BaseAttributeValidationElement<RoomCardAttributes> {
 
 	render() {
 		const userId = AuthManager.getInstance().User!.id
-		const room: BasicPublicLobby & { public: boolean, canJoin: boolean } = {
+		const room: BasicPublicLobby & { public: boolean } = {
 			id: this.getAttribute("room-id")!,
 			name: this.getAttribute("name")!,
 			owner: Number(this.getAttribute("owner")!),
+			ownerName: this.getAttribute("ownerName")!,
 			lobbyType: this.getAttribute("room-type")!,
 			status: this.getAttribute("status")!,
 			requiredPlayers: Number(this.getAttribute("required-players")!),

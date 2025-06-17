@@ -6,11 +6,16 @@ import Router from "@/router/Router";
 const getRoomTemplate = (room: BasicPublicLobby): string => {
 	return /* html */`
 		<div class="room-card-container">
-			<div class="room-card">
-				<div class="room-card-header">
-					<span class="room-card-name" title="${room.name}">${room.name}</span>
+			<div class="room-card ${room.lobbyType === 'tournament' ? 'room-card-tournament' : 'room-card-1v1'}">
+				<div class="room-card-header-left">
 					<span class="badge ${room.lobbyType === 'tournament' ? 'badge-purple' : 'badge-blue'}">
 						${room.lobbyType}
+					</span>
+				</div>
+				
+				<div class="room-card-header">
+					<span class="label">Name:</span>
+					<span class="room-card-name" title="${room.name}">${room.name}</span>
 					</span>
 				</div>
 
@@ -27,7 +32,11 @@ const getRoomTemplate = (room: BasicPublicLobby): string => {
 					</div>
 					<div class="room-card-line">
 						<span class="label">Owner:</span>
-						<span class="value">${room.owner}</span>
+<!--						<span class="value">${room.owner}</span>-->
+<!--						<span class="value">${room.ownerName !== "" ? room.ownerName : "Owner is not in the lobby"}</span>-->
+						<span class="value ${room.ownerName !== "" ? 'text-success' : 'text-danger'}">
+  							${room.ownerName !== "" ? room.ownerName : "Owner is not in the lobby"}
+						</span>
 					</div>
 				</div>
 

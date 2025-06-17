@@ -28,6 +28,7 @@ type RoomCardAttributes = {
 	"room-id": string;
 	name: string;
 	owner: string;
+	ownerName: string;
 	status: LobbyStatus;
 	"required-players": string;
 	"connected-players-number": string;

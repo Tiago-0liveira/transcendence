@@ -183,7 +183,7 @@ const component = async () => {
 				<span class="loading-text">Loading Lobby Data...</span>
 				<loading-spinner size="sm"></loading-spinner>
 			</div>
-			<div id="lobby-error" class="lobby-error hidden">
+			<div id="lobby-error" class="lobby-error styles=display: none;">
 				<p>Error: <span id="error-message"></span></p>
 				<a href="/games/rooms" class="return-link">Return to game rooms</a>
 			</div>
