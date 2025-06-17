@@ -90,6 +90,9 @@ type BasicPublicLobby = {
 	id: string;
 	name: string;
 	owner: number;
+
+	ownerName: string;
+
 	lobbyType: LobbyType;
 	status: LobbyStatus;
 	requiredPlayers: number;
