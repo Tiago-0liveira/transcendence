@@ -304,11 +304,9 @@ div.loading-spinner img {
 
 .phase-2 {
 	@apply col-span-1 col-start-2 col-end-3;
+	grid-row: 1 / span 2;
 }
 
-.phase-3 {
-	@apply col-span-1 col-start-3 col-end-4;
-}
 
 /* ───── SETTINGS ENHANCEMENTS ───── */
 

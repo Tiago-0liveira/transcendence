@@ -62,3 +62,16 @@ type UncompletedBracketCardAttributes = {
 	rPlayer: string;
 	rname: string;
 }
+
+type LocalBracketCardAttributes = {
+	"game-id": string;
+	state: GameState;
+	winner: GameSide;
+	canJoin: StringBool;
+	
+	lname: string;
+	lscore: string;
+
+	rname: string;
+	rscore: string;
+}

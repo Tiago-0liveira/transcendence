@@ -41,11 +41,14 @@ type GameBracket = {
 	phase: number;
 }
 
-interface PlayerActiveGameData extends GamePlayer {
-	paddlePositionY: number;
+type GamePlayerData = {
+	paddlePositionY: number,
 	input: PlayerInput,
-	side: GameSide;
+	side: GameSide,
 	score: number,
+}
+
+interface PlayerActiveGameData extends GamePlayer, GamePlayerData {
 	disconnectedTime: number,
 	disconnectedAt: number,
 }

@@ -4,12 +4,7 @@ type LocalLobbyRoomParams = {
     playerNames: string[];
 }
 
-type LocalGamePlayer = {
-    paddlePositionY: number;
-    input: PlayerInput;
-    side: GameSide;
-    score: number;
-}
+interface LocalGamePlayer extends GamePlayerData {}
 
 type LocalGame = {
     id: string;

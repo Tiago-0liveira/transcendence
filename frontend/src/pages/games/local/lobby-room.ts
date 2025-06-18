@@ -15,69 +15,19 @@ const setError = (el: HTMLDivElement, error: string) => {
 	}
 };
 
-const getUpdatedRoomTemplate = (room: LobbyRoom, userId: number): string => {
-	const playerReadyStatus = room.connectedPlayers.find(u => u.id === userId)?.ready || false;
-
-	const userBracket = room.brackets.find(b =>
-		b.game &&
-		(b.game.players.left.id === userId || b.game.players.right.id === userId)
-	);
-
-	const showJoinGameButton = room.status === "active" && !!userBracket?.game;
-
-	return /* html */ `
-		<div class="profile-card centered auth-box">
-			<div class="settings-header login-section">${room.roomType}</div>
-
-			<div class="form-input-group centered-badge">
-				<span class="badge ${room.settings.visibility === 'public' ? 'badge-public' : 'badge-private'}">
-					${room.settings.visibility === 'public' ? 'Public' : 'Private'}
-				</span>
+const renderTemplate = (room: LocalLobbyRoom) => {
+	return /* html */`
+	    <div class="profile-card centered auth-box">
+			<div class="settings-header login-section">Local ${room.type}</div>
+			<div class="flex items-center justify-center">
+				<button class="btn-logout" id="btn-delete-local-game">Delete Local Game</button>
 			</div>
-
-			<div class="form-input-group horizontal-inputs room-name-block">
-				<span class="form-input-label">Room:</span>
-				<span class="highlight room-name-truncated" title="${room.name}">
-					${room.name}
-				</span>
-			</div>
-
-			${room.status === "waiting" ? `
-				<div class="form-input-group horizontal-inputs">
-					<span class="form-input-label">Status:</span>
-					<span class="badge ${playerReadyStatus ? 'badge-green' : 'badge-red'}">
-						${playerReadyStatus ? 'Ready' : 'Not Ready'}
-					</span>
-				</div>
-
-				<div class="form-input-group ready-button-group">
-					<button id="btn-set-ready-true" data-ready="true"
-						class="btn-steam-fixed ${playerReadyStatus ? 'active' : ''}">Set Ready</button>
-					<button id="btn-set-ready-false" data-ready="false"
-						class="btn-steam-fixed ${!playerReadyStatus ? 'active' : ''}">Set Not Ready</button>
-				</div>
-
-				<div class="form-input-group horizontal-inputs">
-					<span class="form-input-label">Players:</span>
-					<span class="${room.connectedPlayersNumber !== room.requiredPlayers ? 'text-warning' : 'text-success'}">
-						${room.connectedPlayersNumber} / ${room.requiredPlayers}
-					</span>
-				</div>
-
-				${renderOwnerStatus(room, userId)}
-			` : ''}
-
-			${showJoinGameButton ? `
-				<div class="form-input-group">
-					<button id="btn-join-active-game"
-						data-game-id="${userBracket?.game?.id}"
-						data-room-id="${room.id}"
-						class="btn-steam-fixed">Join Game</button>
-				</div>
-			` : ''}
 		</div>
-	`;
-};
+		<div class="profile-card centered auth-box !w-full !max-w-3xl ">
+			${renderBrackets(room)}
+		</div>
+	`
+}
 
 const renderOwnerStatus = (room: LobbyRoom, userId: number): string => {
 	const owner = room.connectedPlayers.find(p => p.id === room.owner);
@@ -101,47 +51,25 @@ const renderOwnerStatus = (room: LobbyRoom, userId: number): string => {
 	return '';
 };
 
-const renderBrackets = (room: LobbyRoom): string => {
-	if (room.status === 'waiting') return '';
-	const numCols = room.brackets.map(b => b.phase).reduce((acc, curr) => Math.max(acc, curr), 1);
-
+const renderBrackets = (room: LocalLobbyRoom): string => {
+	const cols = room.games.reduce((cols, game) => Math.max(cols, game.phase), 0)
 	return /* html */ `
-		<div class="brackets-wrapper">
-			<div class="brackets-grid" style="grid-template-columns: repeat(${numCols}, 1fr);">
-				${room.brackets.map(bracket => {
-		const gridPositionFromPhase = `bracket-phase-${bracket.phase}`;
-		if (bracket.game === null) {
-			let lPlayerName = "";
-			let rPlayerName = "";
-			const l = room.connectedPlayers.find(p => p.id === bracket.lPlayer);
-			const r = room.connectedPlayers.find(p => p.id === bracket.rPlayer);
-			if (l) lPlayerName = l.name;
-			if (r) rPlayerName = r.name;
+		<div class="grid gap-y-4 gap-x-4" ${conditionalRender(room.type === "tournament", `style="grid-template-columns: repeat(${cols}, 1fr);"`)}>
+			${room.games.map(game => /* html */`
+				<local-bracket-card class="flex items-center justify-center phase-${game.phase}"
+					game-id="${game.id}"
+					state="${game.state}"
+					${conditionalRender(game.winner !== null, `winner="${game.winner}"`)}
+					canJoin="${game.dependencyIds.every(gameId => room.games.find(g => g.id === gameId && g.state === 'completed'))}"
 
-			return `
-							<uncompleted-bracket-card class="bracket-card ${gridPositionFromPhase}"
-								lPlayer="${bracket.lPlayer}" rPlayer="${bracket.rPlayer}"
-								${conditionalRender(lPlayerName !== "", `lname="${lPlayerName}"`)}
-								${conditionalRender(rPlayerName !== "", `rname="${rPlayerName}"`)}>
-							</uncompleted-bracket-card>
-						`;
-		}
-
-		const g = bracket.game;
-		return `
-						<bracket-card class="bracket-card ${gridPositionFromPhase}"
-							lobby-id="${g.lobbyId}" game-id="${g.id}" state="${g.state}" ready="${bracket.ready}"
-							${conditionalRender(bracket.winner !== null, `winner="${bracket.winner}"`)}
-
-							lPlayer="${g.players.left.id}" lname="${g.players.left.name}"
-							lconnected="${g.players.left.connected}" lscore="${g.players.left.score}"
-
-							rPlayer="${g.players.right.id}" rname="${g.players.right.name}"
-							rconnected="${g.players.right.connected}" rscore="${g.players.right.score}">
-						</bracket-card>
-					`;
-	}).join('')}
-			</div>
+					lname="${game.lPlayer}"
+					lscore="${game.players.left.score}"
+					
+					rname="${game.rPlayer}"
+					rscore="${game.players.right.score}"
+				>
+				</local-bracket-card>
+			`).join('')}
 		</div>
 	`;
 };
@@ -151,31 +79,32 @@ const component = async () => {
 	const localGameManager = LocalGameRoomManager.getInstance();
 	const router = Router.getInstance();
 
-    if (localGameManager.activeGameLobby === null) {
-        throw new Error("No active Game Lobby")
-    }
-	let gameRoom: LocalLobbyRoom = localGameManager.activeGameLobby;
-
-	const queryParams = router.getCurrentRoute()?.query;
-	if (!queryParams?.roomId) throw new Error('Room not found!');
-
 	document.querySelector('#app')!.innerHTML = /* html */ `
 		<div class="lobby-room">
-			<div id="div-loading" class="lobby-loading">
-				<span class="loading-text">Loading Lobby Data...</span>
-				<loading-spinner size="sm"></loading-spinner>
-			</div>
-			<div id="lobby-error" class="lobby-error" styles="display: none;">
+			<div id="lobby-error" class="lobby-error" style="display: none;">
 				<p>Error: <span id="error-message"></span></p>
-				<a href="/games/rooms" class="return-link">Return to game rooms</a>
+				<div class="flex flex-col">
+					<a href="/games/local/create-game" class="return-link">Create a new Room</a>
+					<a href="/" class="return-link">Go To Home</a>
+				</div>
 			</div>
-			<div id="room-content" class="room-content-wrapper"></div>
+			<div id="room-content" class="w-full flex flex-col">
+				
+			</div>
 		</div>
 	`;
 
-	const divLoading = document.querySelector<HTMLDivElement>('#div-loading')!;
 	const divContent = document.querySelector<HTMLDivElement>('#room-content')!;
 	const divError = document.querySelector<HTMLDivElement>('#lobby-error')!;
+
+	if (!divContent) throw new Error("Could not find #room-content!");
+	if (!divError) throw new Error("Could not find #lobby-error!");
+
+	if (localGameManager.activeGameLobby === null) {
+		return setError(divError, "No active Game Lobby")
+    }
+	let gameRoom: LocalLobbyRoom = localGameManager.activeGameLobby;
+	divContent.innerHTML = renderTemplate(gameRoom);
 
 	const handleUserActions = (ev: MouseEvent) => {
 		if (!(ev.target instanceof Element)) return;
@@ -183,10 +112,12 @@ const component = async () => {
 		if (!targetButton) return;
 
 		switch (targetButton.id) {
-			case 'btn-start-game': {
+			case "btn-delete-local-game":
+
+				break;
+			case 'btn-start-game':
 				
 				break;
-			}
 			case "btn-join-game": {
 				const gameId = targetButton.dataset.gameId;
 				
@@ -214,6 +145,5 @@ const component = async () => {
 
 Router.getInstance().register({
 	path: '/games/local/lobby-room',
-	component,
-	guards: [authGuard]
+	component
 });

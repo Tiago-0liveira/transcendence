@@ -5,7 +5,7 @@ import { createGame } from "./lobby";
 /**
  * This has to be same as in the frontend!
  */
-const REFRESH_RATE_MS = 14 /* 14 ms makes the game run at more than 60fps */
+const REFRESH_RATE_MS = 16 /* 16 ms makes the game run at more than 60fps */
 
 export const BALL_RADIUS = 10
 

@@ -10,7 +10,11 @@ class LocalGameRoomManager {
     private localRoom: null | LocalLobbyRoom;
 
     private constructor() {
-        this.localRoom = null;
+		this.localRoom = null;
+        /*this.localRoom = this.createRoom({
+			type: "tournament",
+			playerNames: ["Player 1", "Player 2", "Player 3", "Player 4"],
+		});*/
     }
 
     /**
@@ -45,9 +49,9 @@ class LocalGameRoomManager {
         if (params.playerNames.some(name => 
                 name === "" ||
                 name.toString().trim().length <= 4 ||
-                name.toString().trim().length >= 15 ||
+                name.toString().trim().length >= 15) ||
                 params.playerNames.length !== (new Set(params.playerNames)).size
-            )) {
+            ) {
             throw new Error("Player Names must be between 4 and 15 chars and cannot be repeated!")
         }
 

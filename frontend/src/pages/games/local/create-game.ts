@@ -1,10 +1,8 @@
 import AuthManager from "@/auth/authManager";
 import LocalGameRoomManager from "@/auth/LocalGameManager";
-import SocketHandler from "@/auth/socketHandler";
-import { newGameConfigSchema, newLocalGameConfigSchema } from "@/auth/validation";
-import { authGuard } from "@/router/guards";
+import { newLocalGameConfigSchema } from "@/auth/validation";
 import Router from "@/router/Router";
-import { z, ZodError } from "zod";
+import { ZodError } from "zod";
 
 const getPlayerNameInputTemplate = (idNumber: number) => {
     return /* html */`
@@ -22,9 +20,12 @@ const getNewErrorTemplate = (error: string) => {
 }
 
 const component = async () => {
-
 	const user = AuthManager.getInstance().User;
+	const router = Router.getInstance();
     const localGameManager = LocalGameRoomManager.getInstance()
+	if (localGameManager.activeGameLobby) {
+		return router.navigate("/games/local/lobby-room")
+	}
 
 	const template = /* html */`
         <div class="profile-card centered auth-box signup-box">
@@ -41,7 +42,6 @@ const component = async () => {
                     </select>
                 </div>
                 <div class="form-input-group">
-                    
                     
                 </div>
 
@@ -104,7 +104,7 @@ const component = async () => {
 		const formData = new FormData(form);
 		try {
 			const data = {
-				roomType: formData.get("select-type")
+				roomType: formData.get("select-type")?.toString() || ""
 			};
 			const validated = newLocalGameConfigSchema.parse(data)
 			errorDiv.innerHTML = "";
@@ -121,12 +121,13 @@ const component = async () => {
             if (playerNames.some(name => 
                 name === "" ||
                 name.toString().trim().length <= 4 ||
-                name.toString().trim().length >= 15 ||
+                name.toString().trim().length >= 15) ||
                 playerNames.length !== (new Set(playerNames)).size
-            )) {
+            ) {
                 errorDiv.innerHTML = getNewErrorTemplate("Player Names must be between 4 and 15 chars and cannot be repeated!")
             } else {
                 console.log(localGameManager.createRoom({ type: validated.roomType, playerNames }))
+				router.navigate("/games/local/lobby-room")
             }
 
 		} catch (error) {
