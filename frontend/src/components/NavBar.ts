@@ -39,7 +39,7 @@ class NavBar extends HTMLElement {
 <!--			<nav id="nav-bar" class="relative w-full bg-dark-500 text-fuchsia-200 p-2 shadow-md">-->
 			<nav id="nav-bar" class="relative w-full bg-dark-500 text-fuchsia-200 p-2 shadow-md">
 				<div class="flex justify-between items-center">
-					<a href="/" class="btn-manual">Transcendence</a>
+					<a href="/transcendence" class="btn-manual">Transcendence</a>
 					<div class="buttons space-x-2">
 						
 					</div>

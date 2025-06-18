@@ -948,16 +948,24 @@ input[type="checkbox"]:checked + .toggle-bg {
 }
 
 .brackets-wrapper {
-	margin-top: 2rem;
+	margin-top: 3rem;
 	padding: 1rem;
 	border: 2px solid rgba(255, 255, 255, 0.1);
 	border-radius: 10px;
 	background-color: #1b1b1b;
 	box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+
 }
 
+/*.brackets-grid {*/
+/*	display: grid;*/
+/*	gap: 1rem;*/
+/*	width: 100%;*/
+/*}*/
 .brackets-grid {
 	display: grid;
+	grid-template-columns: repeat(2, 1fr); /* ⬅ 2 колонки */
+	align-items: center;                   /* ⬅ выравнивание по центру */
 	gap: 1rem;
 	width: 100%;
 }
@@ -969,6 +977,8 @@ input[type="checkbox"]:checked + .toggle-bg {
 	background-color: #2a2a2a;
 	box-shadow: 0 0 4px rgba(0, 0, 0, 0.25);
 }
+
+
 
 .lobby-room {
 	width: 100%;
@@ -1165,3 +1175,112 @@ input[type="checkbox"]:checked + .toggle-bg {
 	border: 1px solid rgba(59, 130, 246, 0.3); /* голубой обвод */
 	box-shadow: 0 0 10px rgba(59, 130, 246, 0.15);
 }
+
+.bracket-card {
+	background-color: #1b1f23;
+	border: 2px solid #333;
+	border-radius: 12px;
+	padding: 1rem;
+	min-height: 80px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	text-align: center;
+	transition: background 0.3s ease;
+}
+.bracket-card:hover {
+	background-color: #2c313a;
+}
+
+.bracket-phase-1 {
+	grid-column: 1;
+}
+
+.bracket-phase-2 {
+	grid-column: 2;
+	grid-row: 2; /* центруем финал */
+}
+
+/*.brackets-grid {*/
+/*	grid-template-rows: repeat(3, 1fr); !* фиксируем 3 ряда *!*/
+/*}*/
+.brackets-grid {
+	grid-template-columns: repeat(2, 1fr);
+	align-items: center;
+	gap: 0.5rem 2rem;
+	width: 100%;
+}
+
+.bracket-phase-1:nth-of-type(1) {
+	grid-row: 1;
+	grid-column: 1;
+}
+.bracket-phase-1:nth-of-type(2) {
+	grid-row: 3;
+	grid-column: 1;
+}
+.bracket-phase-2 {
+	grid-row: 1 / span 3;  /* ⬅ растянуть на 3 ряда */
+	grid-column: 2;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.guide-page {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 3rem; /* ⬅ больше воздуха между секциями */
+	padding: 3rem 0;
+	box-sizing: border-box;
+}
+
+.guide-section {
+	width: 100%;
+	max-width: 700px;
+	text-align: left;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding-bottom: 3rem; /* ⬅ отдельная вертикальная дистанция */
+	border-bottom: 1px solid rgba(255, 255, 255, 0.05); /* лёгкая линия */
+}
+
+
+.guide-section:last-child {
+	border-bottom: none;
+	padding-bottom: 0;
+}
+
+.guide-section h2 {
+	color: #facc15;
+	font-size: 1.1rem;
+	text-align: center;
+	margin-bottom: 1.5rem;
+}
+
+.guide-section p {
+	color: #c7d5e0;
+	font-size: 0.9rem;
+	line-height: 1.9; /* ⬅ увеличенное межстрочное расстояние */
+	margin-bottom: 1.2rem;
+	text-align: left;
+}
+
+
+.guide-screenshot {
+	width: 100%;
+	max-width: 700px;
+	border: 2px solid rgba(255, 222, 173, 0.3);
+	border-radius: 6px;
+	box-shadow: 0 0 16px rgba(0, 0, 0, 0.4);
+	margin-top: 1.5rem;
+}
+
+
+
+
+

@@ -6,6 +6,7 @@ import "@page/friends"
 import "@page/404"
 import "@page/settings"
 import "@page/profile"
+import "@page/transcendence"
 
 import "@page/games/new-config"
 import "@page/games/lobby-room"
