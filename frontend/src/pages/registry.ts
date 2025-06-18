@@ -22,4 +22,4 @@ import "@page/auth/login"
 import "@page/auth/signup"
 
 import "@page/auth/oauth/google"
-
+import "@page/chat"
