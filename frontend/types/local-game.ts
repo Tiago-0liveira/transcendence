@@ -10,7 +10,7 @@ type LocalGame = {
     id: string;
     lPlayer: string;
     rPlayer: string;
-    winner: string | null;
+    winner: "left" | "right" | null;
     state: GameState;
     dependencyIds: string[];
     startAt: number;

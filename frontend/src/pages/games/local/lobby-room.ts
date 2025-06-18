@@ -1,7 +1,5 @@
 import AuthManager from '@/auth/authManager';
 import LocalGameRoomManager from '@/auth/LocalGameManager';
-import SocketHandler from '@/auth/socketHandler';
-import { authGuard } from '@/router/guards';
 import Router from '@/router/Router';
 import { conditionalRender } from '@/utils/conditionalRender';
 import { toastHelper } from '@/utils/toastHelper';
@@ -18,7 +16,12 @@ const setError = (el: HTMLDivElement, error: string) => {
 const renderTemplate = (room: LocalLobbyRoom) => {
 	return /* html */`
 	    <div class="profile-card centered auth-box">
-			<div class="settings-header login-section">Local ${room.type}</div>
+			<div class="settings-header login-section">
+				<span>Local ${room.type}</span>
+				${conditionalRender(room.games.every(game => game.state === "completed"), `
+					<span class="bg-blue-500 p-2 rounded-full">completed</span>
+				`)}
+			</div>
 			<div class="flex items-center justify-center">
 				<button class="btn-logout" id="btn-delete-local-game">Delete Local Game</button>
 			</div>
@@ -29,28 +32,6 @@ const renderTemplate = (room: LocalLobbyRoom) => {
 	`
 }
 
-const renderOwnerStatus = (room: LobbyRoom, userId: number): string => {
-	const owner = room.connectedPlayers.find(p => p.id === room.owner);
-	if (!owner) {
-		return `<span class="owner-status owner-missing">Owner is missing</span>`;
-	}
-
-	if (room.owner === userId) {
-		return /* html */ `
-			<div class="owner-status owner-controls">
-				<div class="owner-hint">
-					You can start the game when all players are connected and ready!
-				</div>
-				<button id="btn-start-game" class="btn-start-game ready">
-					Start Game
-				</button>
-			</div>
-		`;
-	}
-
-	return '';
-};
-
 const renderBrackets = (room: LocalLobbyRoom): string => {
 	const cols = room.games.reduce((cols, game) => Math.max(cols, game.phase), 0)
 	return /* html */ `
@@ -60,7 +41,7 @@ const renderBrackets = (room: LocalLobbyRoom): string => {
 					game-id="${game.id}"
 					state="${game.state}"
 					${conditionalRender(game.winner !== null, `winner="${game.winner}"`)}
-					canJoin="${game.dependencyIds.every(gameId => room.games.find(g => g.id === gameId && g.state === 'completed'))}"
+					canJoin="${game.state !== "completed" && game.dependencyIds.every(gameId => room.games.find(g => g.id === gameId && g.state === 'completed'))}"
 
 					lname="${game.lPlayer}"
 					lscore="${game.players.left.score}"
@@ -75,7 +56,6 @@ const renderBrackets = (room: LocalLobbyRoom): string => {
 };
 
 const component = async () => {
-	const user = AuthManager.getInstance().User!;
 	const localGameManager = LocalGameRoomManager.getInstance();
 	const router = Router.getInstance();
 
@@ -113,10 +93,8 @@ const component = async () => {
 
 		switch (targetButton.id) {
 			case "btn-delete-local-game":
-
-				break;
-			case 'btn-start-game':
-				
+				localGameManager.deleteActiveGameLobby()
+				router.navigate("/games/local/create-game")
 				break;
 			case "btn-join-game": {
 				const gameId = targetButton.dataset.gameId;

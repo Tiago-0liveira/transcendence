@@ -59,7 +59,7 @@ class LocalBracketCard extends BaseAttributeValidationElement<LocalBracketCardAt
 		};
 		const rPlayer = {
 			name: rPlayerName || TBD,
-			determined: lPlayerName !== "",
+			determined: rPlayerName !== "",
 			score: Number(this.getAttribute("rscore")!)
 		};
 

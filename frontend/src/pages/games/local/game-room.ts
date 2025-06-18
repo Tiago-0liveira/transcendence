@@ -107,7 +107,7 @@ const component = async () => {
 	const localGameManager = LocalGameRoomManager.getInstance();
 
 	let goToLobbyIntervalId: number | null = null;
-	let returnToLobbyTimer = 5;
+	let redirectAt: null | number = null
 	let ctx: CanvasRenderingContext2D | null = null;
 	
 	const queryParams = router.getCurrentRoute()?.query
@@ -117,6 +117,8 @@ const component = async () => {
 	const foundGame = localGameManager.activeGameLobby.games.find(game => game.id === queryParams.gameId)
 	if (!foundGame) {
 		throw new Error("Room not found!");
+	} else if (foundGame.state === "completed") {
+		throw new Error("Game already completed!");
 	}
 	let gameRoom: LocalGame = foundGame;
 	const dataUpdateIntervalId = setInterval(() => {
@@ -131,7 +133,6 @@ const component = async () => {
 					timerDiv.classList.add("hidden")
 				}
 				gameRoom.startAt = 0;
-				console.log("actual start")
 			} else {
 				if (timerDiv) {
 					if (timerDiv.classList.contains("hidden")) {
@@ -155,10 +156,44 @@ const component = async () => {
 				}
 				gameRoom.players.left.paddlePositionY = DEFAULT_PADDLE_POS
 				gameRoom.players.right.paddlePositionY = DEFAULT_PADDLE_POS
+				const spanPlayersMiddleText = document.querySelector<HTMLSpanElement>("span#player-middle-text")
+				if (spanPlayersMiddleText) {
+					spanPlayersMiddleText.textContent = gameRoom.players.left.score + " : " + gameRoom.players.right.score
+				}
 				if (gameRoom.players.left.score === 7 || gameRoom.players.right.score === 7) {
+					gameRoom.state = "completed"
 					gameRoom.ballData = gameRoom.ballData = DEFAULT_BALL_DATA()
+					const winner = gameRoom.players.left.score === 7 ? gameRoom.lPlayer : gameRoom.rPlayer
+					gameRoom.winner = gameRoom.players.left.score === 7 ? "left" : "right";
+					localGameManager.updateAfterGameFinnish(gameRoom.id)
+					redirectAt = now + 1000 * 4;
+					// handle timer for leaving the game-room
+					const gameResultBanner = document.getElementById("game-result-banner")
+					if (gameResultBanner) {
+						if (gameResultBanner.classList.contains("hidden")) gameResultBanner.classList.remove("hidden")
+						const spanCup = document.getElementById("span-cup")
+						if (spanCup && spanCup.classList.contains("hidden")) {
+							spanCup.classList.remove("hidden")
+						}
+						const resultText = document.getElementById("game-result-banner-text")
+						if (resultText) {
+							resultText.textContent = winner + " Wins!"
+						}
+					}
 				} else {
 					gameRoom.ballData = gameRoom.ballData = ACTIVE_BALL_DATA()
+				}
+			}
+		} else if (gameRoom.state === "completed") {
+			const redirectNumberSpan = document.getElementById("redirect-number")
+			if (redirectAt) {
+				const timer = Math.floor((redirectAt - now) / 1000)
+				if (timer === 0)
+				{
+					router.navigate("/games/local/lobby-room")
+				}
+				if (redirectNumberSpan) {
+					redirectNumberSpan.textContent = String(timer)
 				}
 			}
 		}
@@ -177,21 +212,21 @@ const component = async () => {
 					<span class="text-2xl w-96">${gameRoom.rPlayer}</span>
 				</div>
 				<div id="game-result-banner" class="absolute hidden w-full z-10 top-14 flex-col items-center justify-center  bg-gray-500 bg-opacity-80 text-white space-y-4">
-					<h1 class="text-9xl flex items-center justify-center space-x-4">
+					<h1 class="text-2xl flex items-center justify-center space-x-4">
 						<span id="span-cup" class="hidden items-center justify-center"><img class="w-32" src="/cup.svg" alt="trophy image"></span>
-						<span id="span-sad-face" class="hidden items-center justify-center"><img class="w-32" src="/sad-face.svg" alt="trophy image"></span>
 						<span id="game-result-banner-text"></span>
 					</h1>
 					<span class="flex flex-col items-center justify-center">
 						<span>Redirecting to Lobby in <span id="redirect-number"></span>...</span>
-						<a href="/" id="a-go-to-lobby" class="link">Go to Lobby now!</a>
+						<a href="/games/local/lobby-room" class="link">Go to Lobby now!</a>
 					</span>
 				</div>
 				<div id="timer-div" class="rounded-full fixed p-4 hidden bg-gray-50 items-center justify-center top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[-1/2]">
 					<span id="timer-left" class=""></span>
 				</div>
 				<button id="btn-go-back" class="absolute left-6 mt-10 p-2 bg-black rounded-md border-2 border-black hover:border-white transition duration-300 text-white">Go back to Lobby</button>
-				<button id="btn-start-game" class="fixed p-2 bg-green-500 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[-1/2] rounded-md border-2 border-black hover:border-white text-white">Start Game</button>
+				<button id="btn-start-game" class="hidden fixed p-2 bg-green-500 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[-1/2] rounded-md border-2 border-black hover:border-white text-white">Start Game</button>
+				<button id="btn-resume-game" class="hidden fixed p-2 bg-green-700 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[-1/2] rounded-md border-2 border-black hover:border-white text-white">Resume Game</button>
 				<div id="game-error" class="hidden">
 					<div class="text-2xl">
 						<span>Error: </span>
@@ -209,6 +244,8 @@ const component = async () => {
 	const divContent = document.querySelector<HTMLDivElement>("div#room-content")
 	const divError = document.querySelector<HTMLDivElement>("div#game-error")
 	const spanPlayersMiddleText = document.querySelector<HTMLSpanElement>("span#player-middle-text")
+	const buttonStartGame = document.querySelector<HTMLButtonElement>("button#btn-start-game")
+	const buttonResumeGame = document.querySelector<HTMLButtonElement>("button#btn-resume-game")
 	
 	const canvas = document.getElementById("gameCanvas")
 	if (!canvas) throw new Error("Could not find canvas")
@@ -219,6 +256,8 @@ const component = async () => {
 	if (!divContent) throw new Error("Could not find div#room-content!")
 	if (!divError) throw new Error("Could not find div#game-error!")
 	if (!spanPlayersMiddleText) throw new Error("Could not find span#player-middle-text!")
+	if (!buttonStartGame) throw new Error("Could not find button#btn-start-game!")
+	if (!buttonResumeGame) throw new Error("Could not find button#btn-resume-game!")
 						
 	const btnGoBackHandler = (btn: HTMLButtonElement) => {
 		if (!gameRoom) return;
@@ -238,10 +277,26 @@ const component = async () => {
 			gameRoom.ballData = ACTIVE_BALL_DATA()
 			btnStartGame.classList.add("hidden")
 		}
+		const btnResumeGame = ev.target.closest("button#btn-resume-game");
+		if (btnResumeGame instanceof HTMLButtonElement) {
+			gameRoom.state = "active";
+			gameRoom.startAt = Date.now() + 4 * 1000;
+			btnResumeGame.classList.add("hidden")
+		}
 	}
 	const keyDownHandler = (event: KeyboardEvent) => {
 		if (!gameRoom) return
 
+		/* pause game */
+		if (event.key === "p") {
+			if (gameRoom.state === "active")
+			{
+				gameRoom.state = "stopped";
+				if (buttonResumeGame.classList.contains("hidden")) {
+					buttonResumeGame.classList.remove("hidden")
+				}
+			}
+		}
 		/* right with arrows */
 		if (event.key === "ArrowUp") gameRoom.players.right.input.up = true;
 		if (event.key === "ArrowDown") gameRoom.players.right.input.down = true;
@@ -252,10 +307,6 @@ const component = async () => {
 	const keyUpHandler = (event: KeyboardEvent) => {
 		if (!gameRoom) return
 
-		/* pause game */
-		if (event.key === "p") {
-			gameRoom.state = "stopped";
-		}
 		/* right with arrows */
 		if (event.key === "ArrowUp") gameRoom.players.right.input.up = false;
 		if (event.key === "ArrowDown") gameRoom.players.right.input.down = false;
@@ -264,11 +315,24 @@ const component = async () => {
 		if (event.key === "s") gameRoom.players.left.input.down = false;
 	}
 
+	if (gameRoom.state === "waiting") {
+		if (buttonStartGame.classList.contains("hidden")) {
+			buttonStartGame.classList.remove("hidden")
+		}
+	} else if (gameRoom.state === "stopped") {
+		if (buttonResumeGame.classList.contains("hidden")) {
+			buttonResumeGame.classList.remove("hidden")
+		}
+	}
+
 	document.addEventListener("click", buttonsHandler)
 	document.addEventListener("keydown", keyDownHandler)
 	document.addEventListener("keyup", keyUpHandler)
 
 	return () => {
+		if (gameRoom.state === "active") {
+			gameRoom.state = "stopped"
+		}
 		clearInterval(dataUpdateIntervalId);
 		document.removeEventListener("click", buttonsHandler)
 		document.removeEventListener("keydown", keyDownHandler)

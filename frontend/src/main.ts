@@ -11,7 +11,9 @@ const b = document.getElementsByTagName("body").item(0)
 if (!b) {
 	throw new Error("Body Element not found!")
 }
-b.prepend(new NavBar())
+const navBar = new NavBar();
+navBar.style.zIndex = "10000";
+b.prepend(navBar)
 
 Router.getInstance().initializeRouter();
 AuthManager.getInstance();

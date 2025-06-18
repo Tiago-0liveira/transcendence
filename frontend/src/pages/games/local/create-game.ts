@@ -23,9 +23,6 @@ const component = async () => {
 	const user = AuthManager.getInstance().User;
 	const router = Router.getInstance();
     const localGameManager = LocalGameRoomManager.getInstance()
-	if (localGameManager.activeGameLobby) {
-		return router.navigate("/games/local/lobby-room")
-	}
 
 	const template = /* html */`
         <div class="profile-card centered auth-box signup-box">
@@ -59,6 +56,21 @@ const component = async () => {
                 <button type="submit" id="btn-create" class="btn-steam-fixed">Create Room</button>
             </form>
         </div>
+		<div id="modal" class="hidden absolute w-full h-[calc(100%-53.33px)] z-10">
+			<div class="w-full h-full opacity-90 bg-black absolute">
+
+			</div>
+			<div class="w-full h-full relative z-20 flex items-center justify-center">
+				<div class="profile-card centered auth-box signup-box !self-center !max-w-3xl">
+					<div class="settings-header login-section">A Local Game Room Already Exists</div>
+					
+					<form id="existing-game-form" class="settings-form space-y-5">
+						<button type="submit" id="btn-delete-old-create" class="!bg-red-500 !text-black hover:!text-white btn-steam-fixed">Delete current room and create a new one</button>
+						<button type="submit" id="btn-join-existing" class="!bg-green-500 !text-black hover:!text-white btn-steam-fixed">Join existing room</button>
+					</form>
+				</div>
+			</div>
+		</div>
 	`;
 	document.querySelector('#app')!.innerHTML = template;
 
@@ -67,14 +79,24 @@ const component = async () => {
     const spanPlayersNumber = document.querySelector<HTMLSpanElement>("span#players-number")
 	const errorDiv = document.querySelector<HTMLDivElement>("div#errors")
     const playerNamesDiv = document.querySelector<HTMLDivElement>("div#player-names")
+	const modal = document.querySelector<HTMLDivElement>("div#modal")
+	const ExistingGameForm = document.querySelector<HTMLFormElement>("#existing-game-form")
+	
     
-	if (!form) { throw new Error("Could not find form"); }
+	if (!form) { throw new Error("Could not find #game-config"); }
 	if (!selectType) { throw new Error("Could not find select#select-type"); }
     if (!spanPlayersNumber) throw new Error("Could not get span#players-number");
 	if (!errorDiv) { throw new Error("Could not find div#errors"); }
     if (!playerNamesDiv) { throw new Error("Could not find div#player-names"); }
+	if (!modal) { throw new Error("Could not find div#modal"); }
+	if (!ExistingGameForm) { throw new Error("Could not find form#existing-game-form"); }
 
-	
+
+	if (localGameManager.activeGameLobby) {
+		if (modal.classList.contains("hidden")) modal.classList.remove("hidden")
+	}
+
+
 	const selectTypeChangeHandler = async (ev: Event) => {
 		if (!(ev.target instanceof HTMLSelectElement)) return;
 
@@ -142,14 +164,31 @@ const component = async () => {
 			}
 		}
 	}
+
+	const formExistingGameSubmitHandler = async (e: SubmitEvent) => {
+		e.preventDefault()
+		const submitter = e.submitter
+		if (submitter instanceof HTMLButtonElement) {
+			if (submitter.id === "btn-delete-old-create") {
+				localGameManager.deleteActiveGameLobby()
+				if (!modal.classList.contains("hidden")) {
+					modal.classList.add("hidden")
+				}
+			} else if (submitter.id === "btn-join-existing") {
+				router.navigate("/games/local/lobby-room")
+			}
+		}
+	}
 	
 	selectTypeChange("1v1")
 	selectType.addEventListener("change", selectTypeChangeHandler)
 	form.addEventListener("submit", formSubmitHandler)
+	ExistingGameForm.addEventListener("submit", formExistingGameSubmitHandler)
 
 	return () => {
 		selectType.removeEventListener("change", selectTypeChangeHandler)
 		form.removeEventListener("submit", formSubmitHandler);
+		ExistingGameForm.removeEventListener("submit", formExistingGameSubmitHandler)
 	}
 }
 

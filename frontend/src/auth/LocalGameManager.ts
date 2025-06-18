@@ -11,10 +11,6 @@ class LocalGameRoomManager {
 
     private constructor() {
 		this.localRoom = null;
-        /*this.localRoom = this.createRoom({
-			type: "tournament",
-			playerNames: ["Player 1", "Player 2", "Player 3", "Player 4"],
-		});*/
     }
 
     /**
@@ -112,6 +108,33 @@ class LocalGameRoomManager {
 
     public get activeGameLobby() {
         return this.localRoom;
+    }
+
+    public deleteActiveGameLobby() {
+        if (this.localRoom !== null)
+        {
+            this.localRoom = null;
+        }
+    }
+
+    public updateAfterGameFinnish(gameId: string) {
+        if (!this.localRoom) return;
+        if (this.localRoom.type === "tournament") {
+            const foundGame = this.localRoom.games.find(game => game.id === gameId)
+            if (foundGame && foundGame.state === "completed" && foundGame.winner !== null) {
+                const winner = foundGame.winner === "left" ? foundGame.lPlayer : foundGame.rPlayer;
+                this.localRoom.games.forEach(game => {
+                    if (game.phase === 2) {
+                        if (game.lPlayer === "") {
+                            game.lPlayer = winner;
+                        } else if (game.rPlayer === "") {
+                            game.rPlayer = winner;
+                        }
+                    }
+                })
+            }
+            
+        }
     }
 }
 
