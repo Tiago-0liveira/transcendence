@@ -90,12 +90,12 @@ const component = async () => {
 		if (!(ev.target instanceof HTMLSelectElement)) return;
 
 		if (["1v1", "tournament"].includes(ev.target.value)) {
-			selectTypeChange(ev.target.value as "1v1" | "tournament")
+			selectTypeChange(ev.target.value as LobbyType)
 		} else {
 			console.warn("Something is very wrong in select#select-type")
 		}
 	}
-	const selectTypeChange = async (newValue: "1v1" | "tournament") => {
+	const selectTypeChange = async (newValue: LobbyType) => {
 		const tournamentDiv = document.querySelector<HTMLDivElement>("div#playersNumber-div")
 		if (!tournamentDiv) throw new Error("Could not get div#playersNumber-div");
 

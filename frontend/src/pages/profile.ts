@@ -11,15 +11,19 @@ Router.getInstance().register({
 
         const template = /* html */`
 			<div class="profile-card">
-				<div class="profile-wrapper-row">
-					<img class="steam-avatar" src="${user.avatarUrl}" alt="User avatar" />
-					<div class="profile-info-block profile-text">
-	                    <div class="profile-name-large">${user.displayName}</div>
-	                    <div class="profile-stats-compact">
-							<p>Status: Online</p>
-							<p>Total games: 42</p>
-							<p>Winrate: 42%</p>
-							<p>Rank: GrandMa</p>
+				<div class="profile-wrapper-row flex flex-col">
+					<div class="profile-name-large">
+						<span>${user.displayName}</span>
+					</div>
+					<div class="flex w-full p-4 justify-evenly">
+						<img class="steam-avatar" src="${user.avatarUrl}" alt="User avatar" />
+						<div class="profile-info-block profile-text">
+							<div class="profile-stats-compact">
+								<p>Status: Online</p>
+								<p>Total games: 42</p>
+								<p>Winrate: 42%</p>
+								<p>Rank: GrandMa</p>
+							</div>
 						</div>
 					</div>
 				</div>
