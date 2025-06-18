@@ -529,8 +529,8 @@ class ChatSidebar extends HTMLElement {
   }
 
   private getTemplate(): string {
-    return `
-      <div class="flex h-full w-screen">
+    return /* html */ `
+      <div class="flex h-full w-64 ">
         <div class="chat-sidebar bg-sidebar-background border-r border-sidebar-border transition-all duration-300 ease-in-out w-80 flex flex-col">
           <div class="p-4 border-b border-sidebar-border flex items-center justify-between flex-shrink-0">
             <h1 class="text-lg font-semibold text-sidebar-foreground">Chat</h1>
@@ -577,15 +577,6 @@ class ChatSidebar extends HTMLElement {
                 </button>
               </div>
             </div>
-          </div>
-        </div>
-
-        <div class="flex-1 flex items-center justify-center bg-white">
-          <div class="text-center text-gray-400">
-            <svg class="w-24 h-24 mx-auto mb-4 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-            </svg>
-            <p class="text-lg text-gray-300">Chat in the sidebar</p>
           </div>
         </div>
       </div>
