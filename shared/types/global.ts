@@ -57,6 +57,7 @@ type SocketMessage =
       "chat-message",
       {
         source: number;
+        sourceName: string;
         target?: number;
         content: string;
         isPrivateMessage: boolean;
