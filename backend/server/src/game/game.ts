@@ -42,7 +42,7 @@ const GAME_MAX_SCORE = 7/* TODO: we can change this later */
  */
 setInterval(() => {
 	const timeTaken = Date.now()
-	for (const [, lobby] of activeGameRooms) {
+	activeGameRooms.forEach(lobby => {
 		if (lobby.status !== "active") return
 		lobby.brackets.forEach(bracket => {
 			if (!bracket.game) return
@@ -101,7 +101,7 @@ setInterval(() => {
 				})
 			}
 		})
-	}
+	})
 	const timeTakenMs = Date.now() - timeTaken;
 	if (timeTakenMs > REFRESH_RATE_MS) {
 		console.warn(`Warning: Game loop took ${timeTakenMs}ms, which is more than ${REFRESH_RATE_MS}ms. Consider optimizing your game logic.`);
