@@ -5,3 +5,4 @@ import "@component/RoomCard";
 import "@component/BracketCard";
 import "@component/UncompletedBracketCard";
 import "@component/chatComponent";
+import "@component/chatComponent2";
