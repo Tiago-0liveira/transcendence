@@ -43,6 +43,7 @@ const routeTree = {
 			status: "status",
 		},
 	},
+	profile: "profile",
 } as const;
 
 const API = buildPaths(routeTree);

@@ -8,7 +8,6 @@ import API from "@/utils/BackendApi";
 
 const component = async () => {
     const auth = AuthManager.getInstance();
-    // 🔹 Обновляем пользователя с сервера
     const user = auth.User!;
     const isGoogleUser = user.authProvider === "google";
 

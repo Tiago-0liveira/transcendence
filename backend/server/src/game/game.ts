@@ -1,6 +1,7 @@
 import { activeGameRooms, connectedSocketClients } from "@api/websocket";
 import { GAME_START_TIMER, MAX_PLAYER_DISCONNECT_ACCUMULATED_TIME } from "@utils/defaults";
 import { createGame } from "./lobby";
+import Database from "@db/Database";
 
 /**
  * This has to be same as in the frontend!
@@ -109,7 +110,7 @@ setInterval(() => {
 }, REFRESH_RATE_MS);
 
 
-export const updateBracketsAfterGameFinnish = (lobby: LobbyRoom, gameId: string, phase: number, winnerId: number) => {
+export const updateBracketsAfterGameFinnish = async (lobby: LobbyRoom, gameId: string, phase: number, winnerId: number) => {
 	let allFinnished = true;
 	lobby.brackets.forEach(bracket => {
 		if (bracket.dependencyIds.includes(gameId) && bracket.phase === phase + 1) {
@@ -130,9 +131,83 @@ export const updateBracketsAfterGameFinnish = (lobby: LobbyRoom, gameId: string,
 			allFinnished = false;
 		}
 	});
-	if (allFinnished)
-	{
+	if (allFinnished) {
 		lobby.status = "completed";
+
+		const lastBracket = lobby.brackets[lobby.brackets.length - 1];
+		if (!lastBracket || !lastBracket.winner || !lastBracket.game) return;
+
+		const db = Database.getInstance();
+
+		const winnerId = lastBracket.winner === "left" ? lastBracket.lPlayer : lastBracket.rPlayer;
+		const loserId = lastBracket.winner === "left" ? lastBracket.rPlayer : lastBracket.lPlayer;
+
+		const game = lastBracket.game;
+		const winnerScore = game.players[lastBracket.winner].score;
+		const loserScore = game.players[lastBracket.winner === "left" ? "right" : "left"].score;
+
+		const startTime = new Date(game.timer.startAt);
+		const endTime = new Date(game.timer.startAt + game.timer.elapsed);
+		const duration = game.timer.elapsed;
+
+		// 1. Запись игры в таблицу game_history
+		await db.gameHistoryTable.new({
+			lobbyId: lobby.id,
+			winnerId,
+			loserId,
+			scoreWinner: winnerScore,
+			scoreLoser: loserScore,
+			startTime,
+			endTime,
+			duration
+		});
+
+		// 2. Обновление статистики победителя
+		const winnerStats = await db.userStatsTable.getByUserId(winnerId);
+		if (winnerStats.result) {
+			const s = winnerStats.result;
+			await db.userStatsTable.update(winnerId, {
+				...s,
+				wins: s.wins + 1,
+				totalGames: s.totalGames + 1
+			});
+		}
+
+		// 3. Обновление статистики проигравшего
+		const loserStats = await db.userStatsTable.getByUserId(loserId);
+		if (loserStats.result) {
+			const s = loserStats.result;
+			await db.userStatsTable.update(loserId, {
+				...s,
+				losses: s.losses + 1,
+				totalGames: s.totalGames + 1
+			});
+		}
+
+		// 4. Финальная проверка для турниров: если это финальный матч — обновить турнирную статистику
+		if (
+			lobby.roomType === "tournament" &&
+			lastBracket === lobby.brackets[lobby.brackets.length - 1]
+		) {
+			for (const player of lobby.connectedPlayers) {
+				const stats = await db.userStatsTable.getByUserId(player.id);
+				if (!stats.result) continue;
+
+				const s = stats.result;
+
+				if (player.id === winnerId) {
+					await db.userStatsTable.update(player.id, {
+						...s,
+						tournamentWins: s.tournamentWins + 1
+					});
+				} else {
+					await db.userStatsTable.update(player.id, {
+						...s,
+						tournamentLosses: s.tournamentLosses + 1
+					});
+				}
+			}
+		}
 	}
 }
 

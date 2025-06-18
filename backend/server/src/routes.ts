@@ -9,6 +9,8 @@ import { websocketHandler } from "./api/websocket";
 import auth2faRoutes from "@api/2fa";
 import UserSettingsRoutes from "@api/settings";
 import blockedUsersRoutes from "@api/auth/blocked";
+import UserStatisticRoutes from "@api/profile";
+import UserProfileRoutes from "@api/profile";
 
 /**
  * @description Registers all endpoints necessary for the server (in a organized way)
@@ -52,4 +54,10 @@ export default function registerRoutes(app: FastifyInstance) {
 		{ prefix: "/settings" }
 	)
 	app.register(blockedUsersRoutes, { prefix: "/blocked"})
+	app.register(
+		(fastifyInstance, _, done) => {
+			fastifyInstance.register(UserProfileRoutes)
+			done()
+		},
+	)
 }
