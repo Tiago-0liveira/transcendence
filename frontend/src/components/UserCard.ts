@@ -84,11 +84,14 @@ class UserCard extends BaseAttributeValidationElement<UserCardAttributes> {
 			>
 
 			<div class="w-full px-4 mt-3">
-				<div 
-					class="text-left text-xl font-semibold break-words mb-3"
-					${user.displayName.length > 10 ? `title="${user.displayName}"` : ""}
-				>
-					${user.displayName.length > 10 ? user.displayName.slice(0, 10) + '…' : user.displayName}
+				<div class="text-left text-xl font-semibold break-words mb-3">
+					<a 
+						href="/profile/${user.id}" 
+						class="hover:underline"
+						title="${user.displayName}"
+					>
+						${user.displayName.length > 10 ? user.displayName.slice(0, 10) + '…' : user.displayName}
+					</a>
 				</div>
 
 				${conditionalRender(variant === "possibleFriend", `
