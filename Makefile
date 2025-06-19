@@ -2,7 +2,7 @@ all: prod
 
 
 prod:
-	docker-compose --profile --verbose prod up --build -d
+	docker-compose --profile prod up --build -d
 dev:
 	docker-compose --profile dev up --build -d
 
