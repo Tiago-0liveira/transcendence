@@ -28,6 +28,7 @@ type RoomCardAttributes = {
 	"room-id": string;
 	name: string;
 	owner: string;
+	ownerName: string;
 	status: LobbyStatus;
 	"required-players": string;
 	"connected-players-number": string;
@@ -61,4 +62,17 @@ type UncompletedBracketCardAttributes = {
 
 	rPlayer: string;
 	rname: string;
+}
+
+type LocalBracketCardAttributes = {
+	"game-id": string;
+	state: GameState;
+	winner: GameSide;
+	canJoin: StringBool;
+	
+	lname: string;
+	lscore: string;
+
+	rname: string;
+	rscore: string;
 }

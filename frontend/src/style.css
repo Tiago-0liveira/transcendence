@@ -304,11 +304,9 @@ div.loading-spinner img {
 
 .phase-2 {
 	@apply col-span-1 col-start-2 col-end-3;
+	grid-row: 1 / span 2;
 }
 
-.phase-3 {
-	@apply col-span-1 col-start-3 col-end-4;
-}
 
 /* ───── SETTINGS ENHANCEMENTS ───── */
 
@@ -1134,4 +1132,35 @@ input[type="checkbox"]:checked + .toggle-bg {
 	text-align: left;
 	width: 100%;
 	margin-bottom: 1.5rem;
+}
+
+.room-card-header-left {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.5rem;
+	color: navajowhite;
+	font-weight: bold;
+	font-size: 1.2rem;
+	color: #3b82f6;
+}
+
+.text-success {
+	color: #00ff00; /* зелёный */
+}
+
+.text-danger {
+	color: #ff6060; /* красный */
+}
+
+.room-card-tournament {
+	background-color: #26231f; /* насыщенный тёмно-коричневый или бронзовый */
+	border: 1px solid rgba(255, 215, 0, 0.3); /* золото */
+	box-shadow: 0 0 10px rgba(255, 215, 0, 0.15);
+}
+
+.room-card-1v1 {
+	background-color: #1a222c; /* тёмно-синий/угольный */
+	border: 1px solid rgba(59, 130, 246, 0.3); /* голубой обвод */
+	box-shadow: 0 0 10px rgba(59, 130, 246, 0.15);
 }

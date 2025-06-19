@@ -155,6 +155,7 @@ export const getBasicLobby = function (room: LobbyRoom, userId: number, isFriend
 		id: room.id,
 		name: room.name,
 		owner: room.owner,
+		ownerName: room.connectedPlayers.find(player => player.id === room.owner)?.name ?? "",
 		lobbyType: room.roomType,
 		status: room.status,
 		requiredPlayers: room.requiredPlayers,

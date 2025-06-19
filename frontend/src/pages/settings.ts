@@ -226,6 +226,9 @@ const component = async () => {
                 body: JSON.stringify({ oldPassword, newPassword }),
             });
 
+            if (!res) {
+                return toastHelper.error("Password change failed")
+            }
             const data = await res.json();
 
             if (!res.ok || !data.ok) {

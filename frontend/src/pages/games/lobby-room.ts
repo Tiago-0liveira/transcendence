@@ -7,6 +7,7 @@ import { toastHelper } from '@/utils/toastHelper';
 
 const setError = (el: HTMLDivElement, error: string) => {
 	const spanError = el.querySelector('span#error-message');
+	console.log(spanError)
 	if (spanError) {
 		spanError.textContent = error;
 		el.style.display = 'block';
@@ -19,6 +20,7 @@ const isRoomFullyReady = (room: LobbyRoom): boolean => {
 };
 
 const getUpdatedRoomTemplate = (room: LobbyRoom, userId: number): string => {
+	console.log("getUpdatedRoomTemplate")
 	const playerReadyStatus = room.connectedPlayers.find(u => u.id === userId)?.ready || false;
 
 	const userBracket = room.brackets.find(b =>
@@ -70,14 +72,15 @@ const getUpdatedRoomTemplate = (room: LobbyRoom, userId: number): string => {
 				${renderOwnerStatus(room, userId)}
 			` : ''}
 
-			${showJoinGameButton ? `
+			${renderBrackets(room)}
+			/* ${showJoinGameButton ? `
 				<div class="form-input-group">
 					<button id="btn-join-active-game"
 						data-game-id="${userBracket?.game?.id}"
 						data-room-id="${room.id}"
 						class="btn-steam-fixed">Join Game</button>
 				</div>
-			` : ''}
+			` : ''} */
 		</div>
 	`;
 };
@@ -143,8 +146,8 @@ const renderBrackets = (room: LobbyRoom): string => {
 			return `
 							<uncompleted-bracket-card class="bracket-card ${gridPositionFromPhase}"
 								lPlayer="${bracket.lPlayer}" rPlayer="${bracket.rPlayer}"
-								${conditionalRender(lPlayerName, `lname="${lPlayerName}"`)}
-								${conditionalRender(rPlayerName, `rname="${rPlayerName}"`)}>
+								${conditionalRender(lPlayerName !== "", `lname="${lPlayerName}"`)}
+								${conditionalRender(rPlayerName !== "", `rname="${rPlayerName}"`)}>
 							</uncompleted-bracket-card>
 						`;
 		}
@@ -183,7 +186,7 @@ const component = async () => {
 				<span class="loading-text">Loading Lobby Data...</span>
 				<loading-spinner size="sm"></loading-spinner>
 			</div>
-			<div id="lobby-error" class="lobby-error hidden">
+			<div id="lobby-error" class="lobby-error" style="display: none;">
 				<p>Error: <span id="error-message"></span></p>
 				<a href="/games/rooms" class="return-link">Return to game rooms</a>
 			</div>
