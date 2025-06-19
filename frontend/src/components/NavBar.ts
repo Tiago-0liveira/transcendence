@@ -4,26 +4,26 @@ import { conditionalRender } from "@/utils/conditionalRender";
 
 class NavBar extends HTMLElement {
 	connectedCallback() {
-		console.log("NavBar-connectedCallback")
-		this.render()
+		console.log("NavBar-connectedCallback");
+		this.render();
 	}
 
 	/**
 	 * @description Renders dynamic part of the nav-bar
 	 */
 	static updateNav() {
-		const buttonsElement = document.querySelector("#nav-bar div.buttons")
+		const buttonsElement = document.querySelector("#nav-bar div.buttons");
 		if (buttonsElement == null)
-			throw new Error("NavBar could not find div.buttons")
+			throw new Error("NavBar could not find div.buttons");
 		const user = AuthManager.getInstance().User;
 		if (user == null) {
 			buttonsElement.innerHTML = `
 				<a href="/auth/login" class="btn-login-out">Login</a>
 				<a href="/auth/signup" class="btn-login-out">Sign Up</a>
-			`
+			`;
 		} else {
 			buttonsElement.innerHTML = `
-				<a href="/game" class="btn-steam">Chat</a>
+				<a href="/chat" class="btn-steam">Chat</a>
 				<a href="/game" class="btn-steam">Game</a>
 				<a href="/players" class="btn-steam">Players</a>
 				<a href="/profile" class="btn-steam">Profile</a>
@@ -31,7 +31,7 @@ class NavBar extends HTMLElement {
 				<a href="/settings" class="btn-steam">Settings</a>
   				<a href="/auth/logout" class="btn-logout">Logout</a>
   				
-			`
+			`;
 		}
 	}
 
@@ -47,10 +47,10 @@ class NavBar extends HTMLElement {
 				</div>
 			</nav>
 		`;
-		NavBar.updateNav()
+		NavBar.updateNav();
 	}
 }
 
-
 customElements.define("nav-bar", NavBar);
 export default NavBar;
+
