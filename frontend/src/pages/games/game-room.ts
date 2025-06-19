@@ -325,6 +325,7 @@ const component = async () => {
 		}
 		const anchorGotoLobby = ev.target.closest("a#a-go-to-lobby");
 		if (anchorGotoLobby instanceof HTMLAnchorElement) {
+			ev.preventDefault()
 			if (gameRoom) {
 				router.navigate("/games/lobby-room", false, {}, { roomId: gameRoom.lobbyId })
 			}

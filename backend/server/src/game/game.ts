@@ -143,6 +143,9 @@ export const updateBracketsAfterGameFinnish = async (lobby: LobbyRoom, gameId: s
 
 		const db = Database.getInstance();
 		const lastBracket = lobby.brackets[lobby.brackets.length - 1];
+		if (lastBracket && lastBracket.winner) {
+			updatePlayerActiveLobby(lastBracket.winner === "left" ? lastBracket.lPlayer : lastBracket.rPlayer)
+		}
 
 		for (const bracket of lobby.brackets) {
 			if (!bracket.game || !bracket.winner) continue;
