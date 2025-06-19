@@ -27,7 +27,16 @@ interface Conversation {
 
 let currentConversationId: number | null = null;
 // let conversations: Conversation[] = [];
-let mockConversations: Conversation[] = [];
+let mockConversations: Conversation[] = [
+  {
+    id: 777888,
+    title: "General Chat",
+    messages: [],
+    lastMessage: "",
+    timestamp: new Date(Date.now()),
+    isPrivate: false,
+  },
+];
 
 const sh = SocketHandler.getInstance();
 
@@ -234,12 +243,15 @@ function createLastMessage(
   conversation: Conversation,
   loggedInUser: UserNoPass,
 ): string {
+  let senderName = "";
+  let joinedStr = "";
   const lastMessage = conversation.messages[conversation.messages.length - 1];
+  if (lastMessage) {
+    senderName =
+      lastMessage.senderId === loggedInUser.id ? "me" : lastMessage.senderName;
+    joinedStr = senderName + ": " + lastMessage.content;
+  }
 
-  const senderName =
-    lastMessage.senderId === loggedInUser.id ? "me" : lastMessage.senderName;
-
-  const joinedStr = senderName + ": " + lastMessage.content;
   return joinedStr;
 }
 
@@ -248,10 +260,14 @@ function createConversationElem(
   loggedInUser: UserNoPass,
 ): HTMLElement {
   const convDiv = document.createElement("div");
+  let dateFmt = "";
 
   const lastMessage = conversation.messages[conversation.messages.length - 1];
+  if (lastMessage) {
+    dateFmt = formatDate(lastMessage.timestamp);
+  }
+  dateFmt = formatDate(new Date(Date.now()));
   const unreadCount = countUnreadMessages(conversation, loggedInUser);
-  const dateFmt = formatDate(lastMessage.timestamp);
   const counterClass = unreadCount > 0 ? "bg-green-500 text-white" : "bg-white";
 
   convDiv.innerHTML = `
