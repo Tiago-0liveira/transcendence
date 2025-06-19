@@ -49,6 +49,7 @@ const newDisconnectedClient = (deviceId: string): ClientValue => {
     connectedAt: 0,
     connected: false,
     connectedToLobby: null,
+    isSocketAlive: false,
     deviceId,
   } as const;
 };
@@ -59,6 +60,7 @@ export const updateDisconnectedClient = (userId: number, socket: WebSocket) => {
   clientValue.connected = true;
   clientValue.connectedAt = Date.now();
   clientValue.socket = socket;
+  clientValue.isSocketAlive = true;
 };
 //NOTE: Check for blocked receivers and filter them
 /**
