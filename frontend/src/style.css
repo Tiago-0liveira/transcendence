@@ -1280,7 +1280,21 @@ input[type="checkbox"]:checked + .toggle-bg {
 	margin-top: 1.5rem;
 }
 
+.guide-avatars {
+	display: flex;
+	justify-content: center;
+	gap: 2rem;
+	margin-top: 1rem;
+	flex-wrap: wrap;
+}
 
+.guide-avatars img {
+	width: 120px;
+	height: auto;
+	border: 2px solid rgba(255, 222, 173, 0.4);
+	border-radius: 4px;
+	box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
 
 
 

@@ -10,7 +10,6 @@ const tournamentTemplate = /* html */`
     <label for="playersNumber" class="form-input-label">Number of Players</label>
     <select name="playersNumber" id="playersNumber" class="form-input">
       <option value="4">4</option>
-      <option value="8">8</option>
     </select>
   </div>
 `

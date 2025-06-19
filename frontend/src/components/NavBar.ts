@@ -23,6 +23,7 @@ class NavBar extends HTMLElement {
 			`
 		} else {
 			buttonsElement.innerHTML = `
+				<a href="/game" class="btn-steam">Chat</a>
 				<a href="/game" class="btn-steam">Game</a>
 				<a href="/players" class="btn-steam">Players</a>
 				<a href="/profile" class="btn-steam">Profile</a>

@@ -69,14 +69,6 @@ const getUpdatedRoomTemplate = (room: LobbyRoom, userId: number): string => {
 
 				${renderOwnerStatus(room, userId)}
 			` : ''}
-<!--			${showJoinGameButton ? `
-<!--				<div class="form-input-group">-->
-<!--					<button id="btn-join-active-game"-->
-<!--						data-game-id="${userBracket?.game?.id}"-->
-<!--						data-room-id="${room.id}"-->
-<!--						class="btn-steam-fixed">Join Game</button>-->
-<!--				</div>-->
-			` : ''}
 		</div>
 	`;
 };
