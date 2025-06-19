@@ -1,14 +1,15 @@
 import { FastifyInstance } from "fastify";
 import { authJwtMiddleware } from "@middleware/auth";
 import Database from "@db/Database";
+import {connectedSocketClients} from "@api/websocket";
 
 export default async function UserProfileRoutes(fastify: FastifyInstance) {
-    // === /stats (текущий пользователь) ===
+    // === /profile (current user) ===
     fastify.get("/profile", { preHandler: authJwtMiddleware }, async (request, reply) => {
         return getProfileHandler(request.user.id, fastify, reply);
     });
 
-    // === /stats/:userId (любой пользователь) ===
+    // === /profile/:userId (any user) ===
     fastify.get("/profile/:userId", { preHandler: authJwtMiddleware }, async (request, reply) => {
         const userId = parseInt(request.params.userId, 10);
         if (isNaN(userId)) {
@@ -21,7 +22,6 @@ export default async function UserProfileRoutes(fastify: FastifyInstance) {
     });
 }
 
-// ===== Универсальный хендлер для обоих случаев =====
 async function getProfileHandler(userId: number, fastify: FastifyInstance, reply: any) {
     try {
         const db = Database.getInstance();
@@ -44,7 +44,6 @@ async function getProfileHandler(userId: number, fastify: FastifyInstance, reply
             });
         }
 
-        // Новый блок — получаем имя и аватар юзера
         const userResult = await db.userTable.getById(userId);
         let displayName = "Unknown";
         let avatarUrl = "";
@@ -72,15 +71,16 @@ async function getProfileHandler(userId: number, fastify: FastifyInstance, reply
             winner: usersMap.get(game.winnerId),
             loser: usersMap.get(game.loserId)
         }));
+        const connected = connectedSocketClients.get(userId)?.connected?? false
 
-        // ⬅️ Добавляем имя и аватар прямо в stats
         return reply.status(200).send({
             ok: true,
             result: {
                 stats: {
                     ...statsResult.result,
                     displayName,
-                    avatarUrl
+                    avatarUrl,
+                    connected
                 },
                 history: hydratedHistory
             }

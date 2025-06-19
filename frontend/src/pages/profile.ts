@@ -13,6 +13,11 @@ const profileComponent = async () => {
     const isOwnProfile = path === "/profile";
     const targetUserId = match ? parseInt(match[1], 10) : null;
 
+    if (!isOwnProfile && targetUserId === currentUser.id) {
+        await Router.getInstance().navigate("/profile")
+        return;
+    }
+
     let response;
     if (isOwnProfile) {
         response = await auth.authFetch(API.profile, {
@@ -31,7 +36,7 @@ const profileComponent = async () => {
         return;
     }
 
-    if (!response.ok) {
+    if (!response.ok || !response) {
         document.querySelector("#app")!.innerHTML = `<div class="text-red-500 p-4">Failed to load stats</div>`;
         return;
     }
@@ -40,6 +45,16 @@ const profileComponent = async () => {
     const stats = data.result.stats;
     const history = data.result.history;
 
+    let statusText: string;
+    let statusClass: string;
+
+    if (isOwnProfile) {
+        statusText = "Online";
+        statusClass = "text-green-400";
+    } else {
+        statusText = stats.connected ? "Online" : "Offline";
+        statusClass = stats.connected ? "text-green-400" : "text-red-400";
+    }
     const wins = stats.wins ?? 0;
     const losses = stats.losses ?? 0;
     const totalGames = stats.totalGames ?? 0;
@@ -74,6 +89,14 @@ const profileComponent = async () => {
         }
     }
 
+    function formatDate(dateStr: string): string {
+        const date = new Date(dateStr);
+        const day = date.getDate();
+        const month = date.toLocaleString("en", { month: "short" }); // "Jun"
+        const year = date.getFullYear();
+        return `${day} ${month} ${year}`;
+    }
+
     const tableRows = history.map(game => {
         const winnerName = game.winner?.displayName ?? "Unknown";
         const loserName = game.loser?.displayName ?? "Unknown";
@@ -81,25 +104,33 @@ const profileComponent = async () => {
         const winnerShort = winnerName.length > 10 ? winnerName.slice(0, 10) + "…" : winnerName;
         const loserShort = loserName.length > 10 ? loserName.slice(0, 10) + "…" : loserName;
 
+        const winnerId = game.winnerId;
+        const loserId = game.loserId;
+
         return `
-        <tr class="border-b border-gray-700 hover:bg-gray-800">
-            <td class="px-4 py-2 text-center">
-                <div class="flex items-center gap-2 justify-center">
-                    <img src="${game.winner?.avatarUrl || ''}" alt="Winner avatar" class="w-6 h-6 rounded-full border border-gray-600" />
-                    <span title="${winnerName}">${winnerShort}</span>
-                </div>
-            </td>
-            <td class="px-4 py-2 text-center">${game.scoreWinner}</td>
-            <td class="px-4 py-2 text-center">
-                <div class="flex items-center gap-2 justify-center">
-                    <img src="${game.loser?.avatarUrl || ''}" alt="Loser avatar" class="w-6 h-6 rounded-full border border-gray-600" />
-                    <span title="${loserName}">${loserShort}</span>
-                </div>
-            </td>
-            <td class="px-4 py-2 text-center">${game.scoreLoser}</td>
-            <td class="px-4 py-2 text-center">${formatDuration(game.duration)}</td>
-        </tr>
-    `;
+		<tr class="border-b border-gray-700 hover:bg-gray-800">
+			<td class="px-4 py-2 text-center">
+				<div class="flex items-center gap-2 justify-center">
+					<img src="${game.winner?.avatarUrl || ''}" alt="Winner avatar" class="w-6 h-6 rounded-full border border-gray-600" />
+					<a href="/profile/${winnerId}" class="hover:underline" title="${winnerName}">
+						${winnerShort}
+					</a>
+				</div>
+			</td>
+			<td class="px-4 py-2 text-center">${game.scoreWinner}</td>
+			<td class="px-4 py-2 text-center">
+				<div class="flex items-center gap-2 justify-center">
+					<img src="${game.loser?.avatarUrl || ''}" alt="Loser avatar" class="w-6 h-6 rounded-full border border-gray-600" />
+					<a href="/profile/${loserId}" class="hover:underline" title="${loserName}">
+						${loserShort}
+					</a>
+				</div>
+			</td>
+			<td class="px-4 py-2 text-center">${game.scoreLoser}</td>
+			<td class="px-4 py-2 text-center">${formatDate(game.startTime)}</td>
+			<td class="px-4 py-2 text-center">${formatDuration(game.duration)}</td>
+		</tr>
+	`;
     }).join("");
 
     const table = /* html */`
@@ -111,6 +142,7 @@ const profileComponent = async () => {
 						<th class="px-4 py-2">Score (W)</th>
 						<th class="px-4 py-2">Loser</th>
 						<th class="px-4 py-2">Score (L)</th>
+						<th class="px-4 py-2">Date</th>
 						<th class="px-4 py-2">Duration</th>
 					</tr>
 				</thead>
@@ -131,7 +163,7 @@ const profileComponent = async () => {
 				<div class="flex flex-row justify-evenly items-center">
 					<img class="w-24 h-24 rounded-full border border-gray-600" src="${avatarUrl}" alt="User avatar" />
 					<div class="bg-[#2b2b2b] p-4 rounded-lg border border-gray-700 text-left">
-						<p class="mb-1">Status: <span class="text-green-400">Online</span></p>
+						<p class="mb-1">Status: <span class="${statusClass}">${statusText}</span></p>
 						<p class="mb-1">Total games: ${totalGames}</p>
 						<p class="mb-1">Winrate: ${winRate}%</p>
 						<p class="mb-1">T winrate: ${tournamentWinRate}%</p>
