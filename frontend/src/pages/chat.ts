@@ -3,23 +3,23 @@ import Router from "@/router/Router";
 import { authGuard } from "@/router/guards";
 
 interface Message {
-  id: string;
-  content: string;
-  timestamp: Date;
-  targetId?: number;
-  senderId: number;
-  senderName: string;
-  seen: boolean;
+	id: string;
+	content: string;
+	timestamp: Date;
+	targetId?: number;
+	senderId: number;
+	senderName: string;
+	seen: boolean;
 }
 
 interface Conversation {
-  id: string;
-  title: string;
-  messages: Message[];
-  lastMessage: string;
-  timestamp: Date;
-  isPrivate?: boolean;
-  targetId?: number;
+	id: string;
+	title: string;
+	messages: Message[];
+	lastMessage: string;
+	timestamp: Date;
+	isPrivate?: boolean;
+	targetId?: number;
 }
 
 // Mock data for testing purposes
@@ -27,62 +27,62 @@ interface Conversation {
 
 let currentConversationId: string | null = null;
 let mockConversations: Conversation[] = [
-  {
-    id: "1",
-    title: "General Chat",
-    messages: [
-      {
-        id: "101",
-        content: "Welcome to the general chat!",
-        timestamp: new Date("2023-06-15T10:00:00"),
-        senderId: 1,
-        senderName: "System",
-        seen: true,
-      },
-      {
-        id: "102",
-        content: "Hello everyone!",
-        timestamp: new Date("2023-06-15T10:05:00"),
-        senderId: 2,
-        senderName: "Jane",
-        seen: false,
-      },
-    ],
-    lastMessage: "Hello everyone!",
-    timestamp: new Date("2023-06-15T10:05:00"),
-    isPrivate: false,
-  },
-  {
-    id: "2",
-    title: "Private Chat with Bob",
-    messages: [
-      {
-        id: "201",
-        content: "Hey, how are you?",
-        timestamp: new Date("2023-06-16T09:00:00"),
-        senderId: 3,
-        senderName: "Bob",
-        seen: false,
-      },
-      {
-        id: "202",
-        content: "I'm doing great! How about you?",
-        timestamp: new Date("2023-06-16T09:05:00"),
-        senderId: 4,
-        senderName: "Alice",
-        seen: false,
-      },
-    ],
-    lastMessage: "I'm doing great! How about you?",
-    timestamp: new Date("2023-06-16T09:05:00"),
-    isPrivate: true,
-    targetId: 3,
-  },
+	{
+		id: "1",
+		title: "General Chat",
+		messages: [
+			{
+				id: "101",
+				content: "Welcome to the general chat!",
+				timestamp: new Date("2023-06-15T10:00:00"),
+				senderId: 1,
+				senderName: "System",
+				seen: true,
+			},
+			{
+				id: "102",
+				content: "Hello everyone!",
+				timestamp: new Date("2023-06-15T10:05:00"),
+				senderId: 2,
+				senderName: "Jane",
+				seen: false,
+			},
+		],
+		lastMessage: "Hello everyone!",
+		timestamp: new Date("2023-06-15T10:05:00"),
+		isPrivate: false,
+	},
+	{
+		id: "2",
+		title: "Private Chat with Bob",
+		messages: [
+			{
+				id: "201",
+				content: "Hey, how are you?",
+				timestamp: new Date("2023-06-16T09:00:00"),
+				senderId: 3,
+				senderName: "Bob",
+				seen: false,
+			},
+			{
+				id: "202",
+				content: "I'm doing great! How about you?",
+				timestamp: new Date("2023-06-16T09:05:00"),
+				senderId: 4,
+				senderName: "Alice",
+				seen: false,
+			},
+		],
+		lastMessage: "I'm doing great! How about you?",
+		timestamp: new Date("2023-06-16T09:05:00"),
+		isPrivate: true,
+		targetId: 3,
+	},
 ];
-const chatComponet = async () => {
-  const loggedInUser = AuthManager.getInstance().User!;
+const chatComponent = async () => {
+	const loggedInUser = AuthManager.getInstance().User!;
 
-  const template = /* html */ `
+	const template = /* html */ `
     <div class="flex w-screen h-[calc(100vh-64px)] bg-sky-950 shadow-xl rounded-lg">
       <!-- Left Sidebar -->
       <aside class="h-full w-100 bg-teal-light p-4 flex flex-col space-y-4">
@@ -134,61 +134,61 @@ const chatComponet = async () => {
       </main>
     </div>
 `;
-  const appEl = document.getElementById("app");
-  if (appEl) appEl.innerHTML = template;
-  initChat(loggedInUser);
+	const appEl = document.getElementById("app");
+	if (appEl) appEl.innerHTML = template;
+	initChat(loggedInUser);
 };
 
 function initChat(loggedInUser: UserNoPass) {
-  renderConversations(loggedInUser);
+	renderConversations(loggedInUser);
 
-  const sendButton = document.getElementById("sendButton");
-  const messageInput = document.getElementById(
-    "messageInput",
-  ) as HTMLInputElement;
+	const sendButton = document.getElementById("sendButton");
+	const messageInput = document.getElementById(
+		"messageInput",
+	) as HTMLInputElement;
 
-  if (sendButton && messageInput)
-    sendButton.addEventListener("click", () => {
-      const message = messageInput.value.trim();
-      if (message.length > 0) {
-        sendMessage(loggedInUser);
-        messageInput.value = "";
-      }
-    });
+	if (sendButton && messageInput)
+		sendButton.addEventListener("click", () => {
+			const message = messageInput.value.trim();
+			if (message.length > 0) {
+				sendMessage(loggedInUser);
+				messageInput.value = "";
+			}
+		});
 
-  if (messageInput) {
-    messageInput.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        sendMessage(loggedInUser);
-      }
-    });
-  }
+	if (messageInput) {
+		messageInput.addEventListener("keypress", (e) => {
+			if (e.key === "Enter") {
+				sendMessage(loggedInUser);
+			}
+		});
+	}
 }
 
 function renderConversations(loggedInUser: UserNoPass) {
-  const publicChatsElem = document.getElementById("publicChats");
-  const privateChatsElem = document.getElementById("privateChats");
+	const publicChatsElem = document.getElementById("publicChats");
+	const privateChatsElem = document.getElementById("privateChats");
 
-  if (publicChatsElem && privateChatsElem) {
-    publicChatsElem.innerHTML = "";
-    privateChatsElem.innerHTML = "";
+	if (publicChatsElem && privateChatsElem) {
+		publicChatsElem.innerHTML = "";
+		privateChatsElem.innerHTML = "";
 
-    mockConversations.forEach((conversation) => {
-      const conversationElem = createConversationElem(
-        conversation,
-        loggedInUser,
-      );
-      if (conversation.isPrivate) {
-        privateChatsElem.appendChild(conversationElem);
-      } else {
-        publicChatsElem.appendChild(conversationElem);
-      }
-    });
-  }
+		mockConversations.forEach((conversation) => {
+			const conversationElem = createConversationElem(
+				conversation,
+				loggedInUser,
+			);
+			if (conversation.isPrivate) {
+				privateChatsElem.appendChild(conversationElem);
+			} else {
+				publicChatsElem.appendChild(conversationElem);
+			}
+		});
+	}
 }
 
 function createChatHeaderElem(conversation: Conversation): string {
-  return `
+	return `
         <!-- Profile Section -->
       <div class= "bg-indigo-950 px-4 py-3 flex items-center justify-between">
         <div class="flex items-center gap-3">
@@ -223,30 +223,30 @@ function createChatHeaderElem(conversation: Conversation): string {
 }
 
 function createLastMessage(
-  conversation: Conversation,
-  loggedInUser: UserNoPass,
+	conversation: Conversation,
+	loggedInUser: UserNoPass,
 ): string {
-  const lastMessage = conversation.messages[conversation.messages.length - 1];
+	const lastMessage = conversation.messages[conversation.messages.length - 1];
 
-  const senderName =
-    lastMessage.senderId === loggedInUser.id ? "me" : lastMessage.senderName;
+	const senderName =
+		lastMessage.senderId === loggedInUser.id ? "me" : lastMessage.senderName;
 
-  const joinedStr = senderName + ": " + lastMessage.content;
-  return joinedStr;
+	const joinedStr = senderName + ": " + lastMessage.content;
+	return joinedStr;
 }
 
 function createConversationElem(
-  conversation: Conversation,
-  loggedInUser: UserNoPass,
+	conversation: Conversation,
+	loggedInUser: UserNoPass,
 ): HTMLElement {
-  const convDiv = document.createElement("div");
+	const convDiv = document.createElement("div");
 
-  const lastMessage = conversation.messages[conversation.messages.length - 1];
-  const unreadCount = countUnreadMessages(conversation, loggedInUser);
-  const dateFmt = formatDate(lastMessage.timestamp);
-  const counterClass = unreadCount > 0 ? "bg-green-500 text-white" : "bg-white";
+	const lastMessage = conversation.messages[conversation.messages.length - 1];
+	const unreadCount = countUnreadMessages(conversation, loggedInUser);
+	const dateFmt = formatDate(lastMessage.timestamp);
+	const counterClass = unreadCount > 0 ? "bg-green-500 text-white" : "bg-white";
 
-  convDiv.innerHTML = `
+	convDiv.innerHTML = `
     <div class="max-w-md mx-auto bg-white rounded-lg">
         <div class="flex items-center gap-3 p-4 hover:bg-gray-50 cursor-pointer border border-gray-200 rounded-lg">
             <!-- Profile Image -->
@@ -270,73 +270,73 @@ function createConversationElem(
         </div>
     </div>
     `;
-  convDiv.addEventListener("click", () => {
-    selectConversation(conversation.id, conversation, loggedInUser);
-  });
+	convDiv.addEventListener("click", () => {
+		selectConversation(conversation.id, conversation, loggedInUser);
+	});
 
-  return convDiv;
+	return convDiv;
 }
 
 function selectConversation(
-  conversationId: string,
-  conversation: Conversation,
-  loggedInUser: UserNoPass,
+	conversationId: string,
+	conversation: Conversation,
+	loggedInUser: UserNoPass,
 ) {
-  currentConversationId = conversationId;
+	currentConversationId = conversationId;
 
-  const conversationItem = mockConversations.find(
-    (conv) => conv.id === conversationId,
-  );
+	const conversationItem = mockConversations.find(
+		(conv) => conv.id === conversationId,
+	);
 
-  if (conversationItem) {
-    markMessageAsSeen(conversation, loggedInUser);
-    const titleElem = document.getElementById("conversationTitle");
-    if (titleElem) {
-      titleElem.textContent = conversation.title;
-    }
-    renderMessages(conversationItem.messages, loggedInUser);
-  }
-  renderConversations(loggedInUser);
-  const upperChatArea = document.getElementById("ChatHeader");
-  if (upperChatArea) {
-    upperChatArea.innerHTML = createChatHeaderElem(conversation);
-  }
+	if (conversationItem) {
+		markMessageAsSeen(conversation, loggedInUser);
+		const titleElem = document.getElementById("conversationTitle");
+		if (titleElem) {
+			titleElem.textContent = conversation.title;
+		}
+		renderMessages(conversationItem.messages, loggedInUser);
+	}
+	renderConversations(loggedInUser);
+	const upperChatArea = document.getElementById("ChatHeader");
+	if (upperChatArea) {
+		upperChatArea.innerHTML = createChatHeaderElem(conversation);
+	}
 }
 
 function renderMessages(messages: Message[], loggedInUser: UserNoPass) {
-  const messageContainer = document.getElementById("messageContainer");
-  // const chatHeader = document.getElementById("ChatHeader");
-  // if (chatHeader) {
-  //   chatHeader.innerHTML = createChatHeaderElem(conversation);
-  // }
+	const messageContainer = document.getElementById("messageContainer");
+	// const chatHeader = document.getElementById("ChatHeader");
+	// if (chatHeader) {
+	//   chatHeader.innerHTML = createChatHeaderElem(conversation);
+	// }
 
-  if (messageContainer) {
-    messageContainer.innerHTML = "";
-    messages.forEach((message) => {
-      const messageElem = createMessageElem(message, loggedInUser);
-      messageContainer.appendChild(messageElem);
-    });
+	if (messageContainer) {
+		messageContainer.innerHTML = "";
+		messages.forEach((message) => {
+			const messageElem = createMessageElem(message, loggedInUser);
+			messageContainer.appendChild(messageElem);
+		});
 
-    messageContainer.scrollTop = messageContainer.scrollHeight;
-  }
+		messageContainer.scrollTop = messageContainer.scrollHeight;
+	}
 }
 
 function createMessageElem(
-  message: Message,
-  loggedInUser: UserNoPass,
+	message: Message,
+	loggedInUser: UserNoPass,
 ): HTMLElement {
-  const msgDiv = document.createElement("div");
-  let senderName;
+	const msgDiv = document.createElement("div");
+	let senderName;
 
-  if (message.senderId === loggedInUser.id) {
-    msgDiv.className = "self-end max-w-xs rounded-l-lg bg-green-500";
-    senderName = "me";
-  } else {
-    msgDiv.className = "self-start max-w-xs rounded-r-lg bg-blue-500";
-    senderName = message.senderName;
-  }
+	if (message.senderId === loggedInUser.id) {
+		msgDiv.className = "self-end max-w-xs rounded-l-lg bg-green-500";
+		senderName = "me";
+	} else {
+		msgDiv.className = "self-start max-w-xs rounded-r-lg bg-blue-500";
+		senderName = message.senderName;
+	}
 
-  msgDiv.innerHTML = /* hmtl */ `
+	msgDiv.innerHTML = /* hmtl */ `
   <div class="text-white p-2 shadow-md relative">
     <!-- Message Content -->
     <div class="mb-4">
@@ -351,73 +351,73 @@ function createMessageElem(
     </div>
   </div>
   `;
-  return msgDiv;
+	return msgDiv;
 }
 
 //Send a new message
 function sendMessage(loggedInUser: UserNoPass) {
-  if (!currentConversationId) {
-    alert("Please select a conversation");
-    return;
-  }
-  const messageInput = document.getElementById(
-    "messageInput",
-  ) as HTMLInputElement;
-  if (messageInput && messageInput.value.trim()) {
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      content: messageInput.value.trim(),
-      timestamp: new Date(),
-      senderId: loggedInUser.id,
-      senderName: loggedInUser.username,
-      seen: true,
-    };
-    const conversation = mockConversations.find(
-      (c) => c.id === currentConversationId,
-    );
+	if (!currentConversationId) {
+		alert("Please select a conversation");
+		return;
+	}
+	const messageInput = document.getElementById(
+		"messageInput",
+	) as HTMLInputElement;
+	if (messageInput && messageInput.value.trim()) {
+		const newMessage: Message = {
+			id: Date.now().toString(),
+			content: messageInput.value.trim(),
+			timestamp: new Date(),
+			senderId: loggedInUser.id,
+			senderName: loggedInUser.username,
+			seen: true,
+		};
+		const conversation = mockConversations.find(
+			(c) => c.id === currentConversationId,
+		);
 
-    if (conversation) {
-      conversation.messages.push(newMessage);
-      conversation.lastMessage = newMessage.content;
-      conversation.timestamp = newMessage.timestamp;
+		if (conversation) {
+			conversation.messages.push(newMessage);
+			conversation.lastMessage = newMessage.content;
+			conversation.timestamp = newMessage.timestamp;
 
-      // Update UI
-      renderMessages(conversation.messages, loggedInUser);
-      renderConversations(loggedInUser);
+			// Update UI
+			renderMessages(conversation.messages, loggedInUser);
+			renderConversations(loggedInUser);
 
-      // Clear input
-      messageInput.value = "";
-    }
-  }
+			// Clear input
+			messageInput.value = "";
+		}
+	}
 }
 function formatDate(date: Date): string {
-  return new Date(date).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+	return new Date(date).toLocaleTimeString([], {
+		hour: "2-digit",
+		minute: "2-digit",
+	});
 }
 
 function countUnreadMessages(
-  conversation: Conversation,
-  loggedInUser: UserNoPass,
+	conversation: Conversation,
+	loggedInUser: UserNoPass,
 ): number {
-  return conversation.messages.filter(
-    (message) => !message.seen && message.senderId !== loggedInUser.id,
-  ).length;
+	return conversation.messages.filter(
+		(message) => !message.seen && message.senderId !== loggedInUser.id,
+	).length;
 }
 
 function markMessageAsSeen(
-  conversation: Conversation,
-  loggedInUser: UserNoPass,
+	conversation: Conversation,
+	loggedInUser: UserNoPass,
 ) {
-  conversation.messages.forEach((message) => {
-    if (message.senderId !== loggedInUser.id) {
-      message.seen = true;
-    }
-  });
+	conversation.messages.forEach((message) => {
+		if (message.senderId !== loggedInUser.id) {
+			message.seen = true;
+		}
+	});
 }
 Router.getInstance().register({
-  component: chatComponet,
-  path: "/chat",
-  guards: [authGuard],
+	component: chatComponent,
+	path: "/chat",
+	guards: [authGuard],
 });
