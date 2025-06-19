@@ -304,11 +304,9 @@ div.loading-spinner img {
 
 .phase-2 {
 	@apply col-span-1 col-start-2 col-end-3;
+	grid-row: 1 / span 2;
 }
 
-.phase-3 {
-	@apply col-span-1 col-start-3 col-end-4;
-}
 
 /* ───── SETTINGS ENHANCEMENTS ───── */
 
@@ -462,9 +460,9 @@ input[type="checkbox"]:checked + .toggle-bg {
 
 .profile-wrapper-row {
 	display: flex;
-	flex-direction: row;
+	flex-direction: col;
 	align-items: flex-start;
-	gap: 6rem;
+	gap: 2rem;
 	padding: 2rem;
 }
 
@@ -479,19 +477,22 @@ input[type="checkbox"]:checked + .toggle-bg {
 }
 
 .profile-name-large {
+	width: 100%;
 	font-size: 2.5rem;
 	font-weight: 900;
 	color: navajowhite;
 	line-height: 1.2;
 	margin: 0;
-	margin-bottom: 1rem; /* чуть сдвинуть вниз, чтобы был воздух */
+	display: flex;
+	justify-content: center;
+	align-items: center;
 }
 
 
 .profile-stats-compact {
 	display: flex;
 	flex-direction: column;
-	justify-content: flex-end;
+	justify-content: space-evenly;
 	flex-grow: 1;
 	font-size: 3rem;
 	letter-spacing: 0.02em;
@@ -499,7 +500,6 @@ input[type="checkbox"]:checked + .toggle-bg {
 
 .profile-stats-compact p {
 	font-size: 1.3rem;
-	margin: 0.2rem 0;
 }
 
 .profile-info-block {
@@ -510,7 +510,6 @@ input[type="checkbox"]:checked + .toggle-bg {
 	box-shadow: 0 0 60px rgba(0, 0, 0, 0.6);
 	width: 100%;
 	max-width: 500px; /* увеличь ширину под размер текста ????*/
-	transform: translateX(-2rem); /* сдвигаем немного левее */
 
 	width: 100%;
 	max-width: 400px;

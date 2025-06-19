@@ -275,6 +275,7 @@ class AuthManager {
 			},
 			body: JSON.stringify(updateData),
 		});
+		if (!res) throw new Error("Update failed")
 
 		const data = await res.json().catch(() => ({}));
 		if (!res.ok || !data.ok) {

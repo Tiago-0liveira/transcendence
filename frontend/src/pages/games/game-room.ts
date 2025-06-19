@@ -11,7 +11,9 @@ const setError = (el: HTMLDivElement, error: string) => {
 	const SpanError = el.querySelector("span#error-message")
 	if (SpanError) {
 		SpanError.textContent = error;
-		el.style.display = "block"
+		if (el.classList.contains("hidden")) {
+			el.classList.remove("hidden")
+		}
 	}
 }
 
@@ -116,7 +118,6 @@ const component = async () => {
 					<span id="player-disconnected-time-left" class="hidden"></span>
 				</div>
 				<button id="btn-set-ready" class="absolute top-[15%] left-1/2 transform -translate-x-1/2 -translate-y-[-15%] mt-40 text-white"></button>
-				<button id="btn-go-back" class="absolute left-6 mt-10 p-2 bg-black rounded-md border-2 border-black hover:border-white transition duration-300 text-white">Go back to Lobby</button>
 				<div id="div-loading" class="bg-gray-300 absolute rounded-md p-4 w-80 flex space-x-8 items-center top-1/2 left-1/2  transform -translate-x-1/2 -translate-y-1/2">
 					<span class="text-2xl">Loading game Data...</span>
 					<loading-spinner size="sm"></loading-spinner>
@@ -263,6 +264,9 @@ const component = async () => {
 		if (gameRoom.state === "completed") {
 			const resultBanner = document.getElementById("game-result-banner");
 			if (!resultBanner || !(resultBanner instanceof HTMLDivElement)) return;
+			if (resultBanner.classList.contains("hidden")) {
+				resultBanner.classList.remove("hidden")
+			}
 
 			const resultBannerText = resultBanner.querySelector("span#game-result-banner-text");
 			if (!resultBannerText || !(resultBannerText instanceof HTMLSpanElement)) return;
