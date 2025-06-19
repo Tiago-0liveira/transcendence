@@ -1,7 +1,6 @@
 import { toastHelper } from "@/utils/toastHelper";
 import AuthManager from "./authManager";
 import Router from "@/router/Router";
-import ChatManager from "./chatManager";
 
 class SocketHandler {
   private static instance: SocketHandler;
@@ -114,10 +113,6 @@ class SocketHandler {
     this.socket.removeEventListener("error", this.errorHandler.bind(this));
     this.socket.removeEventListener("close", this.closeHandler.bind(this));
     // Clean up ChatManager if needed
-    if (this.chatManager) {
-      console.log("Cleaning up ChatManager subscriptions");
-      this.chatManager.cleanup();
-    }
 
     this.messageSubscriptions.clear();
     this.socket = null;
@@ -141,12 +136,6 @@ class SocketHandler {
     console.log("WebSocket connection opened.");
     console.log("debug::openHandler: ", this.queuedMessages);
 
-    //Ensure chatManager is initialized
-    if (!this.chatManager) {
-      await this.initializeChatManager();
-    } else {
-      this.chatManager.reset();
-    }
     this.queuedMessages.forEach((message) => {
       this.socket?.send(JSON.stringify(message));
     });
@@ -255,34 +244,6 @@ class SocketHandler {
 			1005 - this.socket.close() - User probably logged out and this.socket.close was called
 		*/
     this.tryToReconnect = ![4001, 1005].includes(ev.code);
-  }
-
-  private async initializeChatManager() {
-    try {
-      // Dynamic import to avoid circular dependency
-      const { default: ChatManager } = await import("@/auth/chatManager");
-      this.chatManager = ChatManager.getInstance();
-      console.log("ChatManager initialized with SocketHandler");
-    } catch (error) {
-      console.error("Failed to initialize ChatManager:", error);
-    }
-  }
-
-  /**
-   * Get the ChatManager instance associated with this SocketHandler
-   */
-  public async getChatManager() {
-    if (!this.chatManager) {
-      await this.initializeChatManager();
-    }
-    return this.chatManager;
-  }
-
-  /**
-   * Check if ChatManager is initialized
-   */
-  public isChatManagerReady(): boolean {
-    return this.chatManager !== null;
   }
 }
 
