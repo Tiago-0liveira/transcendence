@@ -247,6 +247,7 @@ export const createGame = function (lobby: LobbyRoom, lPlayerId: number, rPlayer
 			left: DEFAULTS.game.playerActive(lPlayer, "left"),
 			right: DEFAULTS.game.playerActive(rPlayer, "right"),
 		},
+		startAt: Date.now(),
 		ballData: DEFAULTS.game.ballPosition(),
 		timer: DEFAULTS.game.timer(),
 	};

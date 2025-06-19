@@ -110,7 +110,7 @@ const profileComponent = async () => {
         return `
 		<tr class="border-b border-gray-700 hover:bg-gray-800">
 			<td class="px-4 py-2 text-center">
-				<div class="flex items-center gap-2 justify-center">
+				<div class="flex items-center gap-2 justify-start">
 					<img src="${game.winner?.avatarUrl || ''}" alt="Winner avatar" class="w-6 h-6 rounded-full border border-gray-600" />
 					<a href="/profile/${winnerId}" class="hover:underline" title="${winnerName}">
 						${winnerShort}
@@ -119,7 +119,7 @@ const profileComponent = async () => {
 			</td>
 			<td class="px-4 py-2 text-center">${game.scoreWinner}</td>
 			<td class="px-4 py-2 text-center">
-				<div class="flex items-center gap-2 justify-center">
+				<div class="flex items-center gap-2 justify-start">
 					<img src="${game.loser?.avatarUrl || ''}" alt="Loser avatar" class="w-6 h-6 rounded-full border border-gray-600" />
 					<a href="/profile/${loserId}" class="hover:underline" title="${loserName}">
 						${loserShort}

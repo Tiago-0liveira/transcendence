@@ -32,6 +32,7 @@ class GameHistoryTable extends BaseTable<GameHistory, GameHistoryParams> {
 
 	async new(params: GameHistoryParams): Promise<DatabaseResult<number>> {
 		try {
+			console.log("PARAMS: ", params);
 			const stmt = this.db.prepare(this._insertStr);
 			const result = stmt.run(
 				params.lobbyId,
@@ -45,7 +46,9 @@ class GameHistoryTable extends BaseTable<GameHistory, GameHistoryParams> {
 			);
 			return { result: result.lastInsertRowid as number };
 		} catch (err: any) {
-			return { error: new Error(`Database error: ${err.message}`) };
+			console.error("GameHistoryTable insert error:", err);
+			return {
+				error: new Error(`Database error: ${err.message}`) };
 		}
 	}
 
