@@ -11,12 +11,16 @@ export const DEFAULT_LOCAL_PLAYER = (side: GameSide): LocalGamePlayer => ({
 
 export const DEFAULT_BALL_DATA = (): GameBallData => ({
     position: { x: CANVAS.w / 2, y: CANVAS.h / 2 }, // Center ball
-    velocity: { vx: 0, vy: 0 }, // No initial velocity until game starts
-    angle: 0, // Initial angle (can be randomized later when game starts)
+    velocity: { vx: 0, vy: 0 },
 });
 
-export const ACTIVE_BALL_DATA = (): GameBallData => ({
-	position: { x: CANVAS.w / 2, y: CANVAS.h / 2 },
-	velocity: { vx: BALL_BASE_VELOCITY, vy: BALL_BASE_VELOCITY },
-	angle: Math.random() > 0.5 ? Math.PI : 0 + Math.random() * 0.5
-})
+export const ACTIVE_BALL_DATA = (winner: GameSide = Math.random() > 0.5 ? "left" : "right"): GameBallData => {
+    
+    return {
+        position: { x: CANVAS.w / 2, y: CANVAS.h / 2 },
+        velocity: {
+            vx: BALL_BASE_VELOCITY * (winner === "left" ? -1 : 1),
+            vy: BALL_BASE_VELOCITY * Math.random() * 0.23 * (Math.random() > 0.5 ? 1 : -1)
+        }
+    }
+}

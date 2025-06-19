@@ -326,8 +326,7 @@ export const handleGameRoomPlayerSetReady = async function (clientContext: Clien
 		game.state = "active"
 		game.ballData = {
 			position: { x: CANVAS.w / 2, y: CANVAS.h / 2 },
-			velocity: { vx: BALL_BASE_VELOCITY, vy: BALL_BASE_VELOCITY },
-			angle: Math.random() > 0.5 ? Math.PI : 0 + Math.random() * 0.5
+			velocity: { vx: BALL_BASE_VELOCITY, vy: BALL_BASE_VELOCITY }
 		}
 		game.startAt = Date.now()
 		game.timer = {

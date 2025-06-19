@@ -142,11 +142,11 @@ const component = async () => {
             }
             if (playerNames.some(name => 
                 name === "" ||
-                name.toString().trim().length <= 4 ||
-                name.toString().trim().length >= 15) ||
+                name.toString().trim().length <= 3 ||
+                name.toString().trim().length >= 12) ||
                 playerNames.length !== (new Set(playerNames)).size
             ) {
-                errorDiv.innerHTML = getNewErrorTemplate("Player Names must be between 4 and 15 chars and cannot be repeated!")
+                errorDiv.innerHTML = getNewErrorTemplate("Player Names must be between 3 and 12 chars and cannot be repeated!")
             } else {
                 console.log(localGameManager.createRoom({ type: validated.roomType, playerNames }))
 				router.navigate("/games/local/lobby-room")
