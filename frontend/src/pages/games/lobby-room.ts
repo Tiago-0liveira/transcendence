@@ -169,7 +169,7 @@ const component = async () => {
 	let gameRoom: LobbyRoom | null = null;
 
 	const queryParams = router.getCurrentRoute()?.query;
-	if (!queryParams?.roomId) throw new Error('Room not found!');
+	if (!queryParams?.roomId) return router.navigate("/games/rooms");
 
 	document.querySelector('#app')!.innerHTML = /* html */ `
 		<div class="lobby-room">
@@ -246,7 +246,7 @@ const component = async () => {
 					return;
 				}
 
-				router.navigate("/games/game-room", {}, { roomId, gameId });
+				router.navigate("/games/game-room", false, {}, { roomId, gameId });
 				break;
 			}
 		}

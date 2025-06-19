@@ -104,7 +104,7 @@ const component = async () => {
 					return;
 				}
 
-				router.navigate("/games/local/game-room", {}, { gameId });
+				router.navigate("/games/local/game-room", false, {}, { gameId });
 				break;
 			}
 		}

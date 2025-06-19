@@ -131,8 +131,11 @@ const component = async () => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ userId: user.id })
         });
-        const data = await res.json();
-        update2faStatus(!!data.enabled);
+
+        if (res) {
+            const data = await res.json();
+            update2faStatus(!!data.enabled);
+        }
 
         visual.addEventListener("click", async () => {
             const enabled = !checkbox.checked;
@@ -143,7 +146,7 @@ const component = async () => {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ userId: user.id, enabled })
                 });
-                const result = await res.json();
+                const result = await res?.json();
                 update2faStatus(enabled);
 
                 if (enabled && result.secret && result.otpauth_url) {

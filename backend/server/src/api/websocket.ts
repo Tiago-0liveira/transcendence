@@ -131,7 +131,6 @@ const socketOnMessage = (
 	clientContext: ClientThis,
 ) =>
 	async function (rawMessage: RawData) {
-		const timeStart = Date.now();
 		try {
 			const message = processRawData(rawMessage);
 			const parsedMessage = JSON.parse(message);
@@ -226,12 +225,6 @@ const socketOnMessage = (
 				}
 			} else {
 				console.error("INVALID SOCKET MESSAGE!!!");
-			}
-			const elapsedTime = Date.now() - timeStart;
-			if (elapsedTime > 10) {
-				console.warn(
-					`Long-running message processing: ${elapsedTime} ms, messageType: ${parsedMessage.type}`,
-				);
 			}
 		} catch (error) {
 			console.error(error);

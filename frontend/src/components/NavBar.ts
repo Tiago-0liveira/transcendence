@@ -18,6 +18,7 @@ class NavBar extends HTMLElement {
 		const user = AuthManager.getInstance().User;
 		if (user == null) {
 			buttonsElement.innerHTML = `
+				<a href="/game" class="btn-login-out">Games</a>
 				<a href="/auth/login" class="btn-login-out">Login</a>
 				<a href="/auth/signup" class="btn-login-out">Sign Up</a>
 			`

@@ -113,7 +113,7 @@ document.addEventListener("click", (e) => {
 	getButtonAndHandleClick(e, "local-join", ["gameId"], (gameId) => {
 		if (!gameId) throw new Error("Invalid roomId or gameId");
 
-		Router.getInstance().navigate("/games/local/game-room", {}, { gameId });
+		Router.getInstance().navigate("/games/local/game-room", false, {}, { gameId });
 	})
 })
 

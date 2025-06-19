@@ -5,7 +5,7 @@ import AuthManager from "@/auth/authManager";
 const component = async () => {
 	// Redirect if no temporary Google OAuth data
 	if (!AuthManager.getInstance().isGoogleOAuthReady()) {
-		await Router.getInstance().navigate("/auth/login");
+		await Router.getInstance().navigate("/auth/login", true);
 		return;
 	}
 

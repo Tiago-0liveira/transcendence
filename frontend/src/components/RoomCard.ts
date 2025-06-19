@@ -120,7 +120,7 @@ document.addEventListener("click", (e) => {
 	})
 	getButtonAndHandleClick(e, "enter-room", (roomId) => {
 		console.log("enter-room roomId: ", roomId)
-		Router.getInstance().navigate("/games/lobby-room", {}, { roomId: roomId })
+		Router.getInstance().navigate("/games/lobby-room", false, {}, { roomId: roomId })
 	})
 })
 

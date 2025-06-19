@@ -1,4 +1,5 @@
 import AuthManager from "@/auth/authManager";
+import Router from "@/router/Router";
 import API from "@/utils/BackendApi";
 import { conditionalRender } from "@/utils/conditionalRender";
 import BaseAttributeValidationElement from "@component/BaseAttributeValidationElement";
@@ -326,7 +327,7 @@ document.addEventListener("click", (e) => {
 	});
 	getButtonAndHandleClick(e, "message", (userId) => {
 		console.log("Message userId: ", userId);
-		window.location.href = `/chat/${userId}`; // или Router.getInstance().navigate(...)
+		Router.getInstance().navigate(`/chat/${userId}`)
 	});
 
 })
