@@ -2,6 +2,7 @@ import AuthManager from "@/auth/authManager";
 import SocketHandler from "@/auth/socketHandler";
 import { authGuard } from "@/router/guards";
 import Router from "@/router/Router";
+import { conditionalRender } from "@/utils/conditionalRender";
 
 const getRoomTemplate = (room: BasicPublicLobby): string => {
 	return /* html */`
@@ -42,8 +43,12 @@ const getRoomTemplate = (room: BasicPublicLobby): string => {
 
 				<div class="room-card-actions">
 					${room.canJoin
-		? `<a class="btn-steam-fixed" href="/games/lobby-room?roomId=${room.id}">Enter</a>`
-		: `<span class="text-muted">Full</span>`}
+										? `<a class="btn-steam-fixed" href="/games/lobby-room?roomId=${room.id}">Enter</a>`
+										: `<span class="text-muted">${conditionalRender(room.connectedPlayersNumber + 1 === room.requiredPlayers, "Only space for owner", "You can't join")}</span>`}
+
+					${room.owner === AuthManager.getInstance().User?.id
+						? `<button class="btn-logout ml-2" data-room-id="${room.id}" id="btn-delete-room">Delete</button>`
+						: ``}
 				</div>
 			</div>
 		</div>
@@ -51,11 +56,8 @@ const getRoomTemplate = (room: BasicPublicLobby): string => {
 }
 
 const component = async () => {
-	const user = AuthManager.getInstance().User;
 	const sh = SocketHandler.getInstance();
 
-	// TODO: add spinner until we get the info
-	// TODO: display all information
 	const template = /* html */`
 		<div class="profile-card">
 			<h1 class="settings-header">Available Rooms</h1>
@@ -75,6 +77,20 @@ const component = async () => {
 	if (!divLoading) throw new Error("Could not find div#div-loading!")
 	if (!divRooms) throw new Error("Could not find div#rooms!")
 
+	const handleButtonClicks = (ev: MouseEvent) => {
+		if (!ev.target || !(ev.target instanceof Element)) return;
+
+		const btnPlayerSetReady = ev.target.closest("button#btn-delete-room");
+		if (btnPlayerSetReady instanceof HTMLButtonElement) {
+			const roomId  = btnPlayerSetReady.getAttribute("data-room-id");
+			if (roomId) {
+				sh.sendMessage({
+					type: "lobby-room-delete",
+					roomId: roomId,
+				})
+			}
+		}
+	}
 
 	sh.addMessageHandler("rooms-update", function (res) {
 		divLoading.style.display = "none";
@@ -93,9 +109,11 @@ const component = async () => {
 		}
 	})
 
+	document.addEventListener("click", handleButtonClicks)
 	sh.sendMessage({ type: "rooms-join" } satisfies SelectSocketMessage<"rooms-join">)
 
 	return () => {
+		document.removeEventListener("click", handleButtonClicks)
 		sh.removeMessageHandler("rooms-update")
 	}
 }

@@ -5,13 +5,12 @@ import Router from "@/router/Router";
 class SocketHandler {
   private static instance: SocketHandler;
   private socket: WebSocket | null = null;
-  private chatManager = null;
+  private chatManager: ChatManager | null = null;
 
-  private pingIntervalId: number;
   private reconnectTimeoutId: number;
   private lastPongTime!: number;
   private lastPingTime!: number;
-  private tryToReconnect!: boolean;
+  private tryToReconnect: boolean;
   private messageSubscriptions: Map<SocketMessageType, SocketMessageHandler> =
     new Map();
   /**
@@ -29,35 +28,15 @@ class SocketHandler {
     return SocketHandler.instance;
   }
 
-  private pingIntervalHandler() {
-    if (!this.socket) return;
-    const now = Date.now();
-    if (now - this.lastPongTime > SocketHandler.PING_INTERVAL_TIMEOUT * 2) {
-      console.warn("WebSocket is unresponsive. Attempting to reconnect...");
-      if (
-        this.socket.readyState === WebSocket.CONNECTING ||
-        this.socket.readyState === WebSocket.OPEN
-      )
-        this.socket.close();
-      return;
-    }
-    if (this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send("ping");
-      this.lastPingTime = Date.now();
-    }
-  }
   private reconnectHandler() {
     if (this.tryToReconnect) {
       this.cleanUpSocketListeners();
-      this.socket = this.createSocket();
+      this.createSocket();
     }
   }
 
   private constructor() {
-    this.pingIntervalId = setInterval(
-      this.pingIntervalHandler.bind(this),
-      SocketHandler.PING_INTERVAL_TIMEOUT,
-    );
+    this.tryToReconnect = false;
     this.reconnectTimeoutId = setInterval(
       this.reconnectHandler.bind(this),
       SocketHandler.RECONNECT_BASE_TIMEOUT,
@@ -76,21 +55,20 @@ class SocketHandler {
     }
   }
   public connect() {
-    this.socket = this.createSocket();
+    this.createSocket();
   }
 
-  private createSocket(): WebSocket {
+  private createSocket() {
+    const accessToken = AuthManager.getInstance().GetAccessToken();
+    if (!accessToken) return toastHelper.warning("You are not logged in so you can't connect to the websocket!")
     try {
-      const accessToken = AuthManager.getInstance().GetAccessToken();
-      if (!accessToken) throw new Error("Invalid AccessToken");
       const socket = new WebSocket(
         `wss://${window.location.hostname}:4000/ws?accessToken=${encodeURIComponent(accessToken)}`,
       );
       this.prepareSocket(socket);
-      return socket;
+      this.socket = socket;
     } catch (error) {
-      toastHelper.error(`Could not connect to WebSocket!\n`);
-      throw new Error("Could not connect to WebSocket!");
+      toastHelper.warning(`Could not connect to WebSocket!\n`);
     }
   }
 
@@ -134,7 +112,6 @@ class SocketHandler {
 
   private async openHandler(ev: Event) {
     console.log("WebSocket connection opened.");
-    console.log("debug::openHandler: ", this.queuedMessages);
 
     this.queuedMessages.forEach((message) => {
       this.socket?.send(JSON.stringify(message));
@@ -144,8 +121,7 @@ class SocketHandler {
   }
 
   private errorHandler(ev: Event) {
-    console.error("WebSocket encountered an error:", ev);
-    toastHelper.error("WebSocket error occurred!");
+    
   }
 
   private static isSocketValidMessage(message: any): message is SocketMessage {
@@ -153,13 +129,6 @@ class SocketHandler {
   }
 
   private messageHandler(ev: MessageEvent<any>) {
-    if (ev.data === "pong") {
-      this.lastPongTime = Date.now();
-
-      const calculatedPing = this.lastPongTime - this.lastPingTime;
-      console.log("ping: ", calculatedPing, " ms");
-      return;
-    }
     try {
       const parsedMessage = JSON.parse(ev.data);
       if (SocketHandler.isSocketValidMessage(parsedMessage)) {
@@ -205,12 +174,12 @@ class SocketHandler {
           parsedMessage.type,
         );
         messageHandler && messageHandler.bind(this)(parsedMessage);
-        console.log(
+        /* console.log(
           "type: ",
           parsedMessage.type,
           " ,handler: ",
           messageHandler ? "exists" : "does not exist",
-        );
+        ); */
       }
     } catch (error) {
       console.warn("SOCKET MESSAGE WRONG FORMAT ERROR: ", error);
@@ -233,15 +202,19 @@ class SocketHandler {
   }
 
   private closeHandler(ev: CloseEvent) {
-    console.warn(
-      "WebSocket connection closed. Reason:",
-      ev.reason || "Unknown",
-    );
-    console.log(`closeHandler: ${ev.code}`);
+    if (![4001, 1005].includes(ev.code))
+    {
+      console.warn(
+        "WebSocket connection closed. Reason:",
+        ev.reason || "Unknown",
+      );
+      console.log(`closeHandler: ${ev.code}`);
+    }
     this.cleanUpSocketListeners();
     /*
 			4001 - invalid or missing credentials
 			1005 - this.socket.close() - User probably logged out and this.socket.close was called
+      1006 - socket lost the connection
 		*/
     this.tryToReconnect = ![4001, 1005].includes(ev.code);
   }

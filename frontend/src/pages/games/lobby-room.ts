@@ -21,12 +21,6 @@ const isRoomFullyReady = (room: LobbyRoom): boolean => {
 const getUpdatedRoomTemplate = (room: LobbyRoom, userId: number): string => {
 	const playerReadyStatus = room.connectedPlayers.find(u => u.id === userId)?.ready || false;
 
-	const userBracket = room.brackets.find(b =>
-		b.game &&
-		(b.game.players.left.id === userId || b.game.players.right.id === userId)
-	);
-
-	const showJoinGameButton = room.status === "active" && !!userBracket?.game;
 
 	return /* html */ `
 		<div class="profile-card centered auth-box">
@@ -69,15 +63,6 @@ const getUpdatedRoomTemplate = (room: LobbyRoom, userId: number): string => {
 
 				${renderOwnerStatus(room, userId)}
 			` : ''}
-
-			${showJoinGameButton ? `
-				<div class="form-input-group">
-					<button id="btn-join-active-game"
-						data-game-id="${userBracket?.game?.id}"
-						data-room-id="${room.id}"
-						class="btn-steam-fixed">Join Game</button>
-				</div>
-			` : ''}
 		</div>
 	`;
 };
@@ -106,24 +91,7 @@ const renderOwnerStatus = (room: LobbyRoom, userId: number): string => {
 	return '';
 };
 
-const renderConnectedPlayers = (room: LobbyRoom): string => {
-	if (room.status !== 'waiting') return '';
-	return /* html */ `
-		<div class="connected-players-grid">
-			${room.connectedPlayers.map(player => `
-				<div class="connected-player-card">
-					<span class="connected-player-name">
-						${player.name}
-						${conditionalRender(player.id === room.owner, `<span class="owner-badge">Owner</span>`)}
-					</span>
-					<span class="connected-player-status ${player.ready ? 'ready' : 'not-ready'}"></span>
-				</div>
-			`).join('')}
-		</div>
-	`;
-};
-
-const renderBrackets = (room: LobbyRoom): string => {
+const renderBrackets = (room: LobbyRoom, userId: number): string => {
 	if (room.status === 'waiting') return '';
 	const numCols = room.brackets.map(b => b.phase).reduce((acc, curr) => Math.max(acc, curr), 1);
 
@@ -132,41 +100,67 @@ const renderBrackets = (room: LobbyRoom): string => {
 			<div class="brackets-grid" style="grid-template-columns: repeat(${numCols}, 1fr);">
 				${room.brackets.map(bracket => {
 		const gridPositionFromPhase = `bracket-phase-${bracket.phase}`;
+
 		if (bracket.game === null) {
-			let lPlayerName = "";
-			let rPlayerName = "";
 			const l = room.connectedPlayers.find(p => p.id === bracket.lPlayer);
 			const r = room.connectedPlayers.find(p => p.id === bracket.rPlayer);
-			if (l) lPlayerName = l.name;
-			if (r) rPlayerName = r.name;
+			const lName = l ? l.name : "To be determined!";
+			const rName = r ? r.name : "To be determined!";
+			const scoreText = `Score: 0`;
 
 			return `
-							<uncompleted-bracket-card class="bracket-card ${gridPositionFromPhase}"
-								lPlayer="${bracket.lPlayer}" rPlayer="${bracket.rPlayer}"
-								${conditionalRender(lPlayerName, `lname="${lPlayerName}"`)}
-								${conditionalRender(rPlayerName, `rname="${rPlayerName}"`)}>
-							</uncompleted-bracket-card>
+							<div class="bracket-card ${gridPositionFromPhase}">
+								<div class="bracket-names text-danger">
+									${lName} vs ${rName}
+								</div>
+								<div class="bracket-scores">
+									<span>${scoreText}</span> <span>${scoreText}</span>
+								</div>
+								<div class="bracket-status text-yellow-400">
+									Waiting for players to finish the games...
+								</div>
+							</div>
 						`;
 		}
 
 		const g = bracket.game;
+		const l = g.players.left;
+		const r = g.players.right;
+		const isUserInGame = l.id === userId || r.id === userId;
+		const canJoin = ["waiting", "stopped"].includes(g.state) && isUserInGame;
+		const lName = room.connectedPlayers.find(p => p.id === g.players.left.id)?.name
+		const rName = room.connectedPlayers.find(p => p.id === g.players.right.id)?.name
+		const winnerName = bracket.winner && lName && rName && (bracket.winner === "left" ? lName : rName)
+
 		return `
-						<bracket-card class="bracket-card ${gridPositionFromPhase}"
-							lobby-id="${g.lobbyId}" game-id="${g.id}" state="${g.state}" ready="${bracket.ready}"
-							${conditionalRender(bracket.winner !== null, `winner="${bracket.winner}"`)}
-
-							lPlayer="${g.players.left.id}" lname="${g.players.left.name}"
-							lconnected="${g.players.left.connected}" lscore="${g.players.left.score}"
-
-							rPlayer="${g.players.right.id}" rname="${g.players.right.name}"
-							rconnected="${g.players.right.connected}" rscore="${g.players.right.score}">
-						</bracket-card>
+						<div class="bracket-card ${gridPositionFromPhase}">
+							<div class="bracket-names">
+								<span class="${l.connected ? 'text-success' : 'text-danger'}">${l.name}</span> vs <span class="${r.connected ? 'text-success' : 'text-danger'}">${r.name}</span>
+							</div>
+							<div class="bracket-scores">
+								<span>Score: ${l.score}</span> <span>Score: ${r.score}</span>
+							</div>
+							<div class="bracket-status">
+								${conditionalRender(canJoin, 
+									`<button class="btn-steam-fixed mt-2"
+										id="btn-join-active-game"
+										data-game-id="${g.id}"
+										data-room-id="${g.lobbyId}">
+										Join Game
+									</button>`
+								)}
+								${conditionalRender(g.state === "waiting", `<span class="text-yellow-400">Waiting for players</span>`)}
+								${conditionalRender(g.state === "stopped", `<span class="text-red-400">The game is paused</span>`)}
+								${conditionalRender(g.state === "completed", `<span class="text-blue-400">Winner: ${winnerName}</span>`)}
+							</div>
+						</div>
 					`;
 	}).join('')}
 			</div>
 		</div>
 	`;
 };
+
 
 const component = async () => {
 	const user = AuthManager.getInstance().User!;
@@ -205,7 +199,10 @@ const component = async () => {
 		sh.addMessageHandler('lobby-room-data-update', res => {
 			divError.style.display = 'none';
 			divLoading.style.display = 'none';
-			divContent.innerHTML = getUpdatedRoomTemplate(res, user.id);
+			divContent.innerHTML = `
+				${getUpdatedRoomTemplate(res, user.id)}
+				${renderBrackets(res, user.id)}
+			`;
 			gameRoom = res;
 		});
 

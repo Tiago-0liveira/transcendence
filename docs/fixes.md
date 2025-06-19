@@ -4,6 +4,8 @@
 ### Backend
 	- [x] check all endpoints for security breaches or things that aren't suppost to happen like someone trying to remove a friend that they don't have (things like this)
 	- [x] on google oauth complete we should clear the http cookie used for completing the signUp
+	- [ ] check two devices connected at the same time
+	- [ ] game start timer stuck at 0 when game starts
 
 ### Frontend
 	- [x] in the auth middleware change from /user to the actual path the user wants to go to
@@ -12,7 +14,5 @@
 	- [x] look at all pages and check if we are removing the event listeners
 	- [x](FIXED but the actual library does not exist, so i added a fallback so the app never crashes) replace google oauth script tag loader with actual library
 
-
 ### Both
 	- [ ] use remember option on login and signin forms or just delete it
-	- (very important) refactor all the code to have the right names for lobby (not room) and game-room

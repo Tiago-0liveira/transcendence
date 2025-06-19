@@ -8,7 +8,6 @@ import API from "@/utils/BackendApi";
 
 const component = async () => {
     const auth = AuthManager.getInstance();
-    // 🔹 Обновляем пользователя с сервера
     const user = auth.User!;
     const isGoogleUser = user.authProvider === "google";
 
@@ -227,6 +226,9 @@ const component = async () => {
                 body: JSON.stringify({ oldPassword, newPassword }),
             });
 
+            if (!res) {
+                return toastHelper.error("Password change failed")
+            }
             const data = await res.json();
 
             if (!res.ok || !data.ok) {

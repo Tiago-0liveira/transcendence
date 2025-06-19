@@ -225,8 +225,6 @@ class FriendsTable extends BaseTable<Friend, FriendParams> {
 		}
 	}
 
-
-
 	/**
 	 * @param userId - The ID of the user to search for possible friends.
 	 * @param name - The name to search for (can be partial).

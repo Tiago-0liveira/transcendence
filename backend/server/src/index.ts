@@ -33,7 +33,6 @@ app.register(cors, {
 			FRONTEND_URL,
 			/^https:\/\/10\.12\.\d{1,3}\.\d{1,3}(:\d+)?$/ // Regex to match 10.12.x.x
 		];
-		console.log("origin: ", origin)
 		if (!origin) {
 			// Allow non-browser tools like curl/postman
 			return callback(null, true);

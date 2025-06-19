@@ -13,7 +13,7 @@
 	- [x] CyberSecurity (2FA and JWT)
 	  - [x] JWT
 	  - [x] 2FA
-	- [ ] (WIP) User Management
+	- [x] (WIP) User Management
 	- [ ] (WIP) Live chat
 
 - Minor:

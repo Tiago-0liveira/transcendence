@@ -10,12 +10,13 @@ export function generateUser(): UserParams {
 }
 
 export function generateGameHistory(insertNum: number = 200): GameHistoryParams {
-	const startTime = faker.date.past({ years: 1 }).toISOString();
-    const endTime = faker.date.soon({ refDate: startTime, days: 1, hours: 0, minutes: 5 }).toISOString();
+    if (insertNum < 2) {
+        throw new Error("Need at least 2 users to generate game history.");
+    }
 
-    const startDateTime = new Date(startTime);
-    const endDateTime = new Date(endTime);
-    const duration = endDateTime.getTime() - startDateTime.getTime(); // Duration in milliseconds
+    const startDateTime = faker.date.past({ years: 1 });
+    const endDateTime = faker.date.soon({ refDate: startDateTime, days: 1, minutes: 5 });
+    const duration = Math.floor(endDateTime.getTime() - startDateTime.getTime());
 
     const winnerScore = 7;
     const loserScore = faker.number.int({ min: 0, max: winnerScore - 1 });
@@ -23,20 +24,24 @@ export function generateGameHistory(insertNum: number = 200): GameHistoryParams 
     let winnerId = faker.number.int({ min: 1, max: insertNum });
     let loserId = faker.number.int({ min: 1, max: insertNum });
 
-    // Ensure winnerId and loserId are different
-    while (winnerId === loserId) {
+    let attempts = 0;
+    while (winnerId === loserId && attempts++ < 10) {
         loserId = faker.number.int({ min: 1, max: insertNum });
+    }
+
+    if (winnerId === loserId) {
+        throw new Error("Could not generate unique winner and loser IDs");
     }
 
     return {
         lobbyId: faker.string.uuid(),
-        winnerId: winnerId,
-        loserId: loserId,
+        winnerId,
+        loserId,
         scoreWinner: winnerScore,
         scoreLoser: loserScore,
-        startTime: startTime,
-        endTime: endTime,
-        duration: duration,
+        startTime: startDateTime.toISOString(),
+        endTime: endDateTime.toISOString(),
+        duration
     };
 }
 

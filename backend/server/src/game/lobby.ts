@@ -12,7 +12,6 @@ export const lobbyFuncs = {
 	playerJoined: function (playerId: number, name: string) {
 		const connectedClient = connectedSocketClients.get(playerId)
 		if (!connectedClient) return; /* Should never reach */
-		connectedClient.connectedToLobby = this /* assign connected room to player */
 
 		if (this.status === "waiting") {
 			this.connectedPlayersNumber++;
@@ -42,7 +41,6 @@ export const lobbyFuncs = {
 		}
 		const connectedClient = connectedSocketClients.get(playerId)
 		if (!connectedClient) return; /* Should never reach */
-		connectedClient.connectedToLobby = null;
 	},
 	/**
 	 * @description what the websocket does when a player gets ready or not ready
@@ -94,6 +92,13 @@ export const lobbyFuncs = {
 		if (this.connectedPlayers.some(player => !player.ready)) return false; // All players must be ready to start the game
 		this.status = "active";
 
+		this.connectedPlayers.forEach(connP => {
+			const socketClient = connectedSocketClients.get(connP.id);
+			if (socketClient) {
+				socketClient.connectedToLobby = this;
+			}
+			console.log(connP.name, ": ", !!socketClient?.connectedToLobby)
+		})
 		if (this.roomType === "1v1") {
 			this.brackets.push(createBracket(this, this.connectedPlayers[0].id, this.connectedPlayers[1].id, 1, [], true));
 			const message = JSON.stringify({
@@ -149,8 +154,13 @@ export const lobbyFuncs = {
  * @returns BasicRoom that is needed for showing which rooms are public in the frontend
  */
 export const getBasicLobby = function (room: LobbyRoom, userId: number, isFriend: boolean = false): BasicPublicLobby {
-	const canJoin = (room.connectedPlayersNumber < room.requiredPlayers && room.status === "waiting")
-		|| (room.status === "active" && room.connectedPlayers.some(player => player.id === userId));
+	const ownerInRoom = !!room.connectedPlayers.find(p => p.id === room.owner)
+	const emptySlots = room.requiredPlayers - room.connectedPlayersNumber 
+	const canJoin = (
+		((emptySlots >= 1 && ownerInRoom) ||  (!ownerInRoom && ((emptySlots >= 1 && userId === room.owner)) || emptySlots >= 2))
+		&& room.status === "waiting")
+		|| (room.status === "active" && room.connectedPlayers.some(player => player.id === userId)
+	);
 	return {
 		id: room.id,
 		name: room.name,
@@ -200,14 +210,12 @@ export const sendPlayerUpdatedRooms = async function (socket: WebSocket, userId:
 			rooms.push(getBasicLobby(room, userId))
 			continue;
 		}
-		if (room.settings.locality === "online") {
-			if (room.settings.visibility === "public") {
-				rooms.push(getBasicLobby(room, userId))
-				continue;
-			}
-			const friend = dbRes.result.find((friend) => friend.id === room.owner)
-			if (friend) rooms.push(getBasicLobby(room, userId, true))
+		if (room.settings.visibility === "public") {
+			rooms.push(getBasicLobby(room, userId))
+			continue;
 		}
+		const friend = dbRes.result.find((friend) => friend.id === room.owner)
+		if (friend) rooms.push(getBasicLobby(room, userId, true))
 	}
 	if (!isInsideLobby) {
 		socket.send(JSON.stringify({
@@ -247,6 +255,7 @@ export const createGame = function (lobby: LobbyRoom, lPlayerId: number, rPlayer
 			left: DEFAULTS.game.playerActive(lPlayer, "left"),
 			right: DEFAULTS.game.playerActive(rPlayer, "right"),
 		},
+		startAt: Date.now(),
 		ballData: DEFAULTS.game.ballPosition(),
 		timer: DEFAULTS.game.timer(),
 	};
