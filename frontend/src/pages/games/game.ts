@@ -4,7 +4,7 @@ import { conditionalRender } from "@/utils/conditionalRender";
 import "@/components/chatComponent2";
 
 const component = async () => {
-  const loggedIn = Boolean(AuthManager.getInstance().User);
+  const loggedInUser = Boolean(AuthManager.getInstance().User);
 
   const template = /* html */ `
     <chat-sidebar2></chat-sidebar2>
