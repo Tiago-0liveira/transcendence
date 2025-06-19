@@ -66,10 +66,21 @@ const profileComponent = async () => {
     const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
 
     let rank = "Unknown";
-    if (winRate <= 25) rank = "Bronze";
-    else if (winRate <= 50) rank = "Silver";
-    else if (winRate <= 75) rank = "Gold";
-    else rank = "GrandMaster";
+    let rankClass = "text-gray-400";
+
+    if (winRate <= 25) {
+        rank = "Bronze";
+        rankClass = "text-[#cd7f32]";
+    } else if (winRate <= 50) {
+        rank = "Silver";
+        rankClass = "text-gray-300";
+    } else if (winRate <= 75) {
+        rank = "Gold";
+        rankClass = "text-yellow-400";
+    } else {
+        rank = "GrandMaster";
+        rankClass = "pride-flag";
+    }
 
     const displayName = isOwnProfile ? currentUser.displayName : stats.displayName ?? `User ${targetUserId}`;
     const avatarUrl = isOwnProfile ? currentUser.avatarUrl : stats.avatarUrl ?? "";
@@ -154,6 +165,30 @@ const profileComponent = async () => {
 	`;
 
     const template = /* html */`
+        <style>
+        @keyframes prideWave {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .pride-flag {
+            background: linear-gradient(
+                270deg,
+                #e40303,
+                #ff8c00,
+                #ffed00,
+                #008026,
+                #004dff,
+                #750787
+            );
+            background-size: 600% 600%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: prideWave 6s ease-in-out infinite;
+            font-weight: bold;
+        }
+        </style>
+
 		<div class="profile-card p-6 bg-[#1b1b1b] rounded-xl border-2 border-gray-700 shadow-lg max-w-5xl mx-auto text-gray-200">
 			<div class="flex flex-col space-y-6">
 				<div class="text-2xl font-bold text-center">
@@ -161,15 +196,15 @@ const profileComponent = async () => {
 				</div>
 
 				<div class="flex flex-row justify-evenly items-center">
-					<img class="w-24 h-24 rounded-full border border-gray-600" src="${avatarUrl}" alt="User avatar" />
-					<div class="bg-[#2b2b2b] p-4 rounded-lg border border-gray-700 text-left">
-						<p class="mb-1">Status: <span class="${statusClass}">${statusText}</span></p>
-						<p class="mb-1">Total games: ${totalGames}</p>
-						<p class="mb-1">Winrate: ${winRate}%</p>
-						<p class="mb-1">T winrate: ${tournamentWinRate}%</p>
-						<p class="mb-1">Rank: ${rank}</p>
-					</div>
-				</div>
+                    <img class="h-[160px] w-[160px] rounded-lg border border-gray-600" src="${avatarUrl}" alt="User avatar" />
+                    <div class="bg-[#2b2b2b] p-4 rounded-lg border border-gray-700 text-left">
+                        <p class="mb-1">Status: <span class="${statusClass}">${statusText}</span></p>
+                        <p class="mb-1">Total games: ${totalGames}</p>
+                        <p class="mb-1">Winrate: ${winRate}%</p>
+                        <p class="mb-1">T winrate: ${tournamentWinRate}%</p>
+                        <p class="mb-1">Rank: <span class="${rankClass}">${rank}</span></p>
+                    </div>
+                </div>
 
 				<div class="bg-[#2b2b2b] p-6 rounded-lg border border-gray-700 text-left mt-6">
 					<h3 class="text-xl font-semibold mb-4 border-b border-gray-600 pb-2 text-center">User Stats</h3>
