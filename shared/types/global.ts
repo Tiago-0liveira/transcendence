@@ -58,10 +58,10 @@ type SocketMessage =
       {
         source: number;
         sourceName: string;
+        timestamp: Date;
         target?: number;
         content: string;
         isPrivateMessage: boolean;
-        isChannelMessage: boolean;
       }
     >;
 
