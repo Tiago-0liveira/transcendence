@@ -2,6 +2,7 @@ import AuthManager from "@/auth/authManager";
 import SocketHandler from "@/auth/socketHandler";
 import { authGuard } from "@/router/guards";
 import Router from "@/router/Router";
+import { conditionalRender } from "@/utils/conditionalRender";
 
 const getRoomTemplate = (room: BasicPublicLobby): string => {
 	return /* html */`
@@ -42,8 +43,8 @@ const getRoomTemplate = (room: BasicPublicLobby): string => {
 
 				<div class="room-card-actions">
 					${room.canJoin
-		? `<a class="btn-steam-fixed" href="/games/lobby-room?roomId=${room.id}">Enter</a>`
-		: `<span class="text-muted">Full</span>`}
+						? `<a class="btn-steam-fixed" href="/games/lobby-room?roomId=${room.id}">Enter</a>`
+						: `<span class="text-muted">${conditionalRender(room.connectedPlayersNumber + 1 === room.requiredPlayers, "Only space for owner", "You can't join")}</span>`}
 				</div>
 			</div>
 		</div>
@@ -51,11 +52,8 @@ const getRoomTemplate = (room: BasicPublicLobby): string => {
 }
 
 const component = async () => {
-	const user = AuthManager.getInstance().User;
 	const sh = SocketHandler.getInstance();
 
-	// TODO: add spinner until we get the info
-	// TODO: display all information
 	const template = /* html */`
 		<div class="profile-card">
 			<h1 class="settings-header">Available Rooms</h1>

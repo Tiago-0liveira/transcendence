@@ -109,6 +109,13 @@ setInterval(() => {
 }, REFRESH_RATE_MS);
 
 
+const updatePlayerActiveLobby = (userId: number) => {
+	const socketClient = connectedSocketClients.get(userId)
+	if (socketClient) {
+		socketClient.connectedToLobby = null;
+	}
+}
+
 export const updateBracketsAfterGameFinnish = (lobby: LobbyRoom, gameId: string, phase: number, winnerId: number) => {
 	let allFinnished = true;
 	lobby.brackets.forEach(bracket => {
@@ -125,6 +132,11 @@ export const updateBracketsAfterGameFinnish = (lobby: LobbyRoom, gameId: string,
 				bracket.game = createGame(lobby, bracket.lPlayer, bracket.rPlayer);
 			}
 		}
+		if (bracket.winner === "left") {
+			updatePlayerActiveLobby(bracket.rPlayer)
+		} else if (bracket.winner === "right") {
+			updatePlayerActiveLobby(bracket.lPlayer)
+		}
 		if (bracket.game?.state !== "completed")
 		{
 			allFinnished = false;
@@ -132,7 +144,11 @@ export const updateBracketsAfterGameFinnish = (lobby: LobbyRoom, gameId: string,
 	});
 	if (allFinnished)
 	{
-		lobby.status = "completed";
+		const lastGame = lobby.brackets[lobby.brackets.length - 1];
+		if (lastGame && lastGame.winner) {
+			updatePlayerActiveLobby(lastGame.winner === "left" ? lastGame.lPlayer : lastGame.rPlayer)
+		}
+		lobby.status = "completed";	
 	}
 }
 

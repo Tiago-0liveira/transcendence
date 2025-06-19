@@ -1,8 +1,6 @@
 type NewGameConfig = {
 	roomName: string,
-	playersNumber: number,
 	roomType: LobbyType,
-	locality: "local" | "online",
 	visibility: "friends" | "public"
 }
 
@@ -85,7 +83,6 @@ type LobbyRoom = {
 	connectedPlayers: GamePlayer[];
 	brackets: GameBracket[];
 	settings: {
-		locality: "local" | "online",
 		visibility: "friends" | "public"
 	};
 }

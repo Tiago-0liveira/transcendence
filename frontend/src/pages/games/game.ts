@@ -1,17 +1,11 @@
-import AuthManager from "@/auth/authManager";
 import Router from "@/router/Router";
-import { conditionalRender } from "@/utils/conditionalRender";
 
 const component = async () => {
-
-    const loggedIn = Boolean(AuthManager.getInstance().User);
-
     const template = /* html */`
         <div class="profile-card centered auth-box game-selection-box">
           <div class="settings-header">Choose Game Mode</div>
         
           <div class="form-input-group">
-<!--            <a href="/game/rooms" class="btn-steam-fixed game-select-button">-->
             <a href="/games/rooms" class="btn-steam-fixed game-select-button">
               <span>Quick Play</span>
             </a>

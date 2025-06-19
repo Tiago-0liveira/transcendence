@@ -41,12 +41,11 @@ export const handleNewGameConfig = async function (clientContext: ClientThis, me
 		status: "waiting",
 		owner: clientContext.userId,
 		lastUpdate: Date.now(),
-		requiredPlayers: message.roomType === "1v1" ? 2 : message.playersNumber,
+		requiredPlayers: message.roomType === "1v1" ? 2 : 4,
 		connectedPlayersNumber: 0,
 		connectedPlayers: [],
 		brackets: [],
 		settings: {
-			locality: message.locality,
 			visibility: message.visibility
 		},
 	})
@@ -66,7 +65,7 @@ export const handleGameRoomGetData = async function (clientContext: ClientThis, 
 			type: "lobby-room-error",
 			error: "Room does not exist!"
 		} satisfies SelectSocketMessage<"lobby-room-error">))
-	} else if (connectedUser !== undefined && connectedUser.connectedToLobby !== null) {
+	} else if (connectedUser !== undefined && connectedUser.connectedToLobby !== null && connectedUser.connectedToLobby.id !== room.id) {
 		return clientContext.socket.send(JSON.stringify({
 			type: "lobby-room-error",
 			error: "You are already connected to another Room!"

@@ -20,15 +20,8 @@ const isRoomFullyReady = (room: LobbyRoom): boolean => {
 };
 
 const getUpdatedRoomTemplate = (room: LobbyRoom, userId: number): string => {
-	console.log("getUpdatedRoomTemplate")
 	const playerReadyStatus = room.connectedPlayers.find(u => u.id === userId)?.ready || false;
 
-	const userBracket = room.brackets.find(b =>
-		b.game &&
-		(b.game.players.left.id === userId || b.game.players.right.id === userId)
-	);
-
-	const showJoinGameButton = room.status === "active" && !!userBracket?.game;
 
 	return /* html */ `
 		<div class="profile-card centered auth-box">
@@ -73,14 +66,6 @@ const getUpdatedRoomTemplate = (room: LobbyRoom, userId: number): string => {
 			` : ''}
 
 			${renderBrackets(room)}
-			/* ${showJoinGameButton ? `
-				<div class="form-input-group">
-					<button id="btn-join-active-game"
-						data-game-id="${userBracket?.game?.id}"
-						data-room-id="${room.id}"
-						class="btn-steam-fixed">Join Game</button>
-				</div>
-			` : ''} */
 		</div>
 	`;
 };
@@ -107,23 +92,6 @@ const renderOwnerStatus = (room: LobbyRoom, userId: number): string => {
 	}
 
 	return '';
-};
-
-const renderConnectedPlayers = (room: LobbyRoom): string => {
-	if (room.status !== 'waiting') return '';
-	return /* html */ `
-		<div class="connected-players-grid">
-			${room.connectedPlayers.map(player => `
-				<div class="connected-player-card">
-					<span class="connected-player-name">
-						${player.name}
-						${conditionalRender(player.id === room.owner, `<span class="owner-badge">Owner</span>`)}
-					</span>
-					<span class="connected-player-status ${player.ready ? 'ready' : 'not-ready'}"></span>
-				</div>
-			`).join('')}
-		</div>
-	`;
 };
 
 const renderBrackets = (room: LobbyRoom): string => {
