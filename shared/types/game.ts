@@ -69,6 +69,7 @@ type Game = {
 		left: PlayerActiveGameData;
 		right: PlayerActiveGameData;
 	}
+	startAt: number;
 	ballData: GameBallData,
 	timer: GameTimer,
 }

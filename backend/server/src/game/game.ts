@@ -1,6 +1,7 @@
 import { activeGameRooms, connectedSocketClients } from "@api/websocket";
 import { GAME_START_TIMER, MAX_PLAYER_DISCONNECT_ACCUMULATED_TIME } from "@utils/defaults";
 import { createGame } from "./lobby";
+import Database from "@db/Database";
 
 /**
  * This has to be same as in the frontend!
@@ -109,7 +110,7 @@ setInterval(() => {
 }, REFRESH_RATE_MS);
 
 
-export const updateBracketsAfterGameFinnish = (lobby: LobbyRoom, gameId: string, phase: number, winnerId: number) => {
+export const updateBracketsAfterGameFinnish = async (lobby: LobbyRoom, gameId: string, phase: number, winnerId: number) => {
 	let allFinnished = true;
 	lobby.brackets.forEach(bracket => {
 		if (bracket.dependencyIds.includes(gameId) && bracket.phase === phase + 1) {
@@ -130,9 +131,82 @@ export const updateBracketsAfterGameFinnish = (lobby: LobbyRoom, gameId: string,
 			allFinnished = false;
 		}
 	});
-	if (allFinnished)
-	{
+	if (allFinnished) {
 		lobby.status = "completed";
+
+		const db = Database.getInstance();
+		const lastBracket = lobby.brackets[lobby.brackets.length - 1];
+
+		for (const bracket of lobby.brackets) {
+			if (!bracket.game || !bracket.winner) continue;
+
+			const game = bracket.game;
+			const winnerId = bracket.winner === "left" ? bracket.lPlayer : bracket.rPlayer;
+			const loserId = bracket.winner === "left" ? bracket.rPlayer : bracket.lPlayer;
+
+			const winnerScore = game.players[bracket.winner].score;
+			const loserScore = game.players[bracket.winner === "left" ? "right" : "left"].score;
+
+			const duration = Date.now() - game.startAt;
+			const startTime = new Date(game.startAt).toISOString();
+			const endTime = new Date(Date.now()).toISOString()
+
+			// 1. Запись игры в историю
+			await db.gameHistoryTable.new({
+				lobbyId: lobby.id,
+				winnerId,
+				loserId,
+				scoreWinner: winnerScore,
+				scoreLoser: loserScore,
+				startTime,
+				endTime,
+				duration
+			});
+
+			// 2. Обновление базовой статистики победителя
+			const winnerStats = await db.userStatsTable.getByUserId(winnerId);
+			if (winnerStats.result) {
+				const s = winnerStats.result;
+				await db.userStatsTable.update(winnerId, {
+					...s,
+					wins: s.wins + 1,
+					totalGames: s.totalGames + 1
+				});
+			}
+
+			// 3. Обновление базовой статистики проигравшего
+			const loserStats = await db.userStatsTable.getByUserId(loserId);
+			if (loserStats.result) {
+				const s = loserStats.result;
+				await db.userStatsTable.update(loserId, {
+					...s,
+					losses: s.losses + 1,
+					totalGames: s.totalGames + 1
+				});
+			}
+
+			// 4. Обновление турнирной статистики — только для финального матча
+			if (lobby.roomType === "tournament" && bracket === lastBracket) {
+				for (const player of lobby.connectedPlayers) {
+					const stats = await db.userStatsTable.getByUserId(player.id);
+					if (!stats.result) continue;
+
+					const s = stats.result;
+					console.log("ДАННЫЕ ЮЗЕРА: ", player)
+					if (player.id === winnerId) {
+						await db.userStatsTable.update(player.id, {
+							...s,
+							tournamentWins: s.tournamentWins + 1
+						});
+					} else {
+						await db.userStatsTable.update(player.id, {
+							...s,
+							tournamentLosses: s.tournamentLosses + 1
+						});
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -248,6 +322,7 @@ export const handleGameRoomPlayerSetReady = async function (clientContext: Clien
 			velocity: { vx: BALL_BASE_VELOCITY, vy: BALL_BASE_VELOCITY },
 			angle: Math.random() > 0.5 ? Math.PI : 0 + Math.random() * 0.5
 		}
+		game.startAt = Date.now()
 		game.timer = {
 			startAt: Date.now() + GAME_START_TIMER,
 			elapsed: 0,
