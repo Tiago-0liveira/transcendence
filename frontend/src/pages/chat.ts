@@ -547,10 +547,10 @@ function createMessageElem(
 		senderName = message.senderName;
 	}
 
-	msgDiv.innerHTML = /* hmtl */ `
+	msgDiv.innerHTML = /* html */ `
   <div class="text-white p-2 shadow-md relative">
     <!-- Message Content -->
-    <div class="mb-4">
+    <div class="text-left mb-4 break-all">
     ${message.content}
     </div>
     <!-- Footer with sender name and timestamp -->
