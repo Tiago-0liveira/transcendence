@@ -59,7 +59,8 @@ type SocketMessage =
         source: number;
         sourceName: string;
         timestamp: Date;
-        target?: number;
+        target: number;
+        targetName: string;
         content: string;
         isPrivateMessage: boolean;
       }
