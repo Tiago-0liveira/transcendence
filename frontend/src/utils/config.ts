@@ -1,6 +1,5 @@
 const BACKEND_PORT = import.meta.env.VITE_BACKEND_PORT;
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-console.log(import.meta.env)
 
 if (!BACKEND_PORT)
     throw new Error("VITE_BACKEND_PORT is necessary in the .env file! Please define it")

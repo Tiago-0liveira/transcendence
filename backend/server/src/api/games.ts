@@ -13,7 +13,6 @@ export default async function gameRoutes(fastify: FastifyInstance) {
 		};
 	}>("/rooms", { preHandler: authJwtMiddleware }, async (request, reply) => {
 		const { targetId } = request.body;
-		console.log(request.query, request.body)
 		if (targetId === undefined) {
 			return reply.status(400).send({
                 ok: false,

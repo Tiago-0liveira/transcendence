@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import BlockedUsersService from "@utils/BlockedUsersService";
+import { authJwtMiddleware } from "@middleware/auth";
 
 export default async function blockedUsersRoutes(fastify: FastifyInstance) {
   /**
@@ -8,15 +9,16 @@ export default async function blockedUsersRoutes(fastify: FastifyInstance) {
   fastify.post(
     "/block",
     {
-      schema: {
-        body: {
-          type: "object",
-          required: ["userId"],
-          properties: {
-            userId: { type: "string" },
-          },
-        },
-      },
+		preHandler: [authJwtMiddleware],
+		schema: {
+			body: {
+				type: "object",
+				required: ["userId"],
+				properties: {
+					userId: { type: "string" },
+				},
+			},
+		},
     },
     async (
       request: FastifyRequest<{ Body: { userId: string } }>,
@@ -54,15 +56,16 @@ export default async function blockedUsersRoutes(fastify: FastifyInstance) {
   fastify.post(
     "/unblock",
     {
-      schema: {
-        body: {
-          type: "object",
-          required: ["userId"],
-          properties: {
-            userId: { type: "string" },
-          },
-        },
-      },
+		preHandler: [authJwtMiddleware],
+		schema: {
+			body: {
+				type: "object",
+				required: ["userId"],
+				properties: {
+					userId: { type: "string" },
+				},
+			},
+		},
     },
     async (
       request: FastifyRequest<{ Body: { userId: string } }>,
@@ -99,6 +102,9 @@ export default async function blockedUsersRoutes(fastify: FastifyInstance) {
    */
   fastify.get(
     "/blocked",
+	{ 
+		preHandler: [authJwtMiddleware]
+	},
     async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         const currentUserId = request.user!.id;

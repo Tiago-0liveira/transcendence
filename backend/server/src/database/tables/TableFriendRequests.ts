@@ -90,8 +90,8 @@ class FriendRequestsTable extends BaseTable<FriendRequest, FriendRequestParams> 
 		return this.updateRequest({ receiverId: senderId, senderId: receiverId, status: "accepted" });
 	}	
 	
-	async rejectRequest(senderId: number, receiverId: number): Promise<DatabaseResult<number>> {
-		return this.updateRequest({ receiverId: senderId, senderId: receiverId, status: "rejected" });
+	async rejectRequest(senderId: number, receiverId: number): Promise<DatabaseResult<boolean>> {
+		return await this.delete(senderId, receiverId)
 	}
 	
 

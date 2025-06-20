@@ -43,19 +43,12 @@ async function handleRoomMessage(
   const db = Database.getInstance();
   const blockedUsersService = BlockedUsersService.getInstance();
 
-  const blockedFriendsRes = await blockedUsersService.getBlockedUsers(
-    clientContext.userId,
-  );
-  if (blockedFriendsRes.error) {
-    return;
-  }
-
-  connectedSocketClients.forEach((connectedClient, clientUserId) => {
+  connectedSocketClients.forEach(async (connectedClient, clientUserId) => {
     if (
       connectedClient.connected &&
       connectedClient.socket &&
       clientUserId !== clientContext.userId &&
-      !blockedFriendsRes.result.find((friend) => friend.id === clientUserId)
+	  !(await blockedUsersService.isBlockedBidirectional(clientContext.userId, clientUserId))
     ) {
       connectedClient.socket.send(JSON.stringify(message));
     }

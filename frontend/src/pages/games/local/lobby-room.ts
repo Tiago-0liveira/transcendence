@@ -6,7 +6,6 @@ import { toastHelper } from '@/utils/toastHelper';
 
 const setError = (el: HTMLDivElement, error: string) => {
 	const spanError = el.querySelector('span#error-message');
-	console.log(spanError)
 	if (spanError) {
 		spanError.textContent = error;
 		el.style.display = 'block';

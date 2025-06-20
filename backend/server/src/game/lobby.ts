@@ -97,7 +97,6 @@ export const lobbyFuncs = {
 			if (socketClient) {
 				socketClient.connectedToLobby = this;
 			}
-			console.log(connP.name, ": ", !!socketClient?.connectedToLobby)
 		})
 		if (this.roomType === "1v1") {
 			this.brackets.push(createBracket(this, this.connectedPlayers[0].id, this.connectedPlayers[1].id, 1, [], true));
@@ -124,7 +123,6 @@ export const lobbyFuncs = {
 			let bracketsPhase2: GameBracket[] = [];
 			for (let i = 0; i < this.brackets.length; i += 2) {
 				const l = this.brackets[i], r = this.brackets[i + 1];
-				console.log("phase 2 bracket", l.game!.id, r.game!.id);
 				bracketsPhase2.push(createBracket(this, 0, 0, 2, [l.game!.id, r.game!.id]));
 			}
 			this.brackets.push(...bracketsPhase2)
@@ -140,7 +138,6 @@ export const lobbyFuncs = {
 			}
 
 
-			console.log(this.brackets);
 			return true;
 		}
 		return false; // Room type not supported yet

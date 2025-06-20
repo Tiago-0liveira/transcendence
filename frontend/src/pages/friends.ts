@@ -44,15 +44,15 @@ const fetchFriends = (page: number, limit: number, cb: (data: { friends?: Friend
 	});
 };
 
-const fetchBlockedUsers = (page: number, limit: number, cb: (data: { blocked?: FriendUser[] }) => void) => {
+const fetchBlockedUsers = (page: number, limit: number, cb: (data: { blockedUsers?: FriendUser[] }) => void) => {
 	const auth = AuthManager.getInstance();
-	auth.authFetch(Router.makeUrl(API.auth.friends.blocked, {}, {
+	auth.authFetch(Router.makeUrl(API.blocked.blocked, {}, {
 		page: String(page), limit: String(limit)
 	}), {
 		method: "GET"
 	}).then(res => {
-		res?.json().then((data: { blocked?: FriendUser[] }) => {
-			if (data.blocked) cb(data);
+		res?.json().then((data: { blockedUsers?: FriendUser[] }) => {
+			if (data.blockedUsers) cb(data);
 			else console.error("Error fetching blocked users:", data);
 		});
 	});
@@ -142,11 +142,11 @@ const component = async () => {
 	};
 
 	const postBlockedRequestUpdate = (mode: UIUpdateMode) =>
-		(data: { blocked?: FriendUser[] }) => {
-			if (data.blocked) {
+		(data: { blockedUsers?: FriendUser[] }) => {
+			if (data.blockedUsers) {
 				blockedPage++;
-				canFetchMoreBlocked = data.blocked.length === blockedSize;
-				updateBlockedList(data.blocked, mode);
+				canFetchMoreBlocked = data.blockedUsers.length === blockedSize;
+				updateBlockedList(data.blockedUsers, mode);
 			}
 		};
 

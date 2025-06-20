@@ -28,7 +28,6 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 		name = name.trim();
 
 		const dbRes = await Database.getInstance().friendsTable.getPossibleFriends(userId, name, offset, limit)
-		console.log("Потенциальный друг: ", dbRes)
 		if (dbRes.error) {
 			return reply.code(500).send(dbRes)
 		}
@@ -149,9 +148,6 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 		const db = Database.getInstance().friendsTable;
 
 		try {
-			console.log("receiverId: ", receiverId);
-			console.log("senderId: ", senderId);
-
 			const relation = db.getRelationBetweenUsers(receiverId, senderId);
 
 			const res = db.deleteSpecificRelation(receiverId, senderId, relation ? "accepted" : "rejected");
@@ -286,7 +282,7 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 		try {
 			const receiverId = Number(userIdStr);
 
-			const dbRes = await Database.getInstance().friendRequestsTable.rejectRequest(senderId, receiverId);
+			const dbRes = await Database.getInstance().friendRequestsTable.rejectRequest(receiverId, senderId);
 			if (dbRes.error) {
 				return reply.code(422).send(dbRes);
 			}

@@ -45,57 +45,65 @@ class FriendsTable extends BaseTable<Friend, FriendParams> {
 				LIMIT ? OFFSET ?
 			;`;
 		this._getPossibleFriendsStr = `
-			SELECT 
-				u.id, 
-				u.username, 
-				u.displayName, 
-				u.avatarUrl,
+	SELECT 
+		u.id, 
+		u.username, 
+		u.displayName, 
+		u.avatarUrl,
 
-				-- Flag: true if u.id sent a pending request to userId
-				EXISTS (
-					SELECT 1 
-					FROM friend_requests 
-					WHERE status = 'pending'
-					AND senderId = u.id AND receiverId = ?
-				) AS hasInvitedMe,
+		-- Flag: true if u.id sent a pending request to userId
+		EXISTS (
+			SELECT 1 
+			FROM friend_requests 
+			WHERE status = 'pending'
+			AND senderId = u.id AND receiverId = ?
+		) AS hasInvitedMe,
 
-				-- Flag: true if there's any pending request between userId and u.id
-				EXISTS (
-					SELECT 1 
-					FROM friend_requests 
-					WHERE status = 'pending'
-					AND senderId = ? AND receiverId = u.id
-				) AS isPending
+		-- Flag: true if there's any pending request between userId and u.id
+		EXISTS (
+			SELECT 1 
+			FROM friend_requests 
+			WHERE status = 'pending'
+			AND senderId = ? AND receiverId = u.id
+		) AS isPending
 
-			FROM ${this._usersTableName} u
+	FROM ${this._usersTableName} u
 
-			WHERE u.id != ?
-			-- Filter by name (starts with)
-			AND (
-				u.displayName LIKE ?
-			)
+	WHERE u.id != ?
+	-- Filter by name (starts with)
+	AND (
+		u.displayName LIKE ?
+	)
 
-			-- Exclude existing friends
-			AND u.id NOT IN (
-				SELECT friendId 
-				FROM ${this._tableName} 
-				WHERE userId = ?
-			)
+	-- Exclude existing friends
+	AND u.id NOT IN (
+		SELECT friendId 
+		FROM ${this._tableName} 
+		WHERE userId = ?
+	)
 
-			-- Exclude rejections
-			AND NOT EXISTS (
-				SELECT 1
-				FROM ${this._friendRequestsTableName}
-				WHERE status = 'rejected'
-				AND (
-					(senderId = ? AND receiverId = u.id)
-					OR (senderId = u.id AND receiverId = ?)
-				)
-			)
+	-- Exclude rejections
+	AND NOT EXISTS (
+		SELECT 1
+		FROM ${this._friendRequestsTableName}
+		WHERE status = 'rejected'
+		AND (
+			(senderId = ? AND receiverId = u.id)
+			OR (senderId = u.id AND receiverId = ?)
+		)
+	)
 
-			ORDER BY hasInvitedMe DESC, isPending DESC, u.username
-			LIMIT ? OFFSET ?
-		`;
+	-- Exclude users who have blocked me
+	AND NOT EXISTS (
+		SELECT 1
+		FROM blocked_users
+		WHERE userId = u.id AND blockedUserId = ?
+	)
+
+	ORDER BY hasInvitedMe DESC, isPending DESC, u.username
+	LIMIT ? OFFSET ?
+`;
+
 
 		this.init();
 	}
@@ -113,7 +121,7 @@ class FriendsTable extends BaseTable<Friend, FriendParams> {
 			try {
 				resolve(this.newTransaction(userId, friendId))
 			} catch (error) {
-				resolve({ error: new Error("could not insert new rows ")})
+				resolve({ error: new Error("could not insert new rows ") })
 				console.error(error)
 			}
 		});
@@ -184,7 +192,6 @@ class FriendsTable extends BaseTable<Friend, FriendParams> {
 		`);
 
 		const row = stmt.get(receiverId, senderId, senderId, receiverId);
-		console.log("row", row);
 		return !!row;
 	}
 
@@ -237,10 +244,16 @@ class FriendsTable extends BaseTable<Friend, FriendParams> {
 		return new Promise((resolve, reject) => {
 			const possibleFriends = this.db.prepare(this._getPossibleFriendsStr)
 			const get1 = possibleFriends.all(
-				userId, userId, userId,
-				nameSearch,
-				userId, userId, userId,
-				limit, offset
+				userId,  // hasInvitedMe
+				userId,  // isPending
+				userId,  // u.id != ?
+				nameSearch,  // displayName LIKE ?
+				userId,  // exclude existing friends
+				userId,  // rejection check (sender)
+				userId,  // rejection check (receiver)
+				userId,  // blocked_users check (blockedUserId)
+				limit,
+				offset
 			)
 			if (get1) {
 				return resolve({ result: get1 as PossibleFriendUser[] })

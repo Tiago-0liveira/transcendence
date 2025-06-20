@@ -200,7 +200,6 @@ export const updateBracketsAfterGameFinnish = async (lobby: LobbyRoom, gameId: s
 					if (!stats.result) continue;
 
 					const s = stats.result;
-					console.log("ДАННЫЕ ЮЗЕРА: ", player)
 					if (player.id === winnerId) {
 						await db.userStatsTable.update(player.id, {
 							...s,
@@ -268,7 +267,6 @@ export const handleGameRoomJoin = async function (clientContext: ClientThis, mes
 		player.disconnectedTime += Date.now() - player.disconnectedAt/* store the amount of time the user has been disconnected for */
 		player.disconnectedAt = 0;
 
-		Object.values(game.players).forEach(player => console.log(player.connected))
 		if (Object.values(game.players).every(player => player.connected)) {
 			handleGameResume(game)
 			updateSecondPlayer = true;

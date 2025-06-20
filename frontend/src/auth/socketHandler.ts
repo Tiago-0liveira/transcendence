@@ -193,12 +193,6 @@ class SocketHandler {
 					parsedMessage.type,
 				);
 				messageHandler && messageHandler.bind(this)(parsedMessage);
-				/* console.log(
-          "type: ",
-          parsedMessage.type,
-          " ,handler: ",
-          messageHandler ? "exists" : "does not exist",
-        ); */
 			}
 		} catch (error) {
 			console.warn("SOCKET MESSAGE WRONG FORMAT ERROR: ", error);

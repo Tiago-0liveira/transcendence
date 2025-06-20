@@ -239,7 +239,6 @@ class UserTable extends BaseTable<User, UserParams> {
 			);
 
 			const row = stmt.get(UserAuthMethod.GOOGLE, googleId);
-			console.log("existsGoogleId:", row);
 
 			return { result: row ? (row as UIDD) : null };
 
