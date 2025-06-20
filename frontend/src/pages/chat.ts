@@ -21,6 +21,7 @@ interface Conversation {
   lastMessage: string;
   timestamp: Date;
   isPrivate: boolean;
+  avatarUrl: string;
   // targetId?: number;
 }
 
@@ -37,6 +38,7 @@ export let mockConversations: Conversation[] = [
     lastMessage: "",
     timestamp: new Date(Date.now()),
     isPrivate: false,
+    avatarUrl: "../../public/42-logo.svg",
   },
 ];
 
@@ -49,18 +51,23 @@ const chatComponent = async () => {
   sh.addMessageHandler("chat-message", function (res) {
     console.log("Received message:", res);
     let conversationId;
+    let conversationAvatarUrl;
+
     if (res.isPrivateMessage) {
       // For private messages, we need to determine if we're the sender or receiver
       if (res.source === loggedInUser.id) {
         // We're the sender, use the recipient's ID (target) as the conversation ID
         conversationId = res.target;
+        // We don't set avatarUrl here - will use what's in existing conversation
       } else {
         // We're the receiver, use the sender's ID as the conversation ID
         conversationId = res.source;
+        conversationAvatarUrl = res.sourceAvatarUrl; // Use sender's avatar
       }
     } else {
       // For public messages, always use the PUBLIC_CHAT_ID
       conversationId = PUBLIC_CHAT_ID;
+      conversationAvatarUrl = "../../public/42-logo.svg"; // Default avatar for public chat
     }
 
     const newMessage: Message = {
@@ -74,6 +81,7 @@ const chatComponent = async () => {
 
     let conversation = mockConversations.find((c) => c.id === conversationId);
     if (!conversation) {
+      // Create new conversation
       conversation = {
         id: conversationId,
         title: res.source === loggedInUser.id ? res.targetName : res.sourceName,
@@ -81,19 +89,29 @@ const chatComponent = async () => {
         lastMessage: res.content,
         timestamp: res.timestamp,
         isPrivate: res.isPrivateMessage,
+        avatarUrl: conversationAvatarUrl || "../../public/42-logo.svg", // Provide default if not available
       };
       mockConversations.push(conversation);
     }
-    //Add the message into the conversation
+    // Update avatar if needed (for private messages from others)
+    else if (
+      res.isPrivateMessage &&
+      res.source !== loggedInUser.id &&
+      res.sourceAvatarUrl
+    ) {
+      conversation.avatarUrl = res.sourceAvatarUrl;
+    }
+
+    // Always add the message to the conversation
     conversation.messages.push(newMessage);
     conversation.lastMessage = newMessage.content;
     conversation.timestamp = newMessage.timestamp;
 
-    //Update UI if this the current conversation
+    // Update UI if this the current conversation
     if (conversationId === currentConversationId) {
       renderMessages(conversation.messages, loggedInUser);
     }
-    //Update conversation list
+    // Update conversation list
     renderConversations(loggedInUser);
   });
 
@@ -215,6 +233,7 @@ export function newChat(
     lastMessage: "empty",
     timestamp: new Date(Date.now()),
     isPrivate: true,
+    avatarUrl: targetUser.avatarUrl || "../../public/42-logo.svg",
   };
   mockConversations.push(conversation);
   //Add the message into the conversation
@@ -230,8 +249,8 @@ function createChatHeaderElem(conversation: Conversation): string {
         <div class="flex items-center gap-3">
           <div class="relative">
             <img
-              src="../../public/42-logo.svg"
-              alt="Rendy Del Rosario"
+              src="${conversation.avatarUrl}"
+              alt=""
               width="48"
               height="48"
               class="rounded-full object-cover"
@@ -281,6 +300,11 @@ function createConversationElem(
   const convDiv = document.createElement("div");
   let dateFmt = "";
 
+  const avatarUrl =
+    conversation.isPrivate && conversation.avatarUrl
+      ? conversation.avatarUrl
+      : "../../public/42-logo.svg";
+
   const lastMessage = conversation.messages[conversation.messages.length - 1];
   if (lastMessage) {
     dateFmt = formatDate(lastMessage.timestamp);
@@ -293,7 +317,7 @@ function createConversationElem(
     <div class="max-w-md mx-auto bg-white rounded-lg">
         <div class="flex items-center gap-3 p-4 hover:bg-gray-50 cursor-pointer border border-gray-200 rounded-lg">
             <!-- Profile Image -->
-            <img src="../../public/42-logo.svg" alt="Profile" width="48" height="48" class="rounded-full object-cover" />
+            <img src="${avatarUrl}" alt="Profile" width="48" height="48" class="rounded-full object-cover" />
             <div class="relative flex-shrink-0">
             </div>
             <!-- Message Content -->
@@ -438,6 +462,7 @@ function sendMessage(loggedInUser: UserNoPass) {
         type: "chat-message",
         source: loggedInUser.id,
         sourceName: loggedInUser.username,
+        sourceAvatarUrl: loggedInUser.avatarUrl,
         timestamp: new Date(Date.now()),
         target: isChatPrivate ? currentConversationId : PUBLIC_CHAT_ID,
         targetName: isChatPrivate ? conversation.title : "Public Chat",
