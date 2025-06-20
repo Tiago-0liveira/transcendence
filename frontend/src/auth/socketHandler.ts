@@ -180,6 +180,14 @@ class SocketHandler {
               { roomId: parsedMessage.roomId, gameId: parsedMessage.gameId },
             );
             break;
+          case "tournament-game-ready":
+            toastHelper.tournamentGameReady(
+                parsedMessage.userName,
+                parsedMessage.avatar,
+                parsedMessage.roomId,
+                parsedMessage.gameId,
+            );
+            break;
           default:
             break;
         }

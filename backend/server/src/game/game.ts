@@ -2,6 +2,7 @@ import { activeGameRooms, connectedSocketClients } from "@api/websocket";
 import { GAME_START_TIMER, MAX_PLAYER_DISCONNECT_ACCUMULATED_TIME } from "@utils/defaults";
 import { createGame } from "./lobby";
 import Database from "@db/Database";
+import {notify} from "@utils/websocket";
 
 /**
  * This has to be same as in the frontend!
@@ -126,6 +127,7 @@ export const updateBracketsAfterGameFinnish = async (lobby: LobbyRoom, gameId: s
 			if (bracket.lPlayer !== 0 && bracket.rPlayer !== 0) {
 				bracket.ready = true;
 				bracket.game = createGame(lobby, bracket.lPlayer, bracket.rPlayer);
+				notify.tournamenGameReady(bracket.lPlayer, bracket.rPlayer, lobby.id, bracket.game.id)
 			}
 		}
 		if (bracket.winner === "left") {
@@ -161,7 +163,6 @@ export const updateBracketsAfterGameFinnish = async (lobby: LobbyRoom, gameId: s
 			const startTime = new Date(game.startAt).toISOString();
 			const endTime = new Date(Date.now()).toISOString()
 
-			// 1. Запись игры в историю
 			await db.gameHistoryTable.new({
 				lobbyId: lobby.id,
 				winnerId,
@@ -173,7 +174,6 @@ export const updateBracketsAfterGameFinnish = async (lobby: LobbyRoom, gameId: s
 				duration
 			});
 
-			// 2. Обновление базовой статистики победителя
 			const winnerStats = await db.userStatsTable.getByUserId(winnerId);
 			if (winnerStats.result) {
 				const s = winnerStats.result;
@@ -184,7 +184,6 @@ export const updateBracketsAfterGameFinnish = async (lobby: LobbyRoom, gameId: s
 				});
 			}
 
-			// 3. Обновление базовой статистики проигравшего
 			const loserStats = await db.userStatsTable.getByUserId(loserId);
 			if (loserStats.result) {
 				const s = loserStats.result;
@@ -195,7 +194,6 @@ export const updateBracketsAfterGameFinnish = async (lobby: LobbyRoom, gameId: s
 				});
 			}
 
-			// 4. Обновление турнирной статистики — только для финального матча
 			if (lobby.roomType === "tournament" && bracket === lastBracket) {
 				for (const player of lobby.connectedPlayers) {
 					const stats = await db.userStatsTable.getByUserId(player.id);

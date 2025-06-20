@@ -62,6 +62,17 @@ type SocketMessage =
         isPrivateMessage: boolean;
         isChannelMessage: boolean;
       }
+    >
+    /** Tournament */
+  | SocketMessageBase<
+        "tournament-game-ready",
+        {
+            userName: string;
+            avatar: string;
+            friendId: number;
+            roomId: string;
+            gameId: string;
+        }
     >;
 
 type SelectSocketMessage<T extends SocketMessageType = SocketMessageType> =
