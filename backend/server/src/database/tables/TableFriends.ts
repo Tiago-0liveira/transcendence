@@ -186,7 +186,7 @@ class FriendsTable extends BaseTable<Friend, FriendParams> {
 	}
 
 	getRelationBetweenUsers(receiverId: number, senderId: number): boolean {
-		const stmt = this.database.database.prepare(`SELECT status FROM friend_requests
+		const stmt = this.database.database.prepare(`SELECT 1 FROM friend_requests
               WHERE (senderId = ? AND receiverId = ?)
                  OR (senderId = ? AND receiverId = ?) LIMIT 1
 		`);

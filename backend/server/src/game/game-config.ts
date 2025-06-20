@@ -1,7 +1,7 @@
 import { activeGameRooms, connectedSocketClients } from "@api/websocket"
 import { newGameConfigSchema } from "./schemas"
 import { ZodError } from "zod"
-import { lobbyFuncs } from "./lobby"
+import { lobbyFuncs, userCanJoinLobby } from "./lobby"
 import Database from "@db/Database"
 import { v4 } from "uuid"
 
@@ -83,6 +83,11 @@ export const handleGameRoomGetData = async function (clientContext: ClientThis, 
 		return clientContext.socket.send(JSON.stringify({
 			type: "lobby-room-error",
 			error: "You can't join this active game room!"
+		} satisfies SelectSocketMessage<"lobby-room-error">))
+	} else if (!userCanJoinLobby(room, clientContext.userId)) {
+		return clientContext.socket.send(JSON.stringify({
+			type: "lobby-room-error",
+			error: "You can't join this room!"
 		} satisfies SelectSocketMessage<"lobby-room-error">))
 	}
 	const dbUser = await Database.getInstance().userTable.getById(clientContext.userId)
