@@ -156,7 +156,7 @@ const chatComponent = async () => {
 	const appEl = document.getElementById("app");
 	if (appEl) appEl.innerHTML = template;
 
-	
+
 	const sendButton = document.getElementById("sendButton");
 	const messageInput = document.querySelector<HTMLInputElement>("#messageInput");
 	const closeModalButton = document.getElementById("btn-close-modal")
@@ -164,7 +164,7 @@ const chatComponent = async () => {
 	const gamesLoadingDiv = document.getElementById("games-loading-div")
 	const invitePlayerNameSpan = document.querySelector("span#invite-player-name")
 	const formInviteGames = document.querySelector("form#form-invite-games")
-	
+
 	if (!sendButton) { throw new Error("Could not find #sendButton"); }
 	if (!messageInput) { throw new Error("Could not find #messageInput"); }
 	if (!closeModalButton) { throw new Error("Could not find #btn-close-modal"); }
@@ -172,8 +172,8 @@ const chatComponent = async () => {
 	if (!gamesLoadingDiv) { throw new Error("Could not find #games-loading-div"); }
 	if (!invitePlayerNameSpan) { throw new Error("Could not find span#invite-player-name"); }
 	if (!formInviteGames) { throw new Error("Could not find form#form-invite-games"); }
-	
-	
+
+
 	const sendButtonHandler = () => {
 		const message = messageInput.value.trim();
 		if (message.length > 0) {
@@ -198,7 +198,7 @@ const chatComponent = async () => {
 	}
 	const clicksHandler = (ev: MouseEvent) => {
 		if (!ev.target || !(ev.target instanceof Element)) return;
-		
+
 		const btnInviteToGame = ev.target.closest("button#btn-invite-to-game");
 		if (btnInviteToGame instanceof HTMLButtonElement) {
 			const targetIdStr = btnInviteToGame.dataset.targetId
@@ -257,41 +257,41 @@ const chatComponent = async () => {
 			}
 		}
 		const newChatFromPublicBtn = ev.target.closest("button#newChatFromPublicBtn")
-		if (newChatFromPublicBtn instanceof HTMLButtonElement){
+		if (newChatFromPublicBtn instanceof HTMLButtonElement) {
 			ev.preventDefault();
 			const userId = newChatFromPublicBtn.dataset.userId
-			if (userId){	
+			if (userId) {
 
 				const loggedInUser = AuthManager.getInstance().User;
 				if (!loggedInUser) {
-				  return;
+					return;
 				}
-			
+
 				// Find the user card to get the display name
-				AuthManager.getInstance().authFetch(`${API.profile}/${userId}`, {method: "GET"})
+				AuthManager.getInstance().authFetch(`${API.profile}/${userId}`, { method: "GET" })
 					.then(res => {
-						if (res){
+						if (res) {
 							res.json().then(data => {
-								const userData = data.result.stats as { 
+								const userData = data.result.stats as {
 									avatarUrl: string
 									displayName: "Adilson#2"
 									userId: 2
 								}
-							
+
 								console.log(data, userData)
 								// Check if conversation already exists
 								const existingConversation = mockConversations.find(
 									(c) => c.id === userData.userId && c.isPrivate,
 								);
-							
+
 								if (!existingConversation) {
 									// Only create a new conversation if it doesn't exist
-									newChat(loggedInUser, {id: userData.userId, username: userData.displayName, avatarUrl: userData.avatarUrl})
+									newChat(loggedInUser, { id: userData.userId, username: userData.displayName, avatarUrl: userData.avatarUrl })
 								}
-							
+
 								// Navigate to the chat page
 								Router.getInstance().navigate("/chat");
-							
+
 								// Find the conversation (whether it was just created or already existed)
 								const conversation = mockConversations.find((c) => c.id === userData.userId);
 								console.log(conversation)
@@ -302,21 +302,21 @@ const chatComponent = async () => {
 										selectConversation(conversation.id, conversation, loggedInUser);
 									}, 100); // Small delay to ensure the chat component has loaded
 								}
-							}) 
+							})
 						}
 					}).catch(err => {
 						toastHelper.warning("Could not fetch user!")
 					})
-				
+
 			}
 		}
 	}
-	
+
 	sendButton.addEventListener("click", sendButtonHandler);
 	messageInput.addEventListener("keypress", keyPressHandler);
 	closeModalButton.addEventListener("click", closeModalButtonHandler)
 	document.addEventListener("click", clicksHandler)
-	
+
 	sh.addMessageHandler("chat-message", function (res) {
 		let conversationId;
 		let conversationAvatarUrl;
@@ -384,7 +384,7 @@ const chatComponent = async () => {
 		renderConversations(loggedInUser);
 	});
 	renderConversations(loggedInUser);
-	
+
 	return () => {
 		sh.removeMessageHandler("chat-message");
 		sendButton.removeEventListener("click", sendButtonHandler);
@@ -440,7 +440,7 @@ export function newChat(
 function createChatHeaderElem(conversation: Conversation): string {
 	let conversationTitle;
 
-	if (conversation.id === 777888){
+	if (conversation.id === 777888) {
 		conversationTitle = `
 			<h2 class="text-white font-medium text-lg leading-tight">${conversation.title}</h2>
 		`;
@@ -474,18 +474,9 @@ function createChatHeaderElem(conversation: Conversation): string {
         <div class="flex items-center gap-2">
 			${conditionalRender(conversation.id !== PUBLIC_CHAT_ID, /* html */`
 				<button id="btn-invite-to-game" data-target-id="${conversation.id}" class="text-white hover:bg-teal-700 h-10 w-10 rounded-full flex items-center justify-center transition-colors text-xl">
-					📹<span class="sr-only">Video call</span>
+					<img src="/send-invite.svg" alt="invite-to-game" class="w-8">
 				</button>
 			`)}
-          <!-- Video Call Button -->
-          <button class="text-white hover:bg-teal-700 h-10 w-10 rounded-full flex items-center justify-center transition-colors text-xl">
-            📹<span class="sr-only">Video call</span>
-          </button>
-
-          <!-- Phone Call Button -->
-          <button class="text-white hover:bg-teal-700 h-10 w-10 rounded-full flex items-center justify-center transition-colors text-xl">
-            📞<span class="sr-only">Voice call</span>
-          </button>
         </div>
       </div>
     `;
@@ -614,8 +605,8 @@ function createMessageElem(
 		senderName = `<span class="font-medium">me</span>`;
 	} else {
 		msgDiv.className = "self-start max-w-xs rounded-r-lg bg-blue-500";
-		if (!message.isChatPrivate){
-		senderName = `<button id="newChatFromPublicBtn" data-user-id=${message.senderId} type="button" class="hover:underline font-medium">${message.senderName}</button>`;
+		if (!message.isChatPrivate) {
+			senderName = `<button id="newChatFromPublicBtn" data-user-id=${message.senderId} type="button" class="hover:underline font-medium">${message.senderName}</button>`;
 		} else {
 			senderName = `<span class="font-medium">${message.senderName}</span>`;
 		}
