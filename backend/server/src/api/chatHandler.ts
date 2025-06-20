@@ -91,7 +91,8 @@ export async function handleChatInviteToGame(message: SelectSocketMessage<"chat-
 			roomId: room.id,
 			roomName: room.name,
 			roomType: room.roomType,
-			sourceName: user.result.displayName
+			sourceName: user.result.displayName,
+			sourceAvatarURL: user.result.avatarUrl
 		} satisfies SelectSocketMessage<"chat-invite-to-game-frontend">))
 	}
 }

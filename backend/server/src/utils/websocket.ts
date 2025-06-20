@@ -166,4 +166,59 @@ export const notify = {
       );
     }
   },
+
+  tournamenGameReady: async (userId: number, enemyId: number, roomId: string, gameId: string ) => {
+    const db = Database.getInstance();
+
+    const socketUser = connectedSocketClients.get(userId);
+    const socketEnemy = connectedSocketClients.get(enemyId);
+
+    if (
+        (!socketUser || !socketUser.connected || !socketUser.socket) &&
+        (!socketEnemy || !socketEnemy.connected || !socketEnemy.socket)
+    ) {
+      console.warn("Both players are disconnected");
+      return;
+    }
+
+    const resUser = await db.userTable.getById(userId);
+    const resEnemy = await db.userTable.getById(enemyId);
+
+    if (
+        resUser.error || !resUser.result ||
+        resEnemy.error || !resEnemy.result
+    ) {
+      console.warn("Error while fetching user");
+      return;
+    }
+
+    const user = resUser.result;
+    const enemy = resEnemy.result;
+
+    if (socketUser?.connected && socketUser.socket) {
+      socketUser.socket.send(
+          JSON.stringify({
+            type: "tournament-game-ready",
+            userName: enemy.displayName,
+            avatar: enemy.avatarUrl,
+            friendId: enemy.id,
+            roomId,
+            gameId,
+          } satisfies SocketMessage)
+      );
+    }
+
+    if (socketEnemy?.connected && socketEnemy.socket) {
+      socketEnemy.socket.send(
+          JSON.stringify({
+            type: "tournament-game-ready",
+            userName: user.displayName,
+            avatar: user.avatarUrl,
+            friendId: user.id,
+            roomId,
+            gameId,
+          } satisfies SocketMessage)
+      );
+    }
+  },
 };

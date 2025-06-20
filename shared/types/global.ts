@@ -77,8 +77,20 @@ type SocketMessage =
 	roomId: string,
 	sourceName: string,
 	roomName: string,
-	roomType: LobbyType
+	roomType: LobbyType,
+    sourceAvatarURL: string
   }>
+    /** Tournament */
+    | SocketMessageBase<
+    "tournament-game-ready",
+    {
+        userName: string;
+        avatar: string;
+        friendId: number;
+        roomId: string;
+        gameId: string;
+    }
+>;
 
 type SelectSocketMessage<T extends SocketMessageType = SocketMessageType> =
   Extract<SocketMessage, { type: T }>;

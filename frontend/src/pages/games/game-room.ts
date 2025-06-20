@@ -110,7 +110,6 @@ const component = async () => {
 					</h1>
 					<span class="flex flex-col items-center justify-center">
 						<span>Redirecting to Lobby in <span id="redirect-number"></span>...</span>
-						<a href="/" id="a-go-to-lobby" class="link">Go to Lobby now!</a>
 					</span>
 				</div>
 				<div id="timer-div" class="rounded-full fixed p-4 hidden bg-gray-50 items-center justify-center top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[-1/2]">
