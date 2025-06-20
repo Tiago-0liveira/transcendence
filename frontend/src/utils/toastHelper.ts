@@ -300,43 +300,39 @@ export const toastHelper = {
     const div = document.createElement("div");
     div.classList.add("content");
 
-    const shortName =
-        sourceName.length > 10 ? sourceName.slice(0, 7) + "…" : sourceName;
+    const shortName = sourceName.length > 10 ? sourceName.slice(0, 7) + "…" : sourceName;
+    const shortRoomName = roomName.length > 10 ? roomName.slice(0, 7) + "…" : roomName;
 
     div.innerHTML = /* html */ `
-		<div class="top-content flex items-center text-sm sm:text-base font-sans font-bold text-white">
-			<img src="${sourceAvatarURL}" alt="${sourceName} avatar"
-				class="w-5 h-5 rounded-full border border-gray-600 mr-2" />
-			<span class="font-semibold text-red-500 mr-1" title="${sourceName}">${shortName}</span>
-			<span>invited you to join</span>
-			<span class="ml-1 text-green-400">${roomType}</span>
-			<span class="ml-1">game in</span>
-			<span class="ml-1 text-yellow-200">"${roomName}"</span>
-			<span class="ml-1">room.</span>
-		</div>
-		<div class="div-buttons mt-3 flex gap-2 justify-end text-sm sm:text-base">
-			<button
-				id="toastify-btn-join-game"
-				class="px-4 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-			>
-				Join
-			</button>
-		</div>
-	`;
+	<div class="top-content flex items-center gap-2 flex-wrap text-sm sm:text-base font-sans font-bold text-white max-w-[400px]">
+		<img src="${sourceAvatarURL}" alt="${sourceName} avatar"
+			class="w-5 h-5 rounded-full border border-gray-600 shrink-0" />
+		<span class="text-red-500 font-semibold" title="${sourceName}">${shortName}</span>
+		<span>invited you to join</span>
+		<span class="text-green-400">${roomType}</span>
+		<span>game in</span>
+		<span class="text-yellow-200" title="${roomName}">"${shortRoomName}"</span>
+		<span>room.</span>
+	</div>
+	<div class="div-buttons mt-3 flex gap-2 justify-end text-sm sm:text-base">
+		<button
+			id="toastify-btn-join-game"
+			class="px-4 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+		>
+			Join
+		</button>
+	</div>
+`;
 
     const joinBtn = div.querySelector("#toastify-btn-join-game") as HTMLButtonElement;
     let gameId = "";
     joinBtn.addEventListener("click", tournamentRedirect(roomId, gameId));
-    // joinBtn.addEventListener("click", () => {
-    //   Router.getInstance().navigate(`/games/game-room`, false, {}, { roomId });
-    // });
 
-    deployToast(`${sourceName} invited you to join ${roomType} game in "${roomName}"`, {
+    deployToast(`Invitation from ${sourceName}`, {
       duration: DURATION * 2,
       avatar: sourceAvatarURL,
-      className: "gameReadyToast",
+      className: "gameReady",
       node: div,
     });
   }
-
 };
