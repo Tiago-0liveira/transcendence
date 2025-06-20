@@ -17,6 +17,7 @@ interface Message {
 	senderId: number;
 	senderName: string;
 	seen: boolean;
+	isChatPrivate: boolean;
 }
 
 interface Conversation {
@@ -255,6 +256,60 @@ const chatComponent = async () => {
 				}
 			}
 		}
+		const newChatFromPublicBtn = ev.target.closest("button#newChatFromPublicBtn")
+		if (newChatFromPublicBtn instanceof HTMLButtonElement){
+			ev.preventDefault();
+			const userId = newChatFromPublicBtn.dataset.userId
+			if (userId){	
+
+				const loggedInUser = AuthManager.getInstance().User;
+				if (!loggedInUser) {
+				  return;
+				}
+			
+				// Find the user card to get the display name
+				AuthManager.getInstance().authFetch(`${API.profile}/${userId}`, {method: "GET"})
+					.then(res => {
+						if (res){
+							res.json().then(data => {
+								const userData = data.result.stats as { 
+									avatarUrl: string
+									displayName: "Adilson#2"
+									userId: 2
+								}
+							
+								console.log(data, userData)
+								// Check if conversation already exists
+								const existingConversation = mockConversations.find(
+									(c) => c.id === userData.userId && c.isPrivate,
+								);
+							
+								if (!existingConversation) {
+									// Only create a new conversation if it doesn't exist
+									newChat(loggedInUser, {id: userData.userId, username: userData.displayName, avatarUrl: userData.avatarUrl})
+								}
+							
+								// Navigate to the chat page
+								Router.getInstance().navigate("/chat");
+							
+								// Find the conversation (whether it was just created or already existed)
+								const conversation = mockConversations.find((c) => c.id === userData.userId);
+								console.log(conversation)
+								/* currentConversationId = conversation.id */
+								// If the conversation exists, select it
+								if (conversation) {
+									setTimeout(() => {
+										selectConversation(conversation.id, conversation, loggedInUser);
+									}, 100); // Small delay to ensure the chat component has loaded
+								}
+							}) 
+						}
+					}).catch(err => {
+						toastHelper.warning("Could not fetch user!")
+					})
+				
+			}
+		}
 	}
 	
 	sendButton.addEventListener("click", sendButtonHandler);
@@ -290,6 +345,7 @@ const chatComponent = async () => {
 			senderName: res.sourceName,
 			targetId: res.target,
 			seen: res.source === loggedInUser.id ? true : false,
+			isChatPrivate: res.isPrivateMessage,
 		};
 
 		let conversation = mockConversations.find((c) => c.id === conversationId);
@@ -382,6 +438,20 @@ export function newChat(
 }
 
 function createChatHeaderElem(conversation: Conversation): string {
+	let conversationTitle;
+
+	if (conversation.id === 777888){
+		conversationTitle = `
+			<h2 class="text-white font-medium text-lg leading-tight">${conversation.title}</h2>
+		`;
+	}
+	else {
+		conversationTitle = `
+			<a href= "/profile/${conversation.id}"
+			class= "hover:underline"
+			><h2 class="text-white font-medium text-lg leading-tight">${conversation.title}</h2></a>
+		`;
+	}
 	return /* html */`
         <!-- Profile Section -->
       <div class= "bg-indigo-950 px-4 py-3 flex items-center justify-between">
@@ -396,7 +466,7 @@ function createChatHeaderElem(conversation: Conversation): string {
             />
           </div>
           <div class="flex">
-            <h2 class="text-white font-medium text-lg leading-tight">${conversation.title}</h2>
+			${conversationTitle}
           </div>
         </div>
 
@@ -541,10 +611,14 @@ function createMessageElem(
 
 	if (message.senderId === loggedInUser.id) {
 		msgDiv.className = "self-end max-w-xs rounded-l-lg bg-green-500";
-		senderName = "me";
+		senderName = `<span class="font-medium">me</span>`;
 	} else {
 		msgDiv.className = "self-start max-w-xs rounded-r-lg bg-blue-500";
-		senderName = message.senderName;
+		if (!message.isChatPrivate){
+		senderName = `<button id="newChatFromPublicBtn" data-user-id=${message.senderId} type="button" class="hover:underline font-medium">${message.senderName}</button>`;
+		} else {
+			senderName = `<span class="font-medium">${message.senderName}</span>`;
+		}
 	}
 
 	msgDiv.innerHTML = /* html */ `
@@ -556,7 +630,7 @@ function createMessageElem(
     <!-- Footer with sender name and timestamp -->
     <div class="flex justify-between items-end text-xs opacity-75 mt-2">
       <!-- Sender name (lower left) -->
-      <span class="font-medium">${senderName}</span>
+	   ${senderName}
       <!-- Timestamp (lower right) -->
       <span class="ml-2">${formatDate(message.timestamp)}</span>
     </div>
@@ -589,6 +663,7 @@ function sendMessage(loggedInUser: UserNoPass) {
 				senderId: loggedInUser.id,
 				senderName: loggedInUser.username,
 				seen: true,
+				isChatPrivate: isChatPrivate,
 			};
 			if (isChatPrivate) {
 				newMessage.targetId = currentConversationId;
