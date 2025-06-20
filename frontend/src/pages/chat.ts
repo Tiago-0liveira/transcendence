@@ -201,7 +201,6 @@ const chatComponent = async () => {
 		const btnInviteToGame = ev.target.closest("button#btn-invite-to-game");
 		if (btnInviteToGame instanceof HTMLButtonElement) {
 			const targetIdStr = btnInviteToGame.dataset.targetId
-			console.log(targetIdStr)
 			if (targetIdStr === undefined) throw new Error("targetId is undefined on button#btn-invite-to-game");
 			try {
 				const targetId = Number(targetIdStr)
@@ -216,13 +215,13 @@ const chatComponent = async () => {
 							modal.classList.remove("hidden")
 						}
 						AuthManager.getInstance().authFetch(API.games.rooms, { method: "POST", body: JSON.stringify({ targetId }) }).then((res => {
-							console.log("rooms: ", res)
 							if (res) {
 								res.json().then((jsonRes) => {
 									if (jsonRes && jsonRes.rooms) {
 										if (!gamesLoadingDiv.classList.contains("hidden")) {
 											gamesLoadingDiv.classList.add("hidden")
 										}
+										formInviteGames.innerHTML = ""
 										jsonRes.rooms.forEach((room: BasicPublicLobby) => {
 											formInviteGames.innerHTML += getInviteLobbyTemplate(room)
 										});
@@ -264,7 +263,6 @@ const chatComponent = async () => {
 	document.addEventListener("click", clicksHandler)
 	
 	sh.addMessageHandler("chat-message", function (res) {
-		console.log("Received message:", res);
 		let conversationId;
 		let conversationAvatarUrl;
 
@@ -615,7 +613,6 @@ function sendMessage(loggedInUser: UserNoPass) {
 				content: content,
 				isPrivateMessage: isChatPrivate,
 			} satisfies SelectSocketMessage<"chat-message">;
-			console.log("sending message", msg);
 			sh.sendMessage(msg);
 			// Clear input
 			messageInput.value = "";

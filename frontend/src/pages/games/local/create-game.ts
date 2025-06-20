@@ -148,13 +148,12 @@ const component = async () => {
             ) {
                 errorDiv.innerHTML = getNewErrorTemplate("Player Names must be between 3 and 12 chars and cannot be repeated!")
             } else {
-                console.log(localGameManager.createRoom({ type: validated.roomType, playerNames }))
+                localGameManager.createRoom({ type: validated.roomType, playerNames })
 				router.navigate("/games/local/lobby-room")
             }
 
 		} catch (error) {
 			if (error instanceof ZodError) {
-				console.log("zod error: ", error);
 				errorDiv.innerHTML = "";/* reset errors */
 				error.errors.forEach(err => {
 					errorDiv.innerHTML += getNewErrorTemplate(err.message)

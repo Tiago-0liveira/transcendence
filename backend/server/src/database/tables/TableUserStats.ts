@@ -38,7 +38,6 @@ class UserStatsTable extends BaseTable<UserStats, UserStatsParams> {
 	async new(params: UserStatsParams): Promise<DatabaseResult<number>> {
 		try {
 			const existing = await this.getByUserId(params.userId);
-			console.log("existing", existing);
 			if ("result" in existing) {
 				return { error: new Error(`Stats for userId ${params.userId} already exist`) };
 			}

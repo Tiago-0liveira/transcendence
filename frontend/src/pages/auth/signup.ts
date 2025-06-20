@@ -203,7 +203,6 @@ const component = async () => {
 	if (googleOauth && google?.accounts?.oauth2?.initCodeClient) {
 		googleOauth.addEventListener("click", googleSignUpWithGoogleHandler)
 	} else {
-		console.log("here");
 		googleOauth?.setAttribute("disabled", "true");
 		/* disable button so user knows google auth is disabled */
 	}

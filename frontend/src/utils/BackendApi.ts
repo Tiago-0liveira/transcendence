@@ -18,7 +18,7 @@ const routeTree = {
 				accept: "accept",
 				reject: "reject",
 			},
-		},
+		}
 	},
 	oauth: {
 		google: {
@@ -46,6 +46,11 @@ const routeTree = {
 	profile: "profile",
 	games: {
 		rooms: "rooms"
+	},
+	blocked: {
+		block: "block",
+		unblock: "unblock",
+		blocked: "blocked"
 	}
 } as const;
 

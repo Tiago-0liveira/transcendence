@@ -11,7 +11,6 @@ export const handleNewGameConfig = async function (clientContext: ClientThis, me
 		newGameConfigSchema.parse(message)
 	} catch (error) {
 		if (error instanceof ZodError) {
-			console.log("here ?", error)
 			if (error.errors.length > 0) {
 				return clientContext.socket.send(JSON.stringify({
 					type: "error-new-game-config",

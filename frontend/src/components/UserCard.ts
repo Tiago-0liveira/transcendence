@@ -13,6 +13,7 @@ type ButtonClassId =
   | "reject"
   | "remove"
   | "block"
+  | "unblock"
   | "message";
 
 const buttonColorsMap: Record<ButtonClassId, string> = {
@@ -22,6 +23,7 @@ const buttonColorsMap: Record<ButtonClassId, string> = {
   reject: "bg-red-700",
   remove: "bg-red-700",
   block: "bg-yellow-600",
+  unblock: "bg-yellow-600",
   message: "bg-blue-600",
 };
 
@@ -45,6 +47,10 @@ const getButtonElement = (id: string, classId: ButtonClassId, text: string) => {
 				<path d="M6 7h12v12.75A2.25 2.25 0 0115.75 22H8.25A2.25 2.25 0 016 19.75V7Zm9.25-3a1 1 0 01.92.606l.326.722H19a1 1 0 110 2h-1v1H6V6H5a1 1 0 110-2h2.504l.326-.722A1 1 0 019.25 4h5.5Z"/>
 			</svg>
 		`;
+  } else if (classId === "block") {
+	iconMarkup = `<img class="w-4" src="/prohibited.svg" alt="">`
+  } else if (classId === "unblock") {
+	iconMarkup = `<img class="w-4" src="/unblock.svg" alt="">`
   }
 
   return `
@@ -88,8 +94,6 @@ class UserCard extends BaseAttributeValidationElement<UserCardAttributes> {
       isOnline: this.getAttribute("online")! === "true",
     };
 
-    console.log("user", user);
-
     // Profile Card
     this.innerHTML = /* html */ `
 		<div class="flex flex-col items-center bg-slate-700 text-white rounded-md overflow-hidden w-full max-w-xs pb-4">
@@ -119,8 +123,10 @@ class UserCard extends BaseAttributeValidationElement<UserCardAttributes> {
 									${getButtonElement(user.id, "accept", "Accept")}
 									${getButtonElement(user.id, "reject", "Reject")}
 								`)}
+								${getButtonElement(user.id, "block", "Block")}
 								${conditionalRender(!user.isPending && !user.hasInvitedMe, getButtonElement(user.id, "add", "Request"))}
 								${conditionalRender(user.isOnline, getButtonElement(user.id, "message", "Message"))}
+								
 							</div>
 
 							${conditionalRender(
@@ -146,6 +152,7 @@ class UserCard extends BaseAttributeValidationElement<UserCardAttributes> {
 								<!-- Кнопки -->
 								<div class="flex gap-2 items-center">
 									${conditionalRender(user.isOnline, getButtonElement(user.id, "message", "Message"))}
+									${getButtonElement(user.id, "block", "Block")}
 									${getButtonElement(user.id, "remove", "Remove")}
 								</div>
 							</div>
@@ -157,11 +164,8 @@ class UserCard extends BaseAttributeValidationElement<UserCardAttributes> {
 				${conditionalRender(variant === "blocked",
           			`
 						<div class="flex gap-2 w-full pr-6 relative">
-							<div class="flex gap-2">
-								${getButtonElement(user.id, "accept", "Accept")}
-							</div>
 							<div class="absolute bottom-0 right-0">
-								${getButtonElement(user.id, "remove", "Unblock")}
+								${getButtonElement(user.id, "unblock", "Unblock")}
 							</div>
 						</div>
 					`,
@@ -306,9 +310,34 @@ const RejectFriendRequestHandler = (userId: string) => {
     });
 };
 
+const BlockUserHandler = (userId: string) => {
+  AuthManager.getInstance()
+    .authFetch(API.blocked.block, {// TODO: change this endpoint
+      method: "POST", // или DELETE — зависит от твоего бекенда
+      body: JSON.stringify({ userId }),
+    })
+    .then((res) => {
+      res?.json().then((data: { error?: string }) => {
+        if (data.error) {
+          console.error("Error block user", data.error);
+          return;
+        }
+        const card: UserCard | null = document.querySelector(
+          `user-card#user-id-${userId}`,
+        );
+        if (card) {
+          card.hidden = true;
+        }
+      });
+    })
+    .catch((err) => {
+      console.error("Error unblocking user", err);
+    });
+};
+
 const UnblockUserHandler = (userId: string) => {
   AuthManager.getInstance()
-    .authFetch(API.auth.friends.remove, {
+    .authFetch(API.blocked.unblock, {// TODO: change this endpoint
       method: "POST", // или DELETE — зависит от твоего бекенда
       body: JSON.stringify({ userId }),
     })
@@ -354,7 +383,7 @@ document.addEventListener("click", (e) => {
     AcceptFriendRequestHandler(userId);
   });
   getButtonAndHandleClick(e, "reject", (userId) => {
-    console.log("Block userId: ", userId);
+    console.log("Reject friend request userId: ", userId);
     RejectFriendRequestHandler(userId);
   });
   getButtonAndHandleClick(e, "cancel", (userId) => {
@@ -366,20 +395,21 @@ document.addEventListener("click", (e) => {
     AddFriendHandler(userId);
   });
   getButtonAndHandleClick(e, "remove", (userId) => {
-    console.log("Remove/Unblock userId: ", userId);
-    const card =
-      document.querySelector(`user-card#user-id-${userId}`) ??
-      document.querySelector(`user-card#blocked-user-id-${userId}`);
+    console.log("Remove userId: ", userId);
 
-    const isBlocked = card?.getAttribute("variant") === "blocked";
-    if (isBlocked) {
-      console.log("→ Unblocking user...");
-      UnblockUserHandler(userId);
-    } else {
-      console.log("→ Removing friend...");
-      RemoveFriendHandler(userId);
-    }
+	console.log("→ Removing friend...");
+	RemoveFriendHandler(userId);
   });
+
+  getButtonAndHandleClick(e, "block", (userId) => {
+	console.log("Block userId: ", userId)
+	BlockUserHandler(userId)
+  })
+
+  getButtonAndHandleClick(e, "unblock", (userId) => {
+	console.log("Block userId: ", userId)
+	UnblockUserHandler(userId)
+  })
 
   getButtonAndHandleClick(e, "message", (userId) => {
     console.log("Message userId: ", userId);
