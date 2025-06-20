@@ -10,17 +10,17 @@ RUN npm install
 RUN apk add --no-cache openssl bash curl nss
 
 # Download and install mkcert as alpine does not have it in their default repositories
-# RUN curl -L "https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-linux-amd64" -o /usr/local/bin/mkcert \
-#    && chmod +x /usr/local/bin/mkcert
+RUN curl -L "https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-linux-amd64" -o /usr/local/bin/mkcert \
+   && chmod +x /usr/local/bin/mkcert
 
 # Set up SSL directory
 RUN mkdir -p /etc/nginx/ssl
 
 # Create the local CA and generate the certificate
-# RUN mkcert -install \
-#    && mkcert localhost \
-#    && mv localhost.pem /etc/nginx/ssl/nginx-selfsigned.crt \
-#    && mv localhost-key.pem /etc/nginx/ssl/nginx-selfsigned.key
+RUN mkcert -install \
+   && mkcert localhost \
+   && mv localhost.pem /etc/nginx/ssl/nginx-selfsigned.crt \
+   && mv localhost-key.pem /etc/nginx/ssl/nginx-selfsigned.key
 
 COPY . .
 RUN npm run build

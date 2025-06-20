@@ -44,6 +44,9 @@ const routeTree = {
 		},
 	},
 	profile: "profile",
+	games: {
+		rooms: "rooms"
+	}
 } as const;
 
 const API = buildPaths(routeTree);

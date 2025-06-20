@@ -109,67 +109,62 @@ class UserCard extends BaseAttributeValidationElement<UserCardAttributes> {
 					</a>
 				</div>
 
-				${conditionalRender(
-          variant === "possibleFriend",
-          `
-					<div class="flex items-center gap-6 w-full">
-						<div class="flex gap-2">
-							${conditionalRender(user.isPending, getButtonElement(user.id, "cancel", "Cancel"))}
-							${conditionalRender(
-                user.hasInvitedMe,
-                `
-								${getButtonElement(user.id, "accept", "Accept")}
-								${getButtonElement(user.id, "reject", "Reject")}
-							`,
-              )}
-							${conditionalRender(!user.isPending && !user.hasInvitedMe, getButtonElement(user.id, "add", "Request"))}
-						</div>
-
-						${conditionalRender(
-              user.isPending,
-              `
-							<span id="pending-indicator" class="text-amber-400 text-sm font-semibold flex items-center">
-								Pending<span id="pending-dots">.</span>
-							</span>
-						`,
-            )}
-					</div>
-				`,
-        )}
-				${conditionalRender(
-          variant === "friend",
-          `
-					<div class="w-full px-2 mt-3 flex flex-col justify-between grow relative min-h-[20px]">
-						<div class="flex items-center justify-between mt-auto">
-							<!-- Статус -->
-							<span class="text-sm font-semibold ${user.isOnline ? "text-green-400" : "text-gray-400"}">
-								${user.isOnline ? "Online" : "Offline"}
-							</span>
-
-							<!-- Кнопки -->
-							<div class="flex gap-2 items-center">
+				${conditionalRender(variant === "possibleFriend",
+          			`
+						<div class="flex items-center gap-6 w-full">
+							<div class="flex gap-2">
+								${conditionalRender(user.isPending, getButtonElement(user.id, "cancel", "Cancel"))}
+								${conditionalRender(user.hasInvitedMe,`
+									${getButtonElement(user.id, "accept", "Accept")}
+									${getButtonElement(user.id, "reject", "Reject")}
+								`)}
+								${conditionalRender(!user.isPending && !user.hasInvitedMe, getButtonElement(user.id, "add", "Request"))}
 								${conditionalRender(user.isOnline, getButtonElement(user.id, "message", "Message"))}
-								${getButtonElement(user.id, "remove", "Remove")}
+							</div>
+
+							${conditionalRender(
+								user.isPending, 
+								`
+									<span id="pending-indicator" class="text-amber-400 text-sm font-semibold flex items-center">
+											Pending<span id="pending-dots">.</span>
+									</span>
+								`
+							)}
+						</div>
+					`,
+				)}
+				${conditionalRender(variant === "friend",
+          			`
+						<div class="w-full px-2 mt-3 flex flex-col justify-between grow relative min-h-[20px]">
+							<div class="flex items-center justify-between mt-auto">
+								<!-- Статус -->
+								<span class="text-sm font-semibold ${user.isOnline ? "text-green-400" : "text-gray-400"}">
+									${user.isOnline ? "Online" : "Offline"}
+								</span>
+
+								<!-- Кнопки -->
+								<div class="flex gap-2 items-center">
+									${conditionalRender(user.isOnline, getButtonElement(user.id, "message", "Message"))}
+									${getButtonElement(user.id, "remove", "Remove")}
+								</div>
 							</div>
 						</div>
-					</div>
-				`,
-        )}
+					`,
+				)}
 
 
-				${conditionalRender(
-          variant === "blocked",
-          `
-					<div class="flex gap-2 w-full pr-6 relative">
-						<div class="flex gap-2">
-							${getButtonElement(user.id, "accept", "Accept")}
+				${conditionalRender(variant === "blocked",
+          			`
+						<div class="flex gap-2 w-full pr-6 relative">
+							<div class="flex gap-2">
+								${getButtonElement(user.id, "accept", "Accept")}
+							</div>
+							<div class="absolute bottom-0 right-0">
+								${getButtonElement(user.id, "remove", "Unblock")}
+							</div>
 						</div>
-						<div class="absolute bottom-0 right-0">
-							${getButtonElement(user.id, "remove", "Unblock")}
-						</div>
-					</div>
-				`,
-        )}
+					`,
+        		)}
 			</div>
 		</div>`;
 

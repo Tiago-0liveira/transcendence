@@ -29,4 +29,5 @@ interface FriendUser extends UIDD, UserParamsNoPass {
 interface PossibleFriendUser extends UIDD, Required<Omit<UserParamsNoPass, "authProvider">> {
 	hasInvitedMe: "0" | "1";
 	isPending: "0" | "1";
+	online: "true" | "false";
 }

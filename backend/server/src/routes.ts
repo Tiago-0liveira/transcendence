@@ -11,6 +11,7 @@ import UserSettingsRoutes from "@api/settings";
 import blockedUsersRoutes from "@api/auth/blocked";
 import UserStatisticRoutes from "@api/profile";
 import UserProfileRoutes from "@api/profile";
+import gameRoutes from "@api/games";
 
 /**
  * @description Registers all endpoints necessary for the server (in a organized way)
@@ -59,5 +60,13 @@ export default function registerRoutes(app: FastifyInstance) {
 			fastifyInstance.register(UserProfileRoutes)
 			done()
 		},
+	)
+	// path: /game
+	app.register(
+		(fastifyInstance, _, done) => {
+			fastifyInstance.register(gameRoutes)
+			done()
+		},
+		{ prefix: "/games" }
 	)
 }

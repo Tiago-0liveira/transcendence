@@ -167,6 +167,9 @@ class SocketHandler {
 							{ roomId: parsedMessage.roomId, gameId: parsedMessage.gameId },
 						);
 						break;
+					case "chat-invite-to-game-frontend":
+						toastHelper.info(`${parsedMessage.sourceName} invited you to ${parsedMessage.roomType}`)
+						break;
 					default:
 						break;
 				}

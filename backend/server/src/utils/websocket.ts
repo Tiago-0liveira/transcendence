@@ -166,28 +166,4 @@ export const notify = {
       );
     }
   },
-
-  //ircChannelMessage
-  // TODO: add ChannelTable and call it to get all the users inside the channel
-  // and the send the notification
-
-  chatMessage: async (userId: number, friendId: number) => {
-    const connectedFriend = connectedSocketClients.get(friendId);
-    if (
-      connectedFriend &&
-      connectedFriend.connected &&
-      connectedFriend.socket
-    ) {
-      const dbRes = await Database.getInstance().userTable.getById(userId);
-      if (dbRes.error) return;
-      const user = dbRes.result;
-      connectedFriend.socket.send(
-        JSON.stringify({
-          type: "chat-notification",
-          source: userId,
-          target: friendId,
-        } satisfies SocketMessage),
-      );
-    }
-  },
 };

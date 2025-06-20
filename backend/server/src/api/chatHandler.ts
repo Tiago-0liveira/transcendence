@@ -1,5 +1,5 @@
 import Database from "@db/Database";
-import { connectedSocketClients } from "@api/websocket";
+import { activeGameRooms, connectedSocketClients } from "@api/websocket";
 import BlockedUsersService from "@utils/BlockedUsersService";
 
 export async function handleChatMessage(
@@ -60,4 +60,45 @@ async function handleRoomMessage(
       connectedClient.socket.send(JSON.stringify(message));
     }
   });
+}
+
+
+export async function handleChatInviteToGame(message: SelectSocketMessage<"chat-invite-to-game">, clientContext: ClientThis) {
+	const blockedUsersService = BlockedUsersService.getInstance();
+
+	const targetClient = connectedSocketClients.get(message.target)
+	if (!targetClient || !targetClient.connected || !targetClient.socket) {
+		return clientContext.socket.send(JSON.stringify({
+			type: "chat-invite-to-game-error",
+			message: "User is offline!"
+		} satisfies SelectSocketMessage<"chat-invite-to-game-error">))
+	}
+	
+	const isBlocked = await blockedUsersService.isBlocked(
+		message.target,
+		clientContext.userId,
+	);
+	if (isBlocked) {
+		return clientContext.socket.send(JSON.stringify({
+			type: "chat-invite-to-game-error",
+			message: "User blocked you!"
+		} satisfies SelectSocketMessage<"chat-invite-to-game-error">))
+	}
+	const room = activeGameRooms.get(message.roomId)
+	if (!room) {
+		return clientContext.socket.send(JSON.stringify({
+			type: "chat-invite-to-game-error",
+			message: "The Room is no longer available!"
+		} satisfies SelectSocketMessage<"chat-invite-to-game-error">))
+	}
+	const user = await Database.getInstance().userTable.getById(clientContext.userId)
+	if (user.result) {
+		return targetClient.socket.send(JSON.stringify({
+			type: "chat-invite-to-game-frontend",
+			roomId: room.id,
+			roomName: room.name,
+			roomType: room.roomType,
+			sourceName: user.result.displayName
+		} satisfies SelectSocketMessage<"chat-invite-to-game-frontend">))
+	}
 }

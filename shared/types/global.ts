@@ -65,7 +65,20 @@ type SocketMessage =
         content: string;
         isPrivateMessage: boolean;
       }
-    >;
+    >
+  | SocketMessageBase<"chat-invite-to-game", {
+	target: number,
+	roomId: string,
+  }>
+  | SocketMessageBase<"chat-invite-to-game-error", {
+	message: string
+  }>
+  | SocketMessageBase<"chat-invite-to-game-frontend", {
+	roomId: string,
+	sourceName: string,
+	roomName: string,
+	roomType: LobbyType
+  }>
 
 type SelectSocketMessage<T extends SocketMessageType = SocketMessageType> =
   Extract<SocketMessage, { type: T }>;

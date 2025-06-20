@@ -177,7 +177,7 @@ class FriendsTable extends BaseTable<Friend, FriendParams> {
 		});
 	}
 
-	getRelationBetweenUsers(receiverId: number, senderId: number): { status: string } | null {
+	getRelationBetweenUsers(receiverId: number, senderId: number): boolean {
 		const stmt = this.database.database.prepare(`SELECT status FROM friend_requests
               WHERE (senderId = ? AND receiverId = ?)
                  OR (senderId = ? AND receiverId = ?) LIMIT 1
@@ -185,7 +185,7 @@ class FriendsTable extends BaseTable<Friend, FriendParams> {
 
 		const row = stmt.get(receiverId, senderId, senderId, receiverId);
 		console.log("row", row);
-		return row ?? null;
+		return !!row;
 	}
 
 	deleteSpecificRelation(receiverId: number, senderId: number, status: string): DatabaseResult<void> {
@@ -216,12 +216,12 @@ class FriendsTable extends BaseTable<Friend, FriendParams> {
 			`);
 				deleteRejected.run(senderId, receiverId, receiverId, senderId);
 			} else {
-				return { error: `Unsupported status '${status}'` };
+				return { error: new Error(`Unsupported status '${status}'`) };
 			}
 
 			return { result: undefined };
 		} catch (error) {
-			return { error };
+			return { error: new Error("deleteSpecificRelation Error!") };
 		}
 	}
 
