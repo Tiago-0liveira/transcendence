@@ -29,7 +29,7 @@ interface Conversation {
 
 let currentConversationId: number | null = null;
 // let conversations: Conversation[] = [];
-let mockConversations: Conversation[] = [
+export let mockConversations: Conversation[] = [
   {
     id: PUBLIC_CHAT_ID,
     title: "General Chat",
@@ -48,20 +48,35 @@ const chatComponent = async () => {
   //Setup socket handler;
   sh.addMessageHandler("chat-message", function (res) {
     console.log("Received message:", res);
-    const conversationId = res.isPrivateMessage ? res.source : PUBLIC_CHAT_ID;
+    let conversationId;
+    if (res.isPrivateMessage) {
+      // For private messages, we need to determine if we're the sender or receiver
+      if (res.source === loggedInUser.id) {
+        // We're the sender, use the recipient's ID (target) as the conversation ID
+        conversationId = res.target;
+      } else {
+        // We're the receiver, use the sender's ID as the conversation ID
+        conversationId = res.source;
+      }
+    } else {
+      // For public messages, always use the PUBLIC_CHAT_ID
+      conversationId = PUBLIC_CHAT_ID;
+    }
+
     const newMessage: Message = {
       content: res.content,
       timestamp: res.timestamp,
       senderId: res.source,
       senderName: res.sourceName,
       targetId: res.target,
-      seen: false,
+      seen: res.source === loggedInUser.id ? true : false,
     };
+
     let conversation = mockConversations.find((c) => c.id === conversationId);
     if (!conversation) {
       conversation = {
         id: conversationId,
-        title: res.sourceName,
+        title: res.source === loggedInUser.id ? res.targetName : res.sourceName,
         messages: [],
         lastMessage: res.content,
         timestamp: res.timestamp,
@@ -188,7 +203,10 @@ function renderConversations(loggedInUser: UserNoPass) {
   }
 }
 
-export function newChat(loggedInUser: UserNoPass, targetUser: UserNoPass) {
+export function newChat(
+  loggedInUser: UserNoPass,
+  targetUser: { id: number; username: string; avatarUrl?: string },
+) {
   const conversationId = targetUser.id;
   let conversation: Conversation = {
     id: conversationId,
@@ -302,7 +320,7 @@ function createConversationElem(
   return convDiv;
 }
 
-function selectConversation(
+export function selectConversation(
   conversationId: number,
   conversation: Conversation,
   loggedInUser: UserNoPass,
@@ -422,6 +440,7 @@ function sendMessage(loggedInUser: UserNoPass) {
         sourceName: loggedInUser.username,
         timestamp: new Date(Date.now()),
         target: isChatPrivate ? currentConversationId : PUBLIC_CHAT_ID,
+        targetName: isChatPrivate ? conversation.title : "Public Chat",
         content: content,
         isPrivateMessage: isChatPrivate,
       } satisfies SelectSocketMessage<"chat-message">;
