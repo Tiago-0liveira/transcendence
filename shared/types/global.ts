@@ -58,6 +58,7 @@ type SocketMessage =
       {
         source: number;
         sourceName: string;
+        sourceAvatarUrl?: string;
         timestamp: Date;
         target: number;
         targetName: string;
