@@ -7,7 +7,7 @@ services:
     env_file:
       - frontend/.env
     environment:
-      - NODE_ENV=development
+      - node_env=development
     ports:
       - "2000:2000"
     volumes:
@@ -23,7 +23,7 @@ services:
     env_file:
       - frontend/.env
     environment:
-      - NODE_ENV=production
+      - node_env=production
     ports:
       - "2000:2000"
     profiles:
@@ -37,7 +37,7 @@ services:
     env_file:
       - backend/server/.env
     environment:
-      - NODE_ENV=development
+      - node_env=development
     ports:
       - "4000:4000"
     volumes:
@@ -54,7 +54,7 @@ services:
     env_file:
       - backend/server/.env
     environment:
-      - NODE_ENV=production
+      - node_env=production
     ports:
       - "4000:4000"
     profiles:

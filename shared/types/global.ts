@@ -57,23 +57,39 @@ type SocketMessage =
       "chat-message",
       {
         source: number;
-        target?: number;
+        sourceName: string;
+        sourceAvatarUrl?: string;
+        timestamp: Date;
+        target: number;
+        targetName: string;
         content: string;
         isPrivateMessage: boolean;
-        isChannelMessage: boolean;
       }
     >
+  | SocketMessageBase<"chat-invite-to-game", {
+	target: number,
+	roomId: string,
+  }>
+  | SocketMessageBase<"chat-invite-to-game-error", {
+	message: string
+  }>
+  | SocketMessageBase<"chat-invite-to-game-frontend", {
+	roomId: string,
+	sourceName: string,
+	roomName: string,
+	roomType: LobbyType
+  }>
     /** Tournament */
-  | SocketMessageBase<
-        "tournament-game-ready",
-        {
-            userName: string;
-            avatar: string;
-            friendId: number;
-            roomId: string;
-            gameId: string;
-        }
-    >;
+    | SocketMessageBase<
+    "tournament-game-ready",
+    {
+        userName: string;
+        avatar: string;
+        friendId: number;
+        roomId: string;
+        gameId: string;
+    }
+>;
 
 type SelectSocketMessage<T extends SocketMessageType = SocketMessageType> =
   Extract<SocketMessage, { type: T }>;

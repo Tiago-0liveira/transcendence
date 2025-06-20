@@ -1,36 +1,15 @@
 import Database from "@db/Database";
-import { connectedSocketClients } from "@api/websocket";
+import { activeGameRooms, connectedSocketClients } from "@api/websocket";
 import BlockedUsersService from "@utils/BlockedUsersService";
 
 export async function handleChatMessage(
-  rawMessage: string,
+  message: SelectSocketMessage<"chat-message">,
   clientContext: ClientThis,
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    // Parse the incoming socket message (it's already structured, not IRC format)
-    const message = JSON.parse(
-      rawMessage,
-    ) as SelectSocketMessage<"chat-message">;
-
-    console.log(
-      `💬 Chat Handler - Processing message from user ${clientContext.userId}`,
-    );
-    console.log(`   Type: ${message.isPrivateMessage ? "Private" : "Room"}`);
-    console.log(`   Content: ${message.content}`);
-
-    if (message.isPrivateMessage) {
-      return await handlePrivateMessage(message, clientContext);
-    } else if (message.isChannelMessage) {
-      return await handleRoomMessage(message, clientContext);
-    } else {
-      return {
-        success: false,
-        error: "Message must be either private or room message",
-      };
-    }
-  } catch (error) {
-    console.error("💥 Chat Handler error:", error);
-    return { success: false, error: "Internal server error" };
+) {
+  if (message.isPrivateMessage) {
+    return await handlePrivateMessage(message, clientContext);
+  } else {
+    return await handleRoomMessage(message, clientContext);
   }
 }
 
@@ -38,42 +17,19 @@ export async function handleChatMessage(
  * Handle private message: send to specific friend if not blocked
  */
 async function handlePrivateMessage(
-  message: any,
+  message: SelectSocketMessage<"chat-message">,
   clientContext: ClientThis,
-): Promise<{ success: boolean; error?: string }> {
-  const targetUserId = message.target;
-  console.log(
-    `📨 Private message from ${clientContext.userId} to ${message.target}`,
-  );
-
+) {
   const blockedUsersService = BlockedUsersService.getInstance();
-
-  // Check if either user has blocked the other
-  const isBlocked = await blockedUsersService.isBlockedBidirectional(
-    senderId,
-    targetUserId,
+  if (!message.target) return;
+  const blockedFriendsRes = await blockedUsersService.isBlocked(
+    clientContext.userId,
+    message.target,
   );
-  if (isBlocked) {
-    console.log(`🚫 Message blocked: blocking relationship exists`);
-    return { success: false, error: "Message blocked" };
-  }
-
-  // Send message to target user if they're online
-  const delivered = await sendMessageToUser(targetUserId, {
-    type: "chat-message",
-    source: senderId,
-    target: targetUserId,
-    content: message.content,
-    isPrivateMessage: true,
-    isChannelMessage: false,
-  });
-
-  if (delivered) {
-    console.log(`✅ Private message delivered to user ${targetUserId}`);
-    return { success: true };
-  } else {
-    console.log(`⚠️ User ${targetUserId} is not online`);
-    return { success: false, error: "User is not online" };
+  if (!blockedFriendsRes) {
+    const connectedClient = connectedSocketClients.get(message.target);
+    if (connectedClient && connectedClient.connected && connectedClient.socket)
+      connectedClient.socket.send(JSON.stringify(message));
   }
 }
 
@@ -81,89 +37,68 @@ async function handlePrivateMessage(
  * Handle room message: broadcast to all connected friends (minus blocked ones)
  */
 async function handleRoomMessage(
-  message: any,
+  message: SelectSocketMessage<"chat-message">,
   clientContext: ClientThis,
-): Promise<{ success: boolean; error?: string }> {
-  console.log(`📢 Room message from user ${senderId}`);
-
+) {
   const db = Database.getInstance();
   const blockedUsersService = BlockedUsersService.getInstance();
 
-  // Get sender's friends (everyone in the main room)
-  const friendsResult = await db.friendsTable.getFriendsWithInfo(
-    senderId,
-    0,
-    1000,
+  const blockedFriendsRes = await blockedUsersService.getBlockedUsers(
+    clientContext.userId,
   );
-  if (friendsResult.error) {
-    return { success: false, error: "Failed to get friends list" };
+  if (blockedFriendsRes.error) {
+    return;
   }
 
-  const friends = friendsResult.result;
-  console.log(`👥 Broadcasting to ${friends.length} friends`);
-
-  // Use service to filter out blocked users
-  const friendIds = friends.map((friend) => friend.id);
-  const allowedFriendIds = await blockedUsersService.filterBlockedUsers(
-    senderId,
-    friendIds,
-  );
-
-  console.log(
-    `🔍 After filtering blocked users: ${allowedFriendIds.length}/${friendIds.length} allowed`,
-  );
-
-  const deliveredTo: number[] = [];
-
-  for (const friendId of allowedFriendIds) {
-    const friend = friends.find((f) => f.id === friendId);
-
-    // Send message to this friend if they're online
-    const delivered = await sendMessageToUser(friendId, {
-      type: "chat-message",
-      source: senderId,
-      target: 0, // Room message
-      content: message.content,
-      isPrivateMessage: false,
-      isChannelMessage: true,
-    });
-
-    if (delivered) {
-      deliveredTo.push(friendId);
-      console.log(
-        `✅ Message delivered to ${friend?.displayName} (${friendId})`,
-      );
-    } else {
-      console.log(
-        `⚠️ Friend ${friend?.displayName} (${friendId}) is not online`,
-      );
+  connectedSocketClients.forEach((connectedClient, clientUserId) => {
+    if (
+      connectedClient.connected &&
+      connectedClient.socket &&
+      clientUserId !== clientContext.userId &&
+      !blockedFriendsRes.result.find((friend) => friend.id === clientUserId)
+    ) {
+      connectedClient.socket.send(JSON.stringify(message));
     }
-  }
-
-  console.log(
-    `📊 Room message delivered to ${deliveredTo.length}/${allowedFriendIds.length} online friends`,
-  );
-  return { success: true };
+  });
 }
 
-/**
- * Send message to a specific user if they're connected
- */
-async function sendMessageToUser(
-  userId: number,
-  message: SocketMessage,
-): Promise<boolean> {
-  const clientValue = connectedSocketClients.get(userId);
 
-  if (clientValue && clientValue.connected && clientValue.socket) {
-    try {
-      clientValue.socket.send(JSON.stringify(message));
-      return true;
-    } catch (error) {
-      console.error(`❌ Failed to send message to user ${userId}:`, error);
-      return false;
-    }
-  }
+export async function handleChatInviteToGame(message: SelectSocketMessage<"chat-invite-to-game">, clientContext: ClientThis) {
+	const blockedUsersService = BlockedUsersService.getInstance();
 
-  return false;
+	const targetClient = connectedSocketClients.get(message.target)
+	if (!targetClient || !targetClient.connected || !targetClient.socket) {
+		return clientContext.socket.send(JSON.stringify({
+			type: "chat-invite-to-game-error",
+			message: "User is offline!"
+		} satisfies SelectSocketMessage<"chat-invite-to-game-error">))
+	}
+	
+	const isBlocked = await blockedUsersService.isBlocked(
+		message.target,
+		clientContext.userId,
+	);
+	if (isBlocked) {
+		return clientContext.socket.send(JSON.stringify({
+			type: "chat-invite-to-game-error",
+			message: "User blocked you!"
+		} satisfies SelectSocketMessage<"chat-invite-to-game-error">))
+	}
+	const room = activeGameRooms.get(message.roomId)
+	if (!room) {
+		return clientContext.socket.send(JSON.stringify({
+			type: "chat-invite-to-game-error",
+			message: "The Room is no longer available!"
+		} satisfies SelectSocketMessage<"chat-invite-to-game-error">))
+	}
+	const user = await Database.getInstance().userTable.getById(clientContext.userId)
+	if (user.result) {
+		return targetClient.socket.send(JSON.stringify({
+			type: "chat-invite-to-game-frontend",
+			roomId: room.id,
+			roomName: room.name,
+			roomType: room.roomType,
+			sourceName: user.result.displayName
+		} satisfies SelectSocketMessage<"chat-invite-to-game-frontend">))
+	}
 }

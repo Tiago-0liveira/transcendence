@@ -32,6 +32,7 @@ const getPlayerLi = (user: PossibleFriendUser) => {
 			is-pending="${user.isPending}"
 			has-invited-me="${user.hasInvitedMe}"
 			id="user-id-${user.id}"
+			online="${user.online}"
 		></user-card>
 	`
 }

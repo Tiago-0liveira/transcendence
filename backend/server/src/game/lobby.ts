@@ -147,6 +147,17 @@ export const lobbyFuncs = {
 	},
 } satisfies GameRoomFuncs;
 
+export const userCanJoinLobby = function (room: LobbyRoom, userId: number, isFriend: boolean = false): boolean {
+	const ownerInRoom = !!room.connectedPlayers.find(p => p.id === room.owner)
+	const emptySlots = room.requiredPlayers - room.connectedPlayersNumber 
+	const canJoin = (
+		((emptySlots >= 1 && ownerInRoom) ||  (!ownerInRoom && ((emptySlots >= 1 && userId === room.owner)) || emptySlots >= 2))
+		&& room.status === "waiting")
+		|| (room.status === "active" && room.connectedPlayers.some(player => player.id === userId)
+	) && ((room.settings.visibility === "friends" && isFriend) || room.settings.visibility === "public");
+	return canJoin
+}
+
 /**
  * 
  * @param room GameRoom to convert
@@ -154,13 +165,6 @@ export const lobbyFuncs = {
  * @returns BasicRoom that is needed for showing which rooms are public in the frontend
  */
 export const getBasicLobby = function (room: LobbyRoom, userId: number, isFriend: boolean = false): BasicPublicLobby {
-	const ownerInRoom = !!room.connectedPlayers.find(p => p.id === room.owner)
-	const emptySlots = room.requiredPlayers - room.connectedPlayersNumber 
-	const canJoin = (
-		((emptySlots >= 1 && ownerInRoom) ||  (!ownerInRoom && ((emptySlots >= 1 && userId === room.owner)) || emptySlots >= 2))
-		&& room.status === "waiting")
-		|| (room.status === "active" && room.connectedPlayers.some(player => player.id === userId)
-	);
 	return {
 		id: room.id,
 		name: room.name,
@@ -171,7 +175,7 @@ export const getBasicLobby = function (room: LobbyRoom, userId: number, isFriend
 		requiredPlayers: room.requiredPlayers,
 		connectedPlayersNumber: room.connectedPlayersNumber,
 		isFriend,
-		canJoin: canJoin
+		canJoin: userCanJoinLobby(room, userId, isFriend)
 	}
 }
 

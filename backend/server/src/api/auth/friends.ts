@@ -1,3 +1,4 @@
+import { connectedSocketClients } from "@api/websocket";
 import Database from "@db/Database";
 import { authJwtMiddleware } from "@middleware/auth";
 import { notify } from "@utils/websocket";
@@ -31,6 +32,12 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 		if (dbRes.error) {
 			return reply.code(500).send(dbRes)
 		}
+		dbRes.result.forEach(possibleFriend => {
+			const connectedSocket = connectedSocketClients.get(possibleFriend.id)
+			if (connectedSocket && connectedSocket.connected) {
+				possibleFriend.online = true
+			}
+		})
 
 		return reply.code(200).send({ users: dbRes.result })
 	})
@@ -146,19 +153,13 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 			console.log("senderId: ", senderId);
 
 			const relation = db.getRelationBetweenUsers(receiverId, senderId);
-			console.log("relation 1: ", relation);
-			if (!relation || !["accepted", "rejected"].includes(relation.status)) {
-				return reply.code(400).send({ message: "User is neither a friend nor blocked" });
-			}
 
-			console.log("relation 2: ", relation);
-
-			const res = db.deleteSpecificRelation(receiverId, senderId, relation.status);
+			const res = db.deleteSpecificRelation(receiverId, senderId, relation ? "accepted" : "rejected");
 			if (res.error) {
 				return reply.code(500).send(res);
 			}
 
-			return reply.code(200).send({ removedStatus: relation.status });
+			return reply.code(200).send({ removedStatus: relation });
 		} catch (e) {
 			console.error("Exception in /remove handler:", e);
 			return reply.code(500).send({ message: "Internal server error" });

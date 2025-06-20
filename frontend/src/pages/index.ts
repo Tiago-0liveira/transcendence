@@ -102,7 +102,7 @@ All tokens are securely stored in <strong>HttpOnly cookies</strong>.
 </div>
 
 	`;
-	document.querySelector('#app')!.innerHTML = template;
-}
+	document.querySelector("#app")!.innerHTML = template;
+};
 
 Router.getInstance().register({ path: '/', component });

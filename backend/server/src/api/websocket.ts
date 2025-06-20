@@ -23,7 +23,7 @@ import {
 	handleGameRoomPlayerSetReady,
 } from "@game/game";
 import WebSocket, { RawData } from "ws";
-import { handleChatMessage } from "@api/chatHandler";
+import { handleChatInviteToGame, handleChatMessage } from "@api/chatHandler";
 
 export const connectedSocketClients: ClientMap = new Map();
 export const activeGameRooms: GameRooms = new Map();
@@ -218,6 +218,9 @@ const socketOnMessage = (
 						break;
 					case "chat-message":
 						await handleChatMessage(parsedMessage, clientContext);
+						break;
+					case "chat-invite-to-game":
+						await handleChatInviteToGame(parsedMessage, clientContext);
 						break;
 					default:
 						console.log("unkown message: ", message);
