@@ -72,8 +72,7 @@ const DEFAULTS = {
 		}),
 		ballPosition: (): GameBallData => ({
 			position: { x: 0, y: 0 },
-			velocity: { vx: 0, vy: 0 },
-			angle: 0,
+			velocity: { vx: 0, vy: 0 }
 		}),
 		timer: (): GameTimer => ({
 			startAt: 0,

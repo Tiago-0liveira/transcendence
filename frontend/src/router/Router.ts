@@ -68,7 +68,7 @@ class Router {
 		}
 	}
 
-	public async navigate(pathOrUrl: string, routeParams: RouteParams = {}, queryParams: QueryParams = {}): Promise<void> {
+	public async navigate(pathOrUrl: string, replaceLocation: boolean = false, routeParams: RouteParams = {}, queryParams: QueryParams = {}): Promise<void> {
 		this.handleComponentUnmount()
 
 		let url = Router.makeUrl(pathOrUrl, routeParams, queryParams);
@@ -84,7 +84,11 @@ class Router {
 
 		const fullUrl = new URL(url, window.location.origin);
 		if (this.mode === 'history') {
-			window.history.pushState({}, '', url);
+			if (replaceLocation) {
+				window.history.replaceState({}, '', url);
+			} else {
+				window.history.pushState({}, '', url);
+			}
 		} else {
 			const locationHash = this.mode === 'hash'
 				? fullUrl.hash.slice(1) || '/'
@@ -104,7 +108,7 @@ class Router {
 		if (currentRoute?.query.returnTo) {
 			this.navigate(currentRoute.query.returnTo)
 		} else {
-			this.navigate(fallbackPath, routeParams, queryParams)
+			this.navigate(fallbackPath, false, routeParams, queryParams)
 		}
 	}
 

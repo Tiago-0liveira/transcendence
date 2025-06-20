@@ -181,7 +181,7 @@ const component = async () => {
 						}
 					}
 				} else {
-					gameRoom.ballData = gameRoom.ballData = ACTIVE_BALL_DATA()
+					gameRoom.ballData = gameRoom.ballData = ACTIVE_BALL_DATA(scorer)
 				}
 			}
 		} else if (gameRoom.state === "completed") {

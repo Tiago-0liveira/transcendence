@@ -14,7 +14,7 @@ const profileComponent = async () => {
     const targetUserId = match ? parseInt(match[1], 10) : null;
 
     if (!isOwnProfile && targetUserId === currentUser.id) {
-        await Router.getInstance().navigate("/profile")
+        await Router.getInstance().navigate("/profile", true)
         return;
     }
 
@@ -36,7 +36,7 @@ const profileComponent = async () => {
         return;
     }
 
-    if (!response.ok || !response) {
+    if (!response || !response.ok || !response) {
         document.querySelector("#app")!.innerHTML = `<div class="text-red-500 p-4">Failed to load stats</div>`;
         return;
     }

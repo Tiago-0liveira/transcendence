@@ -53,8 +53,7 @@ interface PlayerActiveGameData extends GamePlayer, GamePlayerData {
 
 type GameBallData = {
 	position: { x: number, y: number },
-	velocity: { vx: number, vy: number },
-	angle: number
+	velocity: { vx: number, vy: number }
 }
 
 /* Type Game might need a number of "phases" of the tournament so we can organize the brackets */

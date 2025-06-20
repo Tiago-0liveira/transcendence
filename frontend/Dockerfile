@@ -47,6 +47,6 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY --from=builder /etc/nginx/ssl /etc/nginx/ssl
 
-EXPOSE 80 2000
+EXPOSE 2000
 
 CMD ["nginx", "-g", "daemon off;"]

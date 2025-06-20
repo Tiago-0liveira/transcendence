@@ -42,10 +42,9 @@ const GAME_MAX_SCORE = 7/* TODO: we can change this later */
  * @description Game Loop
  */
 setInterval(() => {
-	const timeTaken = Date.now()
 	activeGameRooms.forEach(lobby => {
 		if (lobby.status !== "active") return
-		lobby.brackets.forEach(bracket => {
+		lobby.brackets.forEach(async bracket => {
 			if (!bracket.game) return
 
 			const game = bracket.game
@@ -103,10 +102,6 @@ setInterval(() => {
 			}
 		})
 	})
-	const timeTakenMs = Date.now() - timeTaken;
-	if (timeTakenMs > REFRESH_RATE_MS) {
-		console.warn(`Warning: Game loop took ${timeTakenMs}ms, which is more than ${REFRESH_RATE_MS}ms. Consider optimizing your game logic.`);
-	}
 }, REFRESH_RATE_MS);
 
 
@@ -148,6 +143,9 @@ export const updateBracketsAfterGameFinnish = async (lobby: LobbyRoom, gameId: s
 
 		const db = Database.getInstance();
 		const lastBracket = lobby.brackets[lobby.brackets.length - 1];
+		if (lastBracket && lastBracket.winner) {
+			updatePlayerActiveLobby(lastBracket.winner === "left" ? lastBracket.lPlayer : lastBracket.rPlayer)
+		}
 
 		for (const bracket of lobby.brackets) {
 			if (!bracket.game || !bracket.winner) continue;
@@ -331,8 +329,7 @@ export const handleGameRoomPlayerSetReady = async function (clientContext: Clien
 		game.state = "active"
 		game.ballData = {
 			position: { x: CANVAS.w / 2, y: CANVAS.h / 2 },
-			velocity: { vx: BALL_BASE_VELOCITY, vy: BALL_BASE_VELOCITY },
-			angle: Math.random() > 0.5 ? Math.PI : 0 + Math.random() * 0.5
+			velocity: { vx: BALL_BASE_VELOCITY, vy: BALL_BASE_VELOCITY }
 		}
 		game.startAt = Date.now()
 		game.timer = {

@@ -62,7 +62,7 @@ const component = async () => {
 
 	const queryParams = router.getCurrentRoute()?.query
 	if (!queryParams || !queryParams.roomId || !queryParams.gameId) {
-		throw new Error("Room not found!")
+		return router.navigate("/games/rooms", true)
 	}
 	const dataUpdateIntervalId = setInterval(() => {
 		if (!gameRoom || !["active", "stopped"].includes(gameRoom.state)) return
@@ -162,7 +162,7 @@ const component = async () => {
 	}
 	const btnGoBackHandler = (btn: HTMLButtonElement) => {
 		if (!gameRoom) return;
-		router.navigate("/games/lobby-room", {}, { roomId: gameRoom.lobbyId })
+		router.navigate("/games/lobby-room", false, {}, { roomId: gameRoom.lobbyId })
 	}
 	divLoading.style.display = "none";
 
@@ -291,7 +291,7 @@ const component = async () => {
 
 					if (returnToLobbyTimer === 0) {
 						if (gameRoom) {
-							router.navigate("/games/lobby-room", {}, { roomId: gameRoom.lobbyId })
+							router.navigate("/games/lobby-room", false, {}, { roomId: gameRoom.lobbyId })
 						}
 					}
 				}, 1000);
@@ -325,8 +325,9 @@ const component = async () => {
 		}
 		const anchorGotoLobby = ev.target.closest("a#a-go-to-lobby");
 		if (anchorGotoLobby instanceof HTMLAnchorElement) {
+			ev.preventDefault()
 			if (gameRoom) {
-				router.navigate("/games/lobby-room", {}, { roomId: gameRoom.lobbyId })
+				router.navigate("/games/lobby-room", false, {}, { roomId: gameRoom.lobbyId })
 			}
 		}
 		const btnGoBack = ev.target.closest("button#btn-go-back");

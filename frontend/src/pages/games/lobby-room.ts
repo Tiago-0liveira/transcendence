@@ -128,9 +128,6 @@ const renderBrackets = (room: LobbyRoom, userId: number): string => {
 		const r = g.players.right;
 		const isUserInGame = l.id === userId || r.id === userId;
 		const canJoin = ["waiting", "stopped"].includes(g.state) && isUserInGame;
-		const lName = room.connectedPlayers.find(p => p.id === g.players.left.id)?.name
-		const rName = room.connectedPlayers.find(p => p.id === g.players.right.id)?.name
-		const winnerName = bracket.winner && lName && rName && (bracket.winner === "left" ? lName : rName)
 
 		return `
 						<div class="bracket-card ${gridPositionFromPhase}">
@@ -151,7 +148,7 @@ const renderBrackets = (room: LobbyRoom, userId: number): string => {
 								)}
 								${conditionalRender(g.state === "waiting", `<span class="text-yellow-400">Waiting for players</span>`)}
 								${conditionalRender(g.state === "stopped", `<span class="text-red-400">The game is paused</span>`)}
-								${conditionalRender(g.state === "completed", `<span class="text-blue-400">Winner: ${winnerName}</span>`)}
+								${conditionalRender(g.state === "completed", `<span class="text-blue-400">Winner: ${bracket.winner === "left" ? l.name : r.name}</span>`)}
 							</div>
 						</div>
 					`;
@@ -169,7 +166,7 @@ const component = async () => {
 	let gameRoom: LobbyRoom | null = null;
 
 	const queryParams = router.getCurrentRoute()?.query;
-	if (!queryParams?.roomId) throw new Error('Room not found!');
+	if (!queryParams?.roomId) return router.navigate("/games/rooms");
 
 	document.querySelector('#app')!.innerHTML = /* html */ `
 		<div class="lobby-room">
@@ -246,7 +243,7 @@ const component = async () => {
 					return;
 				}
 
-				router.navigate("/games/game-room", {}, { roomId, gameId });
+				router.navigate("/games/game-room", false, {}, { roomId, gameId });
 				break;
 			}
 		}

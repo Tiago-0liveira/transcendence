@@ -38,17 +38,16 @@ class LocalGameRoomManager {
         if (type === "1v1" && playerNames.length !== 2) {
             throw new Error("A 1v1 game room requires exactly 2 players.");
         }
-        // Assuming tournament supports 4 or 8 players for initial setup
         if (type === "tournament" && playerNames.length !== 4) {
             throw new Error("Local tournaments currently support 4 players.");
         }
         if (params.playerNames.some(name => 
                 name === "" ||
-                name.toString().trim().length <= 4 ||
-                name.toString().trim().length >= 15) ||
+                name.toString().trim().length <= 3 ||
+                name.toString().trim().length >= 12) ||
                 params.playerNames.length !== (new Set(params.playerNames)).size
             ) {
-            throw new Error("Player Names must be between 4 and 15 chars and cannot be repeated!")
+            throw new Error("Player Names must be between 3 and 12 chars and cannot be repeated!")
         }
 
         const games: LocalGame[] = []; // Array to hold games within this room

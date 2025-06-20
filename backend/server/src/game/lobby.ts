@@ -183,14 +183,11 @@ export const getBasicLobby = function (room: LobbyRoom, userId: number, isFriend
 // TODO: overall make this more efficient
 
 export const handleJoinRooms = async function () {
-	const timeStart = Date.now();
 	for (const [id, client] of connectedSocketClients) {
 		if (client.connected && client.socket) {
 			await sendPlayerUpdatedRooms(client.socket, id);
 		}
 	}
-	const timeElapsed = Date.now() - timeStart;
-	console.log(`Updating rooms for ${connectedSocketClients.size} clients took ${timeElapsed}ms`);
 }
 
 export const sendPlayerUpdatedRooms = async function (socket: WebSocket, userId: number) {

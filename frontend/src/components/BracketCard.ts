@@ -141,7 +141,7 @@ document.addEventListener("click", (e) => {
 	getButtonAndHandleClick(e, "join", ["roomId", "gameId"], (roomId, gameId) => {
 		if (!roomId || !gameId) throw new Error("Invalid roomId or gameId");
 
-		Router.getInstance().navigate("/games/game-room", {}, { roomId, gameId });
+		Router.getInstance().navigate("/games/game-room", false, {}, { roomId, gameId });
 	})
 })
 

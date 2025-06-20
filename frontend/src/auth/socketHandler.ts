@@ -156,6 +156,7 @@ class SocketHandler {
 					case "lobby-room-join":
 						Router.getInstance().navigate(
 							"/games/lobby-room",
+              false,
 							{},
 							{ roomId: parsedMessage.roomId },
 						);
@@ -163,6 +164,7 @@ class SocketHandler {
 					case "game-room-join":
 						Router.getInstance().navigate(
 							"/games/game-room",
+              false,
 							{},
 							{ roomId: parsedMessage.roomId, gameId: parsedMessage.gameId },
 						);
