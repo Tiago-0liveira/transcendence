@@ -3,6 +3,8 @@ import SocketHandler from "@/auth/socketHandler";
 import Router from "@/router/Router";
 import { authGuard } from "@/router/guards";
 
+const PUBLIC_CHAT_ID = 777888;
+
 interface Message {
   content: string;
   timestamp: Date;
@@ -29,7 +31,7 @@ let currentConversationId: number | null = null;
 // let conversations: Conversation[] = [];
 let mockConversations: Conversation[] = [
   {
-    id: 777888,
+    id: PUBLIC_CHAT_ID,
     title: "General Chat",
     messages: [],
     lastMessage: "",
@@ -45,7 +47,8 @@ const chatComponent = async () => {
 
   //Setup socket handler;
   sh.addMessageHandler("chat-message", function (res) {
-    const conversationId = res.isPrivateMessage ? res.source : 777888;
+    console.log("Received message:", res);
+    const conversationId = res.isPrivateMessage ? res.source : PUBLIC_CHAT_ID;
     const newMessage: Message = {
       content: res.content,
       timestamp: res.timestamp,
@@ -121,9 +124,7 @@ const chatComponent = async () => {
             />
             <button
               id="sendButton"
-              class="bg-teal-dark text-white px-6 py-3 rounded-lg hover:bg-teal-custom transition-colors"
-              onclick="sendMessage()"
-            >
+              class="bg-teal-dark text-white px-6 py-3 rounded-lg hover:bg-teal-custom transition-colors">
               Send
             </button>
           </div>
@@ -388,43 +389,44 @@ function sendMessage(loggedInUser: UserNoPass) {
     "messageInput",
   ) as HTMLInputElement;
   if (messageInput && messageInput.value.trim()) {
-    const newMessage: Message = {
-      content: messageInput.value.trim(),
-      timestamp: new Date(Date.now()),
-      senderId: loggedInUser.id,
-      senderName: loggedInUser.username,
-      seen: true,
-    };
+    const content = messageInput.value.trim();
     const conversation = mockConversations.find(
       (c) => c.id === currentConversationId,
     );
 
     if (conversation) {
+      const isChatPrivate = currentConversationId !== PUBLIC_CHAT_ID;
+
+      const newMessage: Message = {
+        content: content,
+        timestamp: new Date(Date.now()),
+        senderId: loggedInUser.id,
+        senderName: loggedInUser.username,
+        seen: true,
+      };
+      if (isChatPrivate) {
+        newMessage.targetId = currentConversationId;
+      }
       conversation.messages.push(newMessage);
       conversation.lastMessage = newMessage.content;
       conversation.timestamp = newMessage.timestamp;
 
       // Update UI
-      renderMessages(conversation.messages, loggedInUser);
-      renderConversations(loggedInUser);
-      const isChatPrivate = currentConversationId === 7778888 ? false : true;
-      sh.sendMessage(
-        // source: number;
-        // sourceName: string;
-        // timestamp: Date;
-        // target?: number;
-        // content: string;
-        // isPrivateMessage: boolean;
-        {
-          type: "chat-message",
-          source: loggedInUser.id,
-          sourceName: loggedInUser.username,
-          timestamp: new Date(Date.now()),
-          target: currentConversationId,
-          content: messageInput.value.trim(),
-          isPrivateMessage: isChatPrivate,
-        } satisfies SelectSocketMessage<"chat-message">,
-      );
+      requestAnimationFrame(() => {
+        renderMessages(conversation.messages, loggedInUser);
+        renderConversations(loggedInUser);
+      });
+      const msg = {
+        type: "chat-message",
+        source: loggedInUser.id,
+        sourceName: loggedInUser.username,
+        timestamp: new Date(Date.now()),
+        target: isChatPrivate ? currentConversationId : PUBLIC_CHAT_ID,
+        content: content,
+        isPrivateMessage: isChatPrivate,
+      } satisfies SelectSocketMessage<"chat-message">;
+      console.log("sending message", msg);
+      sh.sendMessage(msg);
       // Clear input
       messageInput.value = "";
     }
