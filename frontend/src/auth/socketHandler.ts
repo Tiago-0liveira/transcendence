@@ -5,7 +5,7 @@ import Router from "@/router/Router";
 class SocketHandler {
 	private static instance: SocketHandler;
 	private socket: WebSocket | null = null;
-	private chatManager: ChatManager | null = null;
+	// private chatManager: ChatManager | null = null;
 
 	private reconnectTimeoutId: number;
 	private lastPongTime!: number;
@@ -170,7 +170,13 @@ class SocketHandler {
 						);
 						break;
 					case "chat-invite-to-game-frontend":
-						toastHelper.info(`${parsedMessage.sourceName} invited you to ${parsedMessage.roomType}`)
+						toastHelper.gameReady(
+							parsedMessage.roomId,
+							parsedMessage.sourceName,
+							parsedMessage.roomName,
+							parsedMessage.roomType,
+							parsedMessage.sourceAvatarURL,
+						);
 						break;
                     case "tournament-game-ready":
                         toastHelper.tournamentGameReady(

@@ -108,8 +108,14 @@ const deployToast = (text: string, options: Toastify.Options) => {
 };
 
 const tournamentRedirect = (roomId: string, gameId: string) => (ev: MouseEvent) => {
+    if (!gameId) {
+      Router.getInstance().navigate(`/games/lobby-room`, false, {}, {roomId});
+      toastifyRequestResultHandler(ev, "Prepare for battle!");
+    }
+    else {
       Router.getInstance().navigate(`/games/game-room`, false, {}, {roomId, gameId});
       toastifyRequestResultHandler(ev, "Now you are in game room. Prepare for battle!");
+    }
 }
 
 export const toastHelper = {
@@ -282,5 +288,55 @@ export const toastHelper = {
       className: "tournamentGameReady",
       node: div,
     });
+  },
+
+  gameReady: (
+      roomId: string,
+      sourceName: string,
+      roomName: string,
+      roomType: string,
+      sourceAvatarURL: string,
+  ) => {
+    const div = document.createElement("div");
+    div.classList.add("content");
+
+    const shortName =
+        sourceName.length > 10 ? sourceName.slice(0, 7) + "…" : sourceName;
+
+    div.innerHTML = /* html */ `
+		<div class="top-content flex items-center text-sm sm:text-base font-sans font-bold text-white">
+			<img src="${sourceAvatarURL}" alt="${sourceName} avatar"
+				class="w-5 h-5 rounded-full border border-gray-600 mr-2" />
+			<span class="font-semibold text-red-500 mr-1" title="${sourceName}">${shortName}</span>
+			<span>invited you to join</span>
+			<span class="ml-1 text-green-400">${roomType}</span>
+			<span class="ml-1">game in</span>
+			<span class="ml-1 text-yellow-200">"${roomName}"</span>
+			<span class="ml-1">room.</span>
+		</div>
+		<div class="div-buttons mt-3 flex gap-2 justify-end text-sm sm:text-base">
+			<button
+				id="toastify-btn-join-game"
+				class="px-4 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+			>
+				Join
+			</button>
+		</div>
+	`;
+
+    const joinBtn = div.querySelector("#toastify-btn-join-game") as HTMLButtonElement;
+    let gameId = "";
+    joinBtn.addEventListener("click", tournamentRedirect(roomId, gameId));
+    // joinBtn.addEventListener("click", () => {
+    //   Router.getInstance().navigate(`/games/game-room`, false, {}, { roomId });
+    // });
+
+    deployToast(`${sourceName} invited you to join ${roomType} game in "${roomName}"`, {
+      duration: DURATION * 2,
+      avatar: sourceAvatarURL,
+      className: "gameReadyToast",
+      node: div,
+    });
   }
+
 };

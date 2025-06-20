@@ -77,7 +77,8 @@ type SocketMessage =
 	roomId: string,
 	sourceName: string,
 	roomName: string,
-	roomType: LobbyType
+	roomType: LobbyType,
+    sourceAvatarURL: string
   }>
     /** Tournament */
     | SocketMessageBase<
