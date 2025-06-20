@@ -54,6 +54,7 @@ async function handleRoomMessage(
     if (
       connectedClient.connected &&
       connectedClient.socket &&
+      clientUserId !== clientContext.userId &&
       !blockedFriendsRes.result.find((friend) => friend.id === clientUserId)
     ) {
       connectedClient.socket.send(JSON.stringify(message));
