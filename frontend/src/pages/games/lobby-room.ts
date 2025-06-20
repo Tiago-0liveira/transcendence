@@ -23,46 +23,55 @@ const getUpdatedRoomTemplate = (room: LobbyRoom, userId: number): string => {
 
 
 	return /* html */ `
-		<div class="profile-card centered auth-box">
-			<div class="settings-header login-section">${room.roomType}</div>
-
-			<div class="form-input-group centered-badge">
-				<span class="badge ${room.settings.visibility === 'public' ? 'badge-public' : 'badge-private'}">
-					${room.settings.visibility === 'public' ? 'Public' : 'Private'}
-				</span>
-			</div>
-
-			<div class="form-input-group horizontal-inputs room-name-block">
-				<span class="form-input-label">Room:</span>
-				<span class="highlight room-name-truncated" title="${room.name}">
-					${room.name}
-				</span>
-			</div>
-
+		<div class="lobby-room-layout">
 			${room.status === "waiting" ? `
-				<div class="form-input-group horizontal-inputs">
-					<span class="form-input-label">Status:</span>
-					<span class="badge ${playerReadyStatus ? 'badge-green' : 'badge-red'}">
-						${playerReadyStatus ? 'Ready' : 'Not Ready'}
+				<div class="profile-card centered auth-box connected-players-box">
+					<h2 class="form-section-title">Connected Players</h2>
+					${renderConnectedPlayers(room)}
+				</div>
+` : ''}
+
+			<div class="profile-card centered auth-box connected-players-box">
+				<div class="settings-header login-section">${room.roomType}</div>
+
+				<div class="form-input-group centered-badge">
+					<span class="badge ${room.settings.visibility === 'public' ? 'badge-public' : 'badge-private'}">
+						${room.settings.visibility === 'public' ? 'Public' : 'Private'}
 					</span>
 				</div>
 
-				<div class="form-input-group ready-button-group">
-					<button id="btn-set-ready-true" data-ready="true"
-						class="btn-steam-fixed ${playerReadyStatus ? 'active' : ''}">Set Ready</button>
-					<button id="btn-set-ready-false" data-ready="false"
-						class="btn-steam-fixed ${!playerReadyStatus ? 'active' : ''}">Set Not Ready</button>
-				</div>
-
-				<div class="form-input-group horizontal-inputs">
-					<span class="form-input-label">Players:</span>
-					<span class="${room.connectedPlayersNumber !== room.requiredPlayers ? 'text-warning' : 'text-success'}">
-						${room.connectedPlayersNumber} / ${room.requiredPlayers}
+				<div class="form-input-group horizontal-inputs room-name-block">
+					<span class="form-input-label">Room:</span>
+					<span class="highlight room-name-truncated" title="${room.name}">
+						${room.name}
 					</span>
 				</div>
 
-				${renderOwnerStatus(room, userId)}
-			` : ''}
+				${room.status === "waiting" ? `
+					<div class="form-input-group horizontal-inputs">
+						<span class="form-input-label">Status:</span>
+						<span class="badge ${playerReadyStatus ? 'badge-green' : 'badge-red'}">
+							${playerReadyStatus ? 'Ready' : 'Not Ready'}
+						</span>
+					</div>
+
+					<div class="form-input-group ready-button-group">
+						<button id="btn-set-ready-true" data-ready="true"
+							class="btn-steam-fixed ${playerReadyStatus ? 'active' : ''}">Set Ready</button>
+						<button id="btn-set-ready-false" data-ready="false"
+							class="btn-steam-fixed ${!playerReadyStatus ? 'active' : ''}">Set Not Ready</button>
+					</div>
+
+					<div class="form-input-group horizontal-inputs">
+						<span class="form-input-label">Players:</span>
+						<span class="${room.connectedPlayersNumber !== room.requiredPlayers ? 'text-warning' : 'text-success'}">
+							${room.connectedPlayersNumber} / ${room.requiredPlayers}
+						</span>
+					</div>
+
+					${renderOwnerStatus(room, userId)}
+				` : ''}
+			</div>
 		</div>
 	`;
 };
@@ -89,6 +98,23 @@ const renderOwnerStatus = (room: LobbyRoom, userId: number): string => {
 	}
 
 	return '';
+};
+
+const renderConnectedPlayers = (room: LobbyRoom): string => {
+	if (room.status !== 'waiting') return '';
+	return /* html */ `
+		<div class="connected-players-grid">
+			${room.connectedPlayers.map(player => `
+				<div class="connected-player-card">
+					<span class="connected-player-name">
+						${player.name}
+						${conditionalRender(player.id === room.owner, `<span class="owner-badge">Owner</span>`)}
+					</span>
+					<span class="connected-player-status ${player.ready ? 'ready' : 'not-ready'}"></span>
+				</div>
+			`).join('')}
+		</div>
+	`;
 };
 
 const renderBrackets = (room: LobbyRoom, userId: number): string => {
