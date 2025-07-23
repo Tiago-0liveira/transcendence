@@ -5,7 +5,7 @@ Transcendence is a multiplayer arcade game inspired by the classic **Pong**, rei
 ## 👥 Project Authors
 The project was created by **42 students**:
 
-| Tiago | Acuva | Sergey | Evneniy |
+| Tiago | Adilson | Sergey | Evgeniy |
 |-------|-------|--------|---------|
 | ![](/frontend/public/assets/avatars/Tiago.png) | ![](/frontend/public/assets/avatars/Acuva.png) | ![](/frontend/public/assets/avatars/SEREGA.png) | ![](/frontend/public/assets/avatars/Evneniy.png) |
 
